@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from ..api_schema import Ok, Role, error_responses
+from ..api_schema import Role, error_responses
 from ..db import get_db
 from ..deps import session_user
 from ..i18n import tr
@@ -40,7 +40,7 @@ def login(body: LoginIn, db: Session = Depends(get_db)):
     db.add(AuditLog(user_id=u.id, action="login", detail=u.login))
     db.commit()
     return TokenOut(
-        token=make_token(u.id), user_id=u.id, display_name=u.display_name, is_admin=u.is_admin
+        token=make_token(u.id, u.token_version or 0), user_id=u.id, display_name=u.display_name, is_admin=u.is_admin
     )
 
 
@@ -84,12 +84,17 @@ def me(user: User = Depends(session_user), db: Session = Depends(get_db)):
     }
 
 
-@router.post("/password", summary="Change my password", response_model=Ok,
+class PasswordOut(BaseModel):
+    ok: bool = True
+    token: str = Field(description="New bearer token: tokens issued before the change stop working.")
+
+
+@router.post("/password", summary="Change my password", response_model=PasswordOut,
              responses=error_responses(400, 401, 403))
 def change_password(
     body: PasswordIn, user: User = Depends(session_user), db: Session = Depends(get_db)
 ):
-    """400 — too short or the default password; 403 — the old password is wrong. Existing tokens stay valid."""
+    """400 — too short or the default password; 403 — the old password is wrong. Every token issued before the change, this one included, stops working; use the one returned."""
     # пароль по умолчанию известен всем — старый у такой учётки не спрашиваем
     if not user.password_default and not verify_password(body.old_password, user.password_hash):
         raise HTTPException(403, tr("auth.wrong_password"))
@@ -99,6 +104,7 @@ def change_password(
         raise HTTPException(400, tr("auth.password_is_default"))
     user.password_hash = hash_password(body.new_password)
     user.password_default = False
+    user.token_version = (user.token_version or 0) + 1
     db.add(AuditLog(user_id=user.id, action="password_change", detail=user.login))
     db.commit()
-    return {"ok": True}
+    return {"ok": True, "token": make_token(user.id, user.token_version)}

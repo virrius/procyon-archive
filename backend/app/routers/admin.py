@@ -22,7 +22,7 @@ from ..i18n import LANGS, instance_lang, set_instance_lang, tr
 from ..models import AuditLog, Campaign, CampaignMember, User
 from ..langpack import prompting as P
 from ..prompting import KIT_SECTIONS, NEWS_SECTIONS
-from ..prompting.kit import prune_nulls
+from ..prompting.kit import prune_nulls, strip_defaults
 from ..server_cfg import (
     DOC_COLUMNS,
     DRAW_KINDS,
@@ -309,10 +309,7 @@ def patch_prompts(body: PromptsIn, db: Session = Depends(get_db)):
     s = server_row(db, create=True)
     if body.kit:
         base = _defaults()
-        over = prune_nulls(P().merge_kit(over, body.kit, keep_nulls=True), base)
-        # секция, совпавшая с кодом, не хранится: иначе застынет на старом тексте
-        over = {k: v for k, v in over.items()
-                if P().merge_kit({k: base.get(k)}, {k: v})[k] != base.get(k)}
+        over = strip_defaults(prune_nulls(P().merge_kit(over, body.kit, keep_nulls=True), base), base)
         s.img_prompt_kit = json.dumps(over, ensure_ascii=False) if over else ""
     kit = P().merge_kit(_defaults(), over)
     docs.update({k: v.strip() for k, v in body.docs.items()})

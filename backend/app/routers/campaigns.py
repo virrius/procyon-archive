@@ -355,6 +355,7 @@ def patch_player(
         if len(body.password) < 4:
             raise HTTPException(400, tr("campaigns.password_short"))
         user.password_hash = hash_password(body.password)
+        user.token_version = (user.token_version or 0) + 1
         db.add(AuditLog(campaign_id=v.campaign_id, user_id=v.user_id,
                         action="password_reset", detail=user.login))
     if body.display_name is not None:

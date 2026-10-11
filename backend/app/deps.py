@@ -64,12 +64,12 @@ def session_user(
     raws = [r.strip() for r in raws if r.strip()]
     if not raws:
         raise HTTPException(401, tr("auth.no_token"))
-    uids = [u for u in map(read_token, raws) if u]
-    if not uids:
+    claims = [c for c in map(read_token, raws) if c]
+    if not claims:
         raise HTTPException(401, tr("auth.bad_token"))
-    for uid in uids:
+    for uid, version in claims:
         user = db.get(User, uid)
-        if user and user.is_active:
+        if user and user.is_active and version == (user.token_version or 0):
             return user
     raise HTTPException(401, tr("auth.unknown_user"))
 

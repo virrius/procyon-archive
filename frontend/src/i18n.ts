@@ -30,7 +30,7 @@ function startLang(): Lang {
 void i18n.use(initReactI18next).init({
   resources,
   lng: startLang(),
-  fallbackLng: 'ru',
+  fallbackLng: 'en',
   defaultNS: 'common',
   ns: Object.keys(resources.ru || {}),
   interpolation: { escapeValue: false },
@@ -38,7 +38,7 @@ void i18n.use(initReactI18next).init({
 })
 document.documentElement.lang = i18n.language
 
-export const lang = () => (i18n.resolvedLanguage || i18n.language || 'ru') as Lang
+export const lang = () => (i18n.resolvedLanguage || i18n.language || 'en') as Lang
 // локаль для дат и чисел: toLocaleString(locale())
 export const locale = () => (lang() === 'en' ? 'en-US' : 'ru-RU')
 

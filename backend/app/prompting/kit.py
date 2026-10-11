@@ -115,6 +115,21 @@ def merge_kit(base: dict, over: dict | None, keep_nulls: bool = False) -> dict:
     return out
 
 
+def strip_defaults(over: dict, base: dict | None) -> dict:
+    """Хранить только отличия от кода: запись, совпавшая с дефолтом, иначе застынет на старом тексте."""
+    out = {}
+    for key, value in over.items():
+        known = isinstance(base, dict) and key in base
+        if known and value == base[key]:
+            continue
+        if known and isinstance(value, dict) and isinstance(base[key], dict):
+            value = strip_defaults(value, base[key])
+            if not value:
+                continue
+        out[key] = value
+    return out
+
+
 def prune_nulls(over: dict, base: dict | None) -> dict:
     """null храним только там, где он гасит запись кода; удалённое добавленное просто исчезает."""
     out = {}

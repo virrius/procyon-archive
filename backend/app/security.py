@@ -19,17 +19,19 @@ def verify_password(raw: str, hashed: str) -> bool:
         return False
 
 
-def make_token(user_id: str) -> str:
+def make_token(user_id: str, version: int = 0) -> str:
     payload = {
         "sub": user_id,
+        "tv": version,
         "exp": datetime.now(timezone.utc) + timedelta(hours=settings.jwt_ttl_hours),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=ALGO)
 
 
-def read_token(token: str) -> str | None:
+def read_token(token: str) -> tuple[str, int] | None:
     try:
         data = jwt.decode(token, settings.jwt_secret, algorithms=[ALGO])
-        return data.get("sub")
     except jwt.PyJWTError:
         return None
+    sub = data.get("sub")
+    return (sub, data.get("tv", 0)) if sub else None

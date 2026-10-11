@@ -35,7 +35,7 @@ The first start takes 5–10 minutes. Later starts take seconds.
 Open http://localhost:5180 in a browser and sign in as `admin` with the password `admin`.
 It will ask you to set your own password right away.
 
-The interface starts in Russian. Press **Admin space**, open **Язык** and pick English.
+The interface is in English. To switch it to Russian, open **Admin space → Language**.
 
 Then, in **Admin space**:
 

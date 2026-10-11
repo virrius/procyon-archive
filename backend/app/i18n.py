@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 LANGS = ("ru", "en")
-DEFAULT = "ru"
+DEFAULT = "en"
 
 _lang: contextvars.ContextVar[str] = contextvars.ContextVar("lang", default=DEFAULT)
 _catalog: dict[str, dict[str, str]] = {}

@@ -50,6 +50,8 @@ class User(Base, PK, Stamps):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     # пароль выдан по умолчанию (первый админ): пока не сменён, API пускает только в /auth/me и /auth/password
     password_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    # растёт при смене пароля: токены со старым номером больше не принимаются
+    token_version: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class Campaign(Base, PK, Stamps):

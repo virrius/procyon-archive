@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api } from '../api'
+import { api, store } from '../api'
 import { useApp } from '../ctx'
 import { Input, Modal } from '../ui'
 
@@ -16,7 +16,8 @@ export default function PasswordModal({ forced, onClose }: { forced?: boolean; o
   const save = async () => {
     setBusy(true); setErr('')
     try {
-      await api.post('/api/auth/password', { old_password: f.old, new_password: f.next })
+      const r = await api.post('/api/auth/password', { old_password: f.old, new_password: f.next })
+      store.token = r.token
       // до смены пароля сервер отвечал 403 на всё, кроме /auth/me: страницы под воротами перечитываем
       if (forced) { location.reload(); return }
       reload()
