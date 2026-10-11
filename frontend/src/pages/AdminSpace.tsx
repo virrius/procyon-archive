@@ -24,7 +24,6 @@ export default function AdminSpace() {
   const nav = useNavigate()
   const { t } = useTranslation('admin')
   const [navOpen, setNavOpen] = useState(false)
-  const [pw, setPw] = useState(false)
   const seg = pathname.split('/').filter(Boolean)[1] || ''
 
   if (!store.token) return <Navigate to="/login" replace />
@@ -71,7 +70,6 @@ export default function AdminSpace() {
               <button className="ghost tiny" onClick={() => {
                 store.token = null; store.campaign = null; store.viewAs = null; nav('/login')
               }}>{t('logout')}</button>
-              <button className="ghost tiny" onClick={() => setPw(true)}>{t('auth:pw.open')}</button>
             </div>
           </div>
         </nav>
@@ -87,7 +85,6 @@ export default function AdminSpace() {
           </main>
         </div>
       </div>
-      {pw && <PasswordModal onClose={() => setPw(false)} />}
     </div>
   )
 }
@@ -303,6 +300,9 @@ function CampaignsAdmin() {
           {(list || []).map(cp => (
             <CampaignRow key={cp.id} cp={cp} open={() => {
               store.campaign = cp.id; store.viewAs = null; nav('/crew')
+            }} gone={() => {
+              if (store.campaign === cp.id) store.campaign = null
+              reload(); reloadApp()
             }} />
           ))}
         </tbody>
@@ -319,7 +319,7 @@ function CampaignsAdmin() {
   )
 }
 
-function CampaignRow({ cp, open }: { cp: Dict; open: () => void }) {
+function CampaignRow({ cp, open, gone }: { cp: Dict; open: () => void; gone: () => void }) {
   const { t } = useTranslation('admin')
   const [job, setJob] = useJob(download)
   const running = job?.status === 'running'
@@ -328,6 +328,11 @@ function CampaignRow({ cp, open }: { cp: Dict; open: () => void }) {
     try {
       setJob(await api.post(`/api/admin/campaigns/${cp.id}/export`, { files }))
     } catch (e: any) { setJob({ id: '', status: 'failed', stage: '', done: 0, total: 0, error: e.message }) }
+  }
+
+  const drop = async () => {
+    if (prompt(t('camps.delete_confirm', { name: cp.name }))?.trim() !== cp.name.trim()) return
+    try { await api.del(`/api/admin/campaigns/${cp.id}`); gone() } catch (e: any) { alert(e.message) }
   }
 
   return (
@@ -346,6 +351,7 @@ function CampaignRow({ cp, open }: { cp: Dict; open: () => void }) {
             onClick={() => start(false)}>JSON</button>
           <button className="ghost tiny" disabled={running} title={t('xfer.zip_hint')}
             onClick={() => start(true)}>{t('xfer.export')}</button>
+          <button className="ghost tiny adm-danger" disabled={running} onClick={drop}>{t('camps.delete')}</button>
         </div>
       </td>
     </tr>
@@ -401,6 +407,8 @@ function UsersAdmin() {
   const { t } = useTranslation('admin')
   const [busy, setBusy] = useState('')
   const [fail, setFail] = useState('')
+  const [pw, setPw] = useState(false)
+  const [fresh, setFresh] = useState({ login: '', display_name: '', password: '' })
 
   const run = async (id: string, f: () => Promise<any>) => {
     setBusy(id); setFail('')
@@ -414,6 +422,11 @@ function UsersAdmin() {
     if (!confirm(t('users.revoke_confirm', { login: u.login, name: c.name }))) return
     run(u.id, () => api.del(`/api/admin/users/${u.id}/campaigns/${c.id}`))
   }
+
+  const add = () => run('new', async () => {
+    await api.post('/api/admin/users', fresh)
+    setFresh({ login: '', display_name: '', password: '' })
+  })
 
   if (err) return <div className="panel"><div className="eg-err">{err}</div></div>
 
@@ -433,16 +446,16 @@ function UsersAdmin() {
                 <td><strong>{u.display_name}</strong>{self && <span className="dim"> · {t('users.you')}</span>}</td>
                 <td className="mono">{u.login}</td>
                 <td>
-                  <div className="adm-user-camps">
+                  <div className="adm-access">
                     {u.campaigns.map((c: Dict) => (
-                      <span key={c.id} className="adm-user-camp">
-                        <span>{c.name}</span>
+                      <div key={c.id} className="adm-access-row">
+                        <span className="adm-access-name" title={c.name}>{c.name}</span>
                         <select value={c.role} disabled={off || c.owner} onChange={e => grant(u, c.id, e.target.value)}>
                           {ROLES.map(k => <option key={k} value={k}>{t(`roles.${k}`)}</option>)}
                         </select>
-                        {!c.owner && <button className="ghost tiny" disabled={off} title={t('users.revoke')}
+                        {c.owner ? <span /> : <button className="ghost tiny" disabled={off} title={t('users.revoke')}
                           onClick={() => revoke(u, c)}>×</button>}
-                      </span>
+                      </div>
                     ))}
                     {free.length > 0 && (
                       <select className="adm-user-add" value="" disabled={off}
@@ -455,10 +468,12 @@ function UsersAdmin() {
                 </td>
                 <td className="mono dim">{new Date(u.created_at).toLocaleDateString(locale())}</td>
                 <td>
-                  <button className={`ghost tiny ${u.is_active ? '' : 'adm-user-unblock'}`} disabled={off || self}
-                    onClick={() => patch(u, { is_active: !u.is_active })}>
-                    {u.is_active ? t('users.block') : t('users.unblock')}
-                  </button>
+                  {self
+                    ? <button className="ghost tiny" onClick={() => setPw(true)}>{t('auth:pw.open')}</button>
+                    : <button className={`ghost tiny ${u.is_active ? '' : 'adm-user-unblock'}`} disabled={off}
+                      onClick={() => patch(u, { is_active: !u.is_active })}>
+                      {u.is_active ? t('users.block') : t('users.unblock')}
+                    </button>}
                 </td>
                 <td>
                   <label className="adm-user-admin">
@@ -473,7 +488,17 @@ function UsersAdmin() {
         </tbody>
       </table>
       {loading && !list && <div className="dim adm-camps-pad">{t('common:loading')}</div>}
+      <div className="row adm-camps-pad adm-camp-new adm-user-new">
+        <input placeholder={t('users.new_login')} value={fresh.login} onChange={e => setFresh({ ...fresh, login: e.target.value })} />
+        <input placeholder={t('users.new_name')} value={fresh.display_name}
+          onChange={e => setFresh({ ...fresh, display_name: e.target.value })} />
+        <input type="password" placeholder={t('users.new_password')} value={fresh.password}
+          onChange={e => setFresh({ ...fresh, password: e.target.value })}
+          onKeyDown={e => { if (e.key === 'Enter' && fresh.login.trim() && fresh.password.length >= 4) add() }} />
+        <button disabled={!!busy || !fresh.login.trim() || fresh.password.length < 4} onClick={add}>{t('users.create')}</button>
+      </div>
       {fail && <div className="adm-camps-pad"><span className="chip red">{fail}</span></div>}
+      {pw && <PasswordModal onClose={() => setPw(false)} />}
     </div>
   )
 }

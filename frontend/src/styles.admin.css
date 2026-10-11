@@ -162,9 +162,13 @@ button.adm-unsaved-item {
 @keyframes xfer-busy { from { left: -30%; } to { left: 100%; } }
 .xfer-err { margin-top: 8px; color: var(--rust); font-size: 12px; }
 .adm-user-admin { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-.adm-user-camps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.adm-user-camp { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 8px; border: 1px solid var(--line); border-radius: 4px; }
-.adm-user-camp select, .adm-user-add { padding: 2px 4px; font-size: 12px; width: auto; flex: none; }
+.adm-access { display: grid; grid-template-columns: minmax(120px, 240px) auto 22px; gap: 3px 8px; align-items: center; }
+.adm-access-row { display: contents; }
+.adm-access-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.adm-access select, .adm-user-add { padding: 1px 4px; font-size: 12px; width: auto; flex: none; }
+.adm-user-add { grid-column: 1 / -1; justify-self: start; width: 180px; max-width: 100%; margin-top: 2px; }
+.adm-user-new { max-width: 760px; }
+.adm-danger:hover { color: var(--red, #c55); border-color: var(--red, #c55); }
 .adm-user-blocked td:not(:nth-last-child(2)) { opacity: .45; }
 .adm-user-blocked td:first-child strong { text-decoration: line-through; }
 .adm-user-unblock { color: var(--red, #c55); }
@@ -179,5 +183,7 @@ button.adm-unsaved-item {
   .adm-camps td { padding: 0; border: none; }
   .adm-camps td:first-child, .adm-camps td:last-child { flex-basis: 100%; }
   .adm-camps td:last-child .adm-camp-acts { justify-content: flex-start; padding-top: 4px; }
+  .adm-access { grid-template-columns: minmax(0, 1fr) auto 22px; }
+  .adm-users td:nth-child(3) { flex-basis: 100%; min-width: 0; }
 }
 

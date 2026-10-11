@@ -45,7 +45,9 @@
     "created": "Created",
     "open": "open",
     "new": "new campaign",
-    "create": "create"
+    "create": "create",
+    "delete": "delete",
+    "delete_confirm": "This deletes “{{name}}” with everything in it and its files. It cannot be undone. Type the campaign name to confirm:"
   },
   "roles": {
     "gm": "GM",
@@ -66,7 +68,11 @@
     "block": "block",
     "unblock": "unblock",
     "yes": "yes",
-    "no": "no"
+    "no": "no",
+    "new_login": "login",
+    "new_name": "name (optional)",
+    "new_password": "password",
+    "create": "+ account"
   },
   "prompts": {
     "doc": {

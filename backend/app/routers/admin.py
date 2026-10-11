@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 from datetime import datetime
 from typing import Literal
 from urllib.parse import unquote
@@ -13,13 +15,14 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from ..api_schema import Role, error_responses
-from ..db import get_db
+from ..api_schema import Ok, Role, error_responses
+from ..config import settings
+from ..db import Base, get_db
 from ..deps import admin_only
 from .. import transfer
 from ..canon import retranslate
 from ..i18n import LANGS, instance_lang, set_instance_lang, tr
-from ..models import AuditLog, Campaign, CampaignMember, User
+from ..models import AuditLog, Campaign, CampaignMember, Message, MessageState, User
 from ..langpack import prompting as P
 from ..prompting import KIT_SECTIONS, NEWS_SECTIONS
 from ..prompting.kit import prune_nulls, strip_defaults
@@ -34,6 +37,8 @@ from ..server_cfg import (
     prompt_overrides,
     server_row,
 )
+from ..seed import ADMIN_PASSWORD
+from ..security import hash_password
 from .images import key_out
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(admin_only)],
@@ -320,6 +325,24 @@ def patch_prompts(body: PromptsIn, db: Session = Depends(get_db)):
     return _prompts_out(db)
 
 
+@router.delete("/campaigns/{campaign_id}", summary="Delete a campaign", response_model=Ok, responses=error_responses(404))
+def delete_campaign(campaign_id: str, me: User = Depends(admin_only), db: Session = Depends(get_db)):
+    """Admin only. Deletes the campaign with everything in it and its files; accounts stay. Cannot be undone."""
+    camp = db.get(Campaign, campaign_id)
+    if not camp:
+        raise HTTPException(404, tr("admin.campaign_missing"))
+    mids = db.query(Message.id).filter(Message.campaign_id == camp.id)
+    db.query(MessageState).filter(MessageState.message_id.in_(mids)).delete(synchronize_session=False)
+    for table in reversed(Base.metadata.sorted_tables):
+        if table.name != "audit_log" and "campaign_id" in table.c:
+            db.execute(table.delete().where(table.c.campaign_id == camp.id))
+    db.add(AuditLog(user_id=me.id, action="campaign_deleted", detail=camp.name))
+    db.delete(camp)
+    db.commit()
+    shutil.rmtree(os.path.join(settings.upload_dir, camp.id), ignore_errors=True)
+    return {"ok": True}
+
+
 @router.get("/campaigns", summary="List every campaign on the server", response_model=list[AdminCampaignOut])
 def admin_list_campaigns(user: User = Depends(admin_only), db: Session = Depends(get_db)):
     """Admin only. All campaigns, not just the admin's own, with their GMs and player count."""
@@ -368,6 +391,30 @@ def _user_out(db: Session, u: User) -> dict:
 def list_users(db: Session = Depends(get_db)):
     """Admin only. Every account with its campaign memberships and roles."""
     return [_user_out(db, u) for u in db.query(User).order_by(User.created_at).all()]
+
+
+class UserNewIn(BaseModel):
+    login: str = Field(description="Lower-cased, unique across the server.", examples=["kes"])
+    password: str = Field(min_length=4)
+    display_name: str = Field(default="", description="Defaults to the login.")
+
+
+@router.post("/users", summary="Create an account", response_model=UserOut, responses=error_responses(400, 409))
+def create_user(body: UserNewIn, me: User = Depends(admin_only), db: Session = Depends(get_db)):
+    """Admin only. An account without campaigns; grant access with `PUT /users/{id}/campaigns/{campaign_id}`.
+    409 — the login is taken."""
+    login = body.login.strip().lower()
+    if not login or len(body.password) < 4:
+        raise HTTPException(400, tr("campaigns.login_password"))
+    if body.password == ADMIN_PASSWORD:
+        raise HTTPException(400, tr("auth.password_is_default"))
+    if db.query(User).filter(User.login == login).first():
+        raise HTTPException(409, tr("campaigns.login_taken"))
+    u = User(login=login, password_hash=hash_password(body.password), display_name=body.display_name.strip() or login)
+    db.add(u)
+    db.add(AuditLog(user_id=me.id, action="account_created", detail=login))
+    db.commit()
+    return _user_out(db, u)
 
 
 @router.patch("/users/{user_id}", summary="Block, unblock or promote an account", response_model=UserOut,

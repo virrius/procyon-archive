@@ -72,8 +72,9 @@ CLOSE = "Painted in visible brush strokes as sci-fi concept art."
 # инструкции меняет только то, что хаб назовёт; общая голова тянула любой угол
 # мира к одному ржавому полумраку
 LOOKS = {
-    "derelict": ("Painterly sci-fi concept art with visible brush strokes, a cold desaturated palette of ash grey, "
-                 "faded paint and frosted blue-grey, shafts of light cutting through dust and darkness, atmospheric depth."),
+    "derelict": ("Painterly sci-fi concept art with visible brush strokes, a decaying palette of rust brown, corroded "
+                 "orange and grimy grey with peeling faded paint, cold shafts of dead light cutting through dust and "
+                 "darkness, barren lifeless decay, atmospheric depth."),
     "junk": ("Painterly sci-fi concept art with visible brush strokes, a dusty palette of rust orange, oxidised "
              "green and sun-bleached grey, harsh light and drifting dust, heaps of scrap detail."),
     "frontier": ("Painterly sci-fi concept art with visible brush strokes, a lived-in far future of matte composite, "
@@ -188,6 +189,8 @@ PART_RULES = {
     "pose": "their pose and what they are doing",
     "place": "what kind of place this is and the things that make it that kind of place, then what is far "
              "behind; as a place only: nobody's pose or action in it",
+    "time": "the time of day the GM named, in one sentence of how it shows on the sky and the place; an empty "
+            "string when they named none",
     "light": "where the light comes from and from which side and height we see it; the light falls on the "
              "front of a person or a creature and they are never seen from behind or in silhouette",
     "subject": "what is pictured: shape, material, size and state",
@@ -203,6 +206,7 @@ CAST = {
     "female": "The character is female.",
 }
 NOBODY = "Nobody is in the picture: no people and no creatures anywhere."
+BLANKS = ("empty", "none", "n/a", "unspecified", "not specified")
 DESERTED = "The place is deserted."
 
 
@@ -214,14 +218,15 @@ def own_parts(kind: str, people: str = "") -> list[tuple[str, int]]:
 def part_rule(kind: str, people: str = "") -> str:
     parts = own_parts(kind, people)
     rule = {**PART_RULES, "subject": ACTION_SUBJECT} if kind == "action" else PART_RULES
-    shared = "; ".join(f"{k} — {rule[k]}" for k, t in parts if not t)
+    shared = "; ".join(f"{k} — {rule[k]}" for k, t in [("time", 0), *parts] if not t)
     take = "; ".join(f"{k} — {rule[k]}" for k, t in parts if t)
     order = ", ".join(k for k, _ in parts)
     return (f"Write the picture as named parts, never as one paragraph: the code joins them in a fixed order — "
             f"{order} — into the paragraph the painter reads, so each part is plain visible description in full "
             f"sentences that reads on from the part before, and no part repeats another. Written once for the "
             f"whole picture: {shared}. Then {TAKES} takes of the same picture, each with: {take}. The takes "
-            f"differ from each other: another moment, side, height and light. One take with the parts written "
+            f"differ from each other: another moment, side, height and light, while a time of day the GM named "
+            f"stays the same in all of them. One take with the parts written "
             f"once runs 90 to 150 words.")
 
 
@@ -265,6 +270,14 @@ def cast_rule(who: str = "", sex: str = "", seed_key: str = "", text: str = "") 
 def _sentence(text: str) -> str:
     text = str(text or "").strip()
     return text if not text or text[-1] in ".!?" else text + "."
+
+
+def fold_time(slots: dict) -> dict:
+    """Время суток ГМа хаб выписывает отдельным полем, а код вклеивает в общее место: так оно в каждом дубле."""
+    hour = _sentence(slots.pop("time", ""))
+    if hour and hour.strip(" .").lower() not in BLANKS and "place" in slots:
+        slots["place"] = f"{_sentence(slots['place'])} {hour}".strip()
+    return slots
 
 
 def picture_of(kind: str, slots: dict, take: int = 0) -> str:
@@ -385,7 +398,7 @@ def _picks_corner(register: str, kind: str, view: str) -> bool:
 
 def schema(kind: str, view: str = "interior", kit: dict | None = None, register: str = "",
            parts: bool = True, people: str = "") -> dict:
-    props: dict = {}
+    props: dict = {"time": {"type": "string"}} if parts else {}
     if _picks_corner(register, kind, view):
         props["corner"] = {"type": "string", "enum": list(_corners(kit))}
     if kind == "frame" and _anchors(kit or {}, view):

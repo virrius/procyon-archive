@@ -199,16 +199,16 @@ REGISTERS: dict[str, dict] = {
                          "dust of the place worked into every fold"),
         # Не постапокалипсис и не руины Предтеч: это человеческое, брошенное
         # недавно по меркам мира и с тех пор не чиненное
-        "vocab": ("nothing here has been kept up for a long time and the frame says so first of "
+        "vocab": ("nothing here has been kept up for decades and the frame says so first of "
                   "all: panels hang from a single remaining fastening, cable looms pulled out of "
-                  "their trunking and left swinging, floors under fallen ceiling plate and drifted "
-                  "grit, hatches jammed part open, whatever was worth taking already cut out and "
-                  "carried off, the sockets it left standing empty. Surfaces carry the slow kinds "
-                  "of damage, and each place has its own mix: dust laid thick over everything "
-                  "horizontal, frost and ice where the air vented out, damp grime and mould where "
-                  "it stayed, scorch marks, cracked and clouded plastics, paint faded and lifting "
-                  "in sheets, dead screens and consoles gone dark, and only here and there a stain "
-                  "of corrosion. Light is what still leaks in — one failing source, a "
+                  "their trunking and left swinging, floors under fallen ceiling plate, debris and "
+                  "drifted grit, hatches jammed part open, whatever was worth taking already cut out "
+                  "and carried off, the sockets it left standing empty. Corrosion is the first thing "
+                  "the eye meets: metal rusted and scaling, rust running down in streaks and stains, "
+                  "paint blistered and peeling away in sheets. Beside it each place has its own mix "
+                  "of slower damage: dust laid thick over everything horizontal, damp grime where "
+                  "water collected, scorch marks, cracked and clouded plastics, dead screens and "
+                  "consoles gone dark. Light is what still leaks in — one failing source, a "
                   "beam through a breach, a hand lamp — and the rest of the frame keeps its dark. "
                   "Whatever the GM named is described in this state and by how it was made, and "
                   "the emptiness is itself part of the picture"),
@@ -461,7 +461,7 @@ REGISTERS: dict[str, dict] = {
 REGISTER_ORDER = ("derelict", "junk", "frontier", "hightech", "hegemony", "luxe", "precursor")
 # подсказка ГМу у кнопки регистра в мастерской
 REGISTER_HINTS = {
-    "derelict": "брошено и не чинено: пыль, иней, плесень, мёртвые пульты, вырванные жгуты, свет только сквозь пролом",
+    "derelict": "брошено давно и не чинено: ржавчина и коррозия, облезшая краска, потёки, обломки, мёртвые пульты, свет только сквозь пролом",
     "junk": "лом и ржавчина: груды хлама, разобранные корпуса, лачуги и лотки из листа, старьёвщики",
     "frontier": "люди здесь живут: отделка далёкого будущего в нейтральных тонах с тёплыми акцентами, вещи в деле, свои мелочи и зелень, износ от рук, не грязь",
     "hightech": "гильдии и центр: спроектировано и вылизано, скрытые стыки, хардлайт, ровный свет",
@@ -475,8 +475,8 @@ if EN:
                          "precursor": "Precursor ruins"}.items():
         REGISTERS[_key]["title"] = _title
     REGISTER_HINTS = {
-        "derelict": "abandoned and never repaired: dust, frost, mold, dead consoles, torn-out cable looms, "
-                    "light only through a breach",
+        "derelict": "long abandoned and never repaired: rust and corrosion, peeling paint, streaks, debris, "
+                    "dead consoles, light only through a breach",
         "junk": "scrap and rust: heaps of junk, gutted hulls, shacks and stalls of sheet metal, scavengers",
         "frontier": "people live here: far future fittings in neutral tones with warm accents, things in use, "
                     "personal belongings and greenery, wear from hands, not grime",

@@ -331,8 +331,8 @@ def draft_slots(camp: Campaign, kind: str, register: str, text: str,
     xeno = P().prose.cast_rule(who, sex, seed_key, text) if kind == "person" else P().prose.xeno_seed()
     people = people if kind != "person" else ""
     system = P().prose.system_prompt(doc, kit, kind, register, view, outfit, xeno, parts, people)
-    parsed = hub_call(camp, system, text, P().prose.schema(kind, view, kit, register, parts, people),
-                      max_tokens=3000)
+    parsed = P().prose.fold_time(hub_call(camp, system, text, P().prose.schema(kind, view, kit, register, parts,
+                                                                                people), max_tokens=3000))
     # руки в абзаце хаб мог выдумать: анатомию плеч код дописывает только по слову ГМа
     parsed["four_arms"] = P().prose.gm_four_arms(text)
     if people == "none":

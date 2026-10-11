@@ -13,10 +13,20 @@ export default function Campaigns() {
   const [list, loading, reload] = useAsync<Dict[]>(() => api.get('/api/campaigns'), [])
   const [pw, setPw] = useState(false)
   const [ren, setRen] = useState<Dict | null>(null)
+  const [name, setName] = useState('')
+  const [fail, setFail] = useState('')
 
   if (!store.token) { nav('/login'); return null }
 
   const pick = (id: string) => { store.campaign = id; store.viewAs = null; nav('/crew') }
+  const create = async () => {
+    if (!name.trim()) return
+    setFail('')
+    try {
+      await api.post('/api/campaigns', { name: name.trim() })
+      setName(''); reload(); reloadApp()
+    } catch (e: any) { setFail(e.message) }
+  }
 
   return (
     <div style={{ maxWidth: 720, margin: '40px auto', padding: 16 }} className="col">
@@ -41,6 +51,14 @@ export default function Campaigns() {
         {!loading && (list || []).length === 0 && (
           <div className="empty">{t('campaigns.empty')} {isAdmin ? t('campaigns.empty_admin') : t('campaigns.empty_player')}</div>
         )}
+        {isAdmin && (
+          <div className="row">
+            <input placeholder={t('admin:camps.new')} value={name} onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') create() }} />
+            <button disabled={!name.trim()} onClick={create}>{t('admin:camps.create')}</button>
+          </div>
+        )}
+        {fail && <div className="chip red">{fail}</div>}
       </div>
 
       <div className="row wrap">

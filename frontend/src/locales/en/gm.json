@@ -51,7 +51,7 @@
     "open": "open",
     "rename": "rename",
     "empty": "No campaigns.",
-    "empty_admin": "Create the first one in Admin space.",
+    "empty_admin": "Create the first one below.",
     "empty_player": "Ask your GM for access.",
     "change_password": "change my password",
     "logout": "sign out",
