@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import i18n, { LANG_TITLES, LANGS, locale, setLang, type Lang } from '../i18n'
+import i18n, { LANG_TITLES, LANGS, lang, locale, setLang, type Lang } from '../i18n'
 import { api, store, type Dict } from '../api'
 import { useApp, useAsync } from '../ctx'
 import { Chip } from '../ui'
 import AdminPrompts, { adminDirty } from '../components/AdminPrompts'
 import PasswordModal from '../components/PasswordModal'
+import { SetupLang } from './Campaigns'
 import { TransferBar, download, upload, useJob, type Job } from '../components/Transfer'
 import { SaveBar, type SavePhase } from '../components/SaveBar'
 import '../styles.nav.css'
@@ -277,13 +278,14 @@ function CampaignsAdmin() {
   const { t } = useTranslation('admin')
   const nav = useNavigate()
   const [name, setName] = useState('')
+  const [setup, setSetup] = useState<Lang>(lang())
   const [fail, setFail] = useState('')
 
   const create = async () => {
     if (!name.trim()) return
     setFail('')
     try {
-      await api.post('/api/campaigns', { name: name.trim() })
+      await api.post('/api/campaigns', { name: name.trim(), lang: setup })
       setName(''); reload(); reloadApp()
     } catch (e: any) { setFail(e.message) }
   }
@@ -311,6 +313,7 @@ function CampaignsAdmin() {
       <div className="row adm-camps-pad adm-camp-new">
         <input placeholder={t('camps.new')} value={name} onChange={e => setName(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') create() }} />
+        <SetupLang value={setup} onChange={setSetup} />
         <button disabled={!name.trim()} onClick={create}>{t('camps.create')}</button>
       </div>
       {fail && <div className="chip red">{fail}</div>}

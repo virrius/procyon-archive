@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -11,7 +13,7 @@ from ..book_defs import book
 from ..book_lore import seed_campaign
 from ..db import get_db
 from ..deps import current_user, gm_only, viewer
-from ..i18n import ctr, instance_lang, tr
+from ..i18n import instance_lang, tr
 from ..models import AuditLog, Campaign, CampaignMember, Entity, User
 from ..security import hash_password
 from ..visibility import Viewer
@@ -22,6 +24,8 @@ router = APIRouter(prefix="/api", tags=["campaigns"], responses=AUTH_ERRORS)
 class CampaignIn(BaseModel):
     name: str = Field(max_length=200, examples=["The Procyon Run"])
     description: str = ""
+    lang: Literal["ru", "en"] | None = Field(
+        default=None, description="Language of the starting materials: rulebook canon, sector map, ship. Empty = the instance language.")
 
 
 # --- vocabulary ---------------------------------------------------------------------------
@@ -129,12 +133,12 @@ def create_campaign(
     body: CampaignIn, user: User = Depends(current_user), db: Session = Depends(get_db)
 ):
     """Server admin only. The creator becomes its GM. The campaign starts with the
-    rulebook canon: factions, locations, the sector map with their markers, and an unnamed ship."""
+    rulebook canon: factions, locations, the sector map with their markers, and an unnamed ship — in `lang`.
+    Once created, the materials stay in that language."""
     if not user.is_admin:
         raise HTTPException(403, tr("campaigns.admin_creates"))
-    c = Campaign(
-        name=body.name, description=body.description, owner_id=user.id
-    )
+    lang = body.lang or instance_lang()
+    c = Campaign(name=body.name, description=body.description, owner_id=user.id, lang=lang)
     db.add(c)
     db.flush()
     db.add(
@@ -142,8 +146,8 @@ def create_campaign(
             campaign_id=c.id, user_id=user.id, role="gm", display_name=user.display_name
         )
     )
-    db.add(Entity(campaign_id=c.id, kind="ship", name=ctr("content.ship_unnamed")))
-    seed_campaign(db, c.id, instance_lang())
+    db.add(Entity(campaign_id=c.id, kind="ship", name=tr("content.ship_unnamed", lang=lang)))
+    seed_campaign(db, c.id, lang)
     db.commit()
     return {"id": c.id}
 

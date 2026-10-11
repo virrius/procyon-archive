@@ -13,8 +13,8 @@ from .. import history as journal
 from ..api_schema import AUTH_ERRORS, Ok, error_responses
 from ..db import get_db
 from ..deps import gm_only
-from ..i18n import ctr, instance_lang, tr
-from ..models import Attachment, ContentBlock
+from ..i18n import LANGS, ctr, instance_lang, tr
+from ..models import Attachment, Campaign, ContentBlock
 from ..visibility import Viewer
 from .files import drop_files
 
@@ -31,16 +31,22 @@ ATT, MEDIA = "att:", "media:"
 ASSETS = "/data/assets"
 
 
-def rules_dir(lang: str | None = None) -> str:
-    return "rules_en" if (lang or instance_lang()) == "en" else "rules"
+def rules_dir(lang: str) -> str:
+    return "rules_en" if lang == "en" else "rules"
 
 
-def book_index(lang: str | None = None) -> dict:
+def camp_lang(db: Session, v: Viewer) -> str:
+    """Книга кампании — на языке её материалов; у кампаний до выбора языка — язык экземпляра."""
+    lang = db.get(Campaign, v.campaign_id).lang
+    return lang if lang in LANGS else instance_lang()
+
+
+def book_index(lang: str) -> dict:
     with open(os.path.join(ASSETS, rules_dir(lang), "index.json"), encoding="utf-8") as fh:
         return json.load(fh)
 
 
-def page_ref(file: str, lang: str | None = None) -> str:
+def page_ref(file: str, lang: str) -> str:
     return f"{MEDIA}{rules_dir(lang)}/{file}"
 
 
@@ -167,9 +173,10 @@ def seed_from_book(db: Session, v: Viewer) -> None:
     мы не вмешиваемся: об этом помнит блок-отметка."""
     if blocks(db, v, SEED, ""):
         return
-    db.add(make(v, SEED, "", ctr("content.rules_seeded"), "", 0))
+    lang = camp_lang(db, v)
+    db.add(make(v, SEED, "", tr("content.rules_seeded", lang=lang), "", 0))
     try:
-        book = book_index()
+        book = book_index(lang)
     except (OSError, ValueError):
         return
     for i, sec in enumerate(book.get("sections", [])):
@@ -178,8 +185,8 @@ def seed_from_book(db: Session, v: Viewer) -> None:
         db.flush()
         for j, page in enumerate(sec.get("pages", [])):
             label = page.get("label", "")
-            db.add(make(v, SHOT, section.id, ctr("content.page", label=label) if label else "",
-                        page_ref(page.get("file", "")), j))
+            db.add(make(v, SHOT, section.id, tr("content.page", lang=lang, label=label) if label else "",
+                        page_ref(page.get("file", ""), lang), j))
 
 
 @router.get("/rules", summary="List rule sections with clippings", response_model=list[RulesSectionOut])
@@ -261,8 +268,9 @@ def reseed_rules(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
     """GM only. Re-adds the rulebook sections that are currently absent (matched by title) with
     their pages; sections the GM edited are left as they are. 404 when the book pages are not
     rendered on this server."""
+    lang = camp_lang(db, v)
     try:
-        book = book_index()
+        book = book_index(lang)
     except (OSError, ValueError):
         raise HTTPException(404, tr("rules.set_not_rendered")) from None
     have = {s.title for s in blocks(db, v, SECTION, "")}
@@ -277,8 +285,8 @@ def reseed_rules(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
         db.flush()
         for j, page in enumerate(sec.get("pages", [])):
             label = page.get("label", "")
-            db.add(make(v, SHOT, section.id, ctr("content.page", label=label) if label else "",
-                        page_ref(page.get("file", "")), j))
+            db.add(make(v, SHOT, section.id, tr("content.page", lang=lang, label=label) if label else "",
+                        page_ref(page.get("file", ""), lang), j))
         journal.log(db, v, "rules", "section-restore", target_id=section.id, title=title)
         back.append(title)
         order += 1
@@ -287,17 +295,18 @@ def reseed_rules(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
 
 
 @router.get("/rules/book", summary="List rendered rulebook pages", response_model=list[BookSectionOut])
-def list_rules_book_pages(v: Viewer = Depends(gm_only)):
+def list_rules_book_pages(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
     """GM only. The rulebook and playbook pages rendered on this server, grouped as in the book.
     Use `file` as `media` in `POST /rules/sections/{id}/items`. Empty list when nothing is rendered."""
+    lang = camp_lang(db, v)
     try:
-        book = book_index()
+        book = book_index(lang)
     except (OSError, ValueError):
         return []
     return [
         {"title": sec.get("title", ""),
          "pages": [{"file": p.get("file", ""), "label": p.get("label", ""),
-                    "src": page_src(page_ref(p.get("file", "")))}
+                    "src": page_src(page_ref(p.get("file", ""), lang))}
                    for p in sec.get("pages", [])]}
         for sec in book.get("sections", [])
     ]
@@ -322,9 +331,10 @@ def create_rules_item(section_id: str, body: ItemIn,
             content = f"{ATT}{a.id}"
         elif body.media:
             name = os.path.basename(body.media)
-            if not os.path.exists(os.path.join(ASSETS, rules_dir(), name)):
+            lang = camp_lang(db, v)
+            if not os.path.exists(os.path.join(ASSETS, rules_dir(lang), name)):
                 raise HTTPException(404, tr("rules.no_such_page"))
-            content = page_ref(name)
+            content = page_ref(name, lang)
         else:
             raise HTTPException(422, tr("rules.image_clip_source"))
     else:

@@ -77,6 +77,7 @@ _COLUMNS: list[tuple[str, str, str]] = [
     ("server_settings", "lang", "varchar(5) not null default ''"),
     ("users", "password_default", "boolean not null default false"),
     ("users", "token_version", "integer not null default 0"),
+    ("campaigns", "lang", "varchar(5) not null default ''"),
 ]
 
 # осевые шаблоны промптов заменены единым редактируемым мета-промптом (см. Campaign.img_meta_prompt)

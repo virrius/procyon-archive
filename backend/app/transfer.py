@@ -143,7 +143,7 @@ def dump(db, campaign_id: str, progress=None) -> dict:
     payload: dict = {
         "format": FORMAT,
         "exported_at": datetime.now(timezone.utc).isoformat(),
-        "lang": instance_lang(),
+        "lang": camp.lang or instance_lang(),
         "campaign": {k: v for k, v in _row(camp).items() if k not in HUB_COLUMNS},
     }
     for i, (name, model) in enumerate(TABLES):
@@ -292,6 +292,7 @@ def _import(job: dict) -> None:
                     job_row["status"] = "failed"
 
         camp = _typed(Campaign, src)
+        camp.setdefault("lang", payload.get("lang") if payload.get("lang") in ("ru", "en") else "")
         camp.update(owner_id=importer.id, created_at=datetime.now(timezone.utc), **{col: "" for col in HUB_COLUMNS})
         total = sum(len(payload.get(name, [])) for name, _m in TABLES)
         _set(job, stage="rows", done=0, total=total, name=src.get("name", ""))

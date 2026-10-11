@@ -60,6 +60,8 @@ class Campaign(Base, PK, Stamps):
     description: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(30), default="active")
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    # язык стартовых материалов: канон, карта, корабль, вырезки правил; заведённое так и остаётся
+    lang: Mapped[str] = mapped_column(String(5), default="")
     members: Mapped[list[CampaignMember]] = relationship(back_populates="campaign")
 
     # --- генерация картинок: редактируемые инструкции для LLM-хаба

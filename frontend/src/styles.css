@@ -567,3 +567,8 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
 .kit-slot code { color: var(--amber); }
 .kit-slot.off { opacity: .7; }
 .kit-slot-miss, .kit-slot.bad { color: var(--rust); }
+
+/* язык стартовых материалов кампании */
+.setup-lang { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+.setup-lang select { width: auto; text-transform: none; letter-spacing: 0; }
+.setup-row input { flex: 1 1 200px; min-width: 0; }

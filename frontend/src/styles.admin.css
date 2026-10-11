@@ -147,8 +147,9 @@ button.adm-unsaved-item {
 /* --- кампании --- */
 .adm-camps table { width: 100%; }
 .adm-camps-pad { padding: 12px 14px; }
-.adm-camp-acts { justify-content: flex-end; gap: 6px; }
-.adm-camp-new { border-top: 1px solid var(--line); max-width: 560px; }
+.adm-camp-acts { justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+.adm-camp-new { border-top: 1px solid var(--line); max-width: 680px; flex-wrap: wrap; }
+.adm-camp-new input { flex: 1 1 200px; min-width: 0; }
 .adm-import { border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .adm-import .row { gap: 12px; align-items: center; flex-wrap: wrap; }
 

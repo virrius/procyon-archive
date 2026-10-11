@@ -2,9 +2,23 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { api, store, type Dict } from '../api'
+import { LANG_TITLES, LANGS, lang, type Lang } from '../i18n'
 import { useApp, useAsync } from '../ctx'
 import { Chip, Input, Modal } from '../ui'
 import PasswordModal from '../components/PasswordModal'
+
+/** Язык стартовых материалов кампании: канон книги, карта, корабль. Заведённые так и остаются. */
+export function SetupLang({ value, onChange }: { value: Lang; onChange: (v: Lang) => void }) {
+  const { t } = useTranslation('admin')
+  return (
+    <label className="setup-lang">
+      <span>{t('camps.materials')}</span>
+      <select value={value} onChange={e => onChange(e.target.value as Lang)}>
+        {LANGS.map(l => <option key={l} value={l}>{LANG_TITLES[l]}</option>)}
+      </select>
+    </label>
+  )
+}
 
 export default function Campaigns() {
   const nav = useNavigate()
@@ -14,6 +28,7 @@ export default function Campaigns() {
   const [pw, setPw] = useState(false)
   const [ren, setRen] = useState<Dict | null>(null)
   const [name, setName] = useState('')
+  const [setup, setSetup] = useState<Lang>(lang())
   const [fail, setFail] = useState('')
 
   if (!store.token) { nav('/login'); return null }
@@ -23,7 +38,7 @@ export default function Campaigns() {
     if (!name.trim()) return
     setFail('')
     try {
-      await api.post('/api/campaigns', { name: name.trim() })
+      await api.post('/api/campaigns', { name: name.trim(), lang: setup })
       setName(''); reload(); reloadApp()
     } catch (e: any) { setFail(e.message) }
   }
@@ -51,9 +66,10 @@ export default function Campaigns() {
           <div className="empty">{t('campaigns.empty')} {isAdmin ? t('campaigns.empty_admin') : t('campaigns.empty_player')}</div>
         )}
         {isAdmin && (
-          <div className="row">
+          <div className="row wrap setup-row">
             <input placeholder={t('admin:camps.new')} value={name} onChange={e => setName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') create() }} />
+            <SetupLang value={setup} onChange={setSetup} />
             <button disabled={!name.trim()} onClick={create}>{t('admin:camps.create')}</button>
           </div>
         )}
