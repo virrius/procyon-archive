@@ -39,8 +39,8 @@ The interface starts in Russian. Press **Admin space**, open **Язык** and pi
 
 Then, in **Admin space**:
 
-1. **Campaigns**: press **new campaign** to start an empty one, with the sector's factions, places
-   and the Procyon map already in it.
+1. **Campaigns**: type a name into the **new campaign** field and press **Create**. The campaign starts
+   with the sector's factions, places and the Procyon map already in it.
 2. To look around a filled campaign first, press **import from archive** and pick
    `samples/demo-silence-over-brekk.zip` from the project folder.
 

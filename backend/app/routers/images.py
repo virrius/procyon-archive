@@ -725,6 +725,9 @@ def drop_self_negation(prompt: str, negative: str) -> str:
     return ", ".join(keep)
 
 
+PROMPT_MAX = 3200
+
+
 def check_prompt(prompt: str, negative: str) -> tuple[str, str]:
     prompt, negative = prompt.strip(), negative.strip()
     if not prompt:
@@ -744,14 +747,14 @@ def candidate_prompts(db: Session, v: Viewer, params: dict, prompt: str, n_image
     kit = campaign_kit(db.get(Campaign, v.campaign_id))
     out = P().prose.prompts(params["kind"], slots, params.get("view") or "interior", kit,
                         P().norm_register(params.get("register") or ""))
-    return [prompt] + [p[:2000] for p in out[1:n_images]]
+    return [prompt] + [p[:PROMPT_MAX] for p in out[1:n_images]]
 
 
 def build_job(db: Session, v: Viewer, body: ImageJobIn, entity_id: str | None, n_images: int) -> ImageGenJob:
     prompt, _ = check_prompt(body.prompt, "")
     if len(json.dumps(body.params)) > MAX_PARAMS_BYTES:
         raise HTTPException(400, tr("images.params_too_big"))
-    prompt = prompt[:2000]
+    prompt = prompt[:PROMPT_MAX]
     params = {**body.params, "prompts": candidate_prompts(db, v, body.params, prompt, n_images)}
     return ImageGenJob(
         campaign_id=v.campaign_id, entity_id=entity_id, prompt=prompt,
@@ -1402,7 +1405,7 @@ async def create_inpaint_job(
         campaign_id=v.campaign_id, kind="inpaint", params=params,
         # правка портрета остаётся при карточке: так её видно в аудите и уборке
         entity_id=entity_id,
-        source_attachment_id=src.id, prompt=prompt[:2000], negative_prompt=negative[:1000],
+        source_attachment_id=src.id, prompt=prompt[:PROMPT_MAX], negative_prompt=negative[:1000],
         # размер держим полный: кандидат вклеивается обратно в целый кадр, а окно
         # правки и галерея показывают пропорции исходника, а не куска
         width=width, height=height, crop_box=crop, n_images=CANDIDATES_PER_JOB,
@@ -1564,7 +1567,7 @@ def again_inpaint_job(
     params["hand"] = bool(params.get("hand")) or prompt != old.prompt
     job = ImageGenJob(
         campaign_id=old.campaign_id, kind="inpaint", entity_id=old.entity_id,
-        source_attachment_id=old.source_attachment_id, prompt=prompt[:2000],
+        source_attachment_id=old.source_attachment_id, prompt=prompt[:PROMPT_MAX],
         width=old.width, height=old.height, crop_box=old.crop_box,
         n_images=old.n_images, denoise=old.denoise, created_by=v.member_id, params=params,
     )
