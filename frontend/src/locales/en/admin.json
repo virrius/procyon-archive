@@ -48,7 +48,7 @@
     "create": "create",
     "delete": "delete",
     "delete_confirm": "This deletes “{{name}}” with everything in it and its files. It cannot be undone. Type the campaign name to confirm:",
-    "materials": "materials"
+    "materials": "presets"
   },
   "roles": {
     "gm": "GM",
@@ -90,7 +90,6 @@
       "views": "Frame subtypes",
       "registers": "Registers",
       "anchors": "Anchors",
-      "ages": "Age",
       "dispatch_journalists": "Journalists",
       "dispatch_lenses": "Dispatch angles",
       "comment_manners": "Comment manners",

@@ -19,5 +19,6 @@
     "object": "must be an object",
     "json": "not valid JSON",
     "invalid": "invalid value"
-  }
+  },
+  "too_long": "a value is too long"
 }

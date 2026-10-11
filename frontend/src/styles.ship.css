@@ -82,9 +82,6 @@ textarea.ss-blurb-in {
 .ss-strip-cell .ss-cap { padding-top: 0; white-space: nowrap; }
 
 .ss-size-sel { min-width: 150px; text-transform: none; }
-.ss-sizes { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.ss-size-wrap { display: inline-flex; align-items: center; gap: 4px; }
-.ss-dash { color: var(--dim2); font-size: 11px; }
 .ss-size {
   font-family: var(--util); font-size: 11.5px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--dim2); padding: 1px 3px;
@@ -140,7 +137,6 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
 .ss-sub { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 5px; }
 .ss-slots { font-family: var(--util); font-size: 11px; color: var(--dim2); }
 .ss-empty { color: var(--dim2); font-size: 12.5px; font-style: italic; }
-.ss-pre { white-space: pre-wrap; }
 
 /* --- деления показателя --- */
 .ss-pips { display: inline-flex; gap: 3px; flex-wrap: wrap; }
@@ -217,10 +213,6 @@ button.ss-tick.on:hover { background: #eab458; border-color: #eab458; }
   flex: none; font-family: var(--util); font-size: 10.5px;
   color: var(--amber); border: 1px solid var(--amber-dim); padding: 0 4px;
 }
-.ss-stock {
-  flex: none; font-family: var(--util); font-size: 9.5px;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--dim2);
-}
 
 /* --- изображение корабля --- */
 .ss-shot-img {
@@ -279,11 +271,6 @@ button.ss-sq.on.rust:hover { background: #d06a49; border-color: #d06a49; }
 .ss-contact-hd .ss-nm { min-width: 0; }
 a.ss-nm:hover { color: var(--amber); }
 .ss-role { font-size: 11.5px; color: var(--dim2); overflow-wrap: break-word; }
-.ss-book {
-  font-family: var(--util); font-size: 9.5px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--dim2); border: 1px solid var(--line2); padding: 0 4px;
-}
-.ss-book-hint { margin-top: 7px; border-top: 1px solid var(--line); padding-top: 5px; }
 .ss-flag {
   flex: none; font-family: var(--util); font-size: 10.5px; letter-spacing: .06em;
   text-transform: uppercase; padding: 1px 7px;
@@ -299,15 +286,6 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 .ss-npc-hd .ss-cap { flex: 1; padding-top: 0; }
 .ss-npc-pick { padding: 0 6px 6px; }
 .ss-npc-pick input { font-size: 13px; padding: 5px 8px; }
-
-/* --- тайна корабля --- */
-.ss-gm { border-color: #5c3327; }
-.ss-gm .ss-p-hd { background: #241612; border-bottom-color: #5c3327; }
-.ss-tag {
-  font-family: var(--util); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--rust); border: 1px solid var(--rust); padding: 0 5px;
-}
-.ss-gm textarea { min-height: 70px; }
 
 /* --- конструктор бланка (модалка ГМа) --- */
 .sb { display: flex; flex-direction: column; gap: 8px; }
@@ -399,8 +377,6 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-strip-cell {
     flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 8px;
   }
-  .ss-sizes { gap: 4px; }
-  .ss-size-wrap .ss-dash { display: none; }
   button.ss-size { padding: 3px 7px; font-size: 10.5px; }
   .ss-size { font-size: 11px; }
 
@@ -410,7 +386,6 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-p-hd .ss-meter { flex: 1 0 100%; order: 5; }
   .ss-dmg { padding: 4px 7px; gap: 4px 6px; }
   .ss-p-b { padding: 6px 7px; }
-  .ss-kits { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .ss-eff { margin-left: auto; font-size: 10px; }
   .ss-slots { font-size: 10px; }
 
@@ -436,7 +411,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-sqs { gap: 5px; }
   .ss-shot-img { max-height: 200px; }
   .ss-contact { padding: 5px 0; }
-  .ss-role, .ss-book, .ss-flag { font-size: 10px; }
+  .ss-role, .ss-flag { font-size: 10px; }
   .ss-npc-pick .lnk-hits { max-height: 55vh; }
 
   /* конструктор ГМа: строки в столбик, поля во всю ширину */

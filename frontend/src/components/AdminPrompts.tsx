@@ -32,7 +32,6 @@ const SECTION_TITLES: Dict = {
   views: 'prompts.sec.views',
   registers: 'prompts.sec.registers',
   anchors: 'prompts.sec.anchors',
-  ages: 'prompts.sec.ages',
   dispatch_journalists: 'prompts.sec.dispatch_journalists',
   dispatch_lenses: 'prompts.sec.dispatch_lenses',
   comment_manners: 'prompts.sec.comment_manners',

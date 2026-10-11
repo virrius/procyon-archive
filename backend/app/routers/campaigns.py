@@ -17,6 +17,7 @@ from ..i18n import instance_lang, tr
 from ..models import AuditLog, Campaign, CampaignMember, Entity, User
 from ..security import hash_password
 from ..visibility import Viewer
+from .rules import seed_rules
 
 router = APIRouter(prefix="/api", tags=["campaigns"], responses=AUTH_ERRORS)
 
@@ -141,13 +142,12 @@ def create_campaign(
     c = Campaign(name=body.name, description=body.description, owner_id=user.id, lang=lang)
     db.add(c)
     db.flush()
-    db.add(
-        CampaignMember(
-            campaign_id=c.id, user_id=user.id, role="gm", display_name=user.display_name
-        )
-    )
+    gm = CampaignMember(campaign_id=c.id, user_id=user.id, role="gm", display_name=user.display_name)
+    db.add(gm)
+    db.flush()
     db.add(Entity(campaign_id=c.id, kind="ship", name=tr("content.ship_unnamed", lang=lang)))
     seed_campaign(db, c.id, lang)
+    seed_rules(db, c.id, gm.id, lang)
     db.commit()
     return {"id": c.id}
 

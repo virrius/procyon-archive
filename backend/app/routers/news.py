@@ -19,7 +19,7 @@ from .. import history as journal
 from ..api_schema import AUTH_ERRORS, VISIBLE_TO_DOC, Ok, Visibility, default_visibility, error_responses, vis_field
 from ..db import SessionLocal, get_db
 from ..deps import gm_only, viewer
-from ..i18n import ctr, tr
+from ..i18n import campaign_lang, ctr, reset_campaign, tr, use_campaign
 from ..models import Campaign, Clock, Entity, News, NewsJob
 from ..langpack import prompting as P
 from ..visibility import Viewer, apply_scope, can_see
@@ -233,11 +233,12 @@ def _bylines(db: Session, campaign_id: str) -> dict[str, str]:
     return {k: P().dispatch.byline(j, k) for k, j in P().dispatch.journalists_of(kit).items()}
 
 
-def _expire(db: Session, jobs: list[NewsJob]) -> None:
-    now = datetime.now(timezone.utc)
-    hung = [j for j in jobs if j.status == "pending" and now - j.updated_at > STALE]
+def fail_stale_jobs(db: Session) -> None:
+    """Задание, которое пишется дольше STALE, уже не допишется: процесс перезапускали или хаб молчит."""
+    cutoff = datetime.now(timezone.utc) - STALE
+    hung = db.query(NewsJob).filter(NewsJob.status == "pending", NewsJob.updated_at < cutoff).all()
     for j in hung:
-        j.status, j.error = "failed", ctr("content.news_silent")
+        j.status, j.error = "failed", tr("content.news_silent", lang=campaign_lang(j.campaign_id))
     if hung:
         db.commit()
 
@@ -287,10 +288,12 @@ def _settle(db: Session, job: NewsJob) -> bool:
 def run_job(job_id: str) -> None:
     """Фоновое написание депеш: своя сессия, итог — в самом задании."""
     db = SessionLocal()
+    lang = None
     try:
         job = db.get(NewsJob, job_id)
         if not job or job.status != "pending":
             return
+        lang = use_campaign(job.campaign_id)
         try:
             out = write_drafts(db, job.campaign_id, DraftIn(
                 gm_text=job.gm_text, entity_ids=job.entity_ids or [], clock_ids=job.clock_ids or [],
@@ -305,15 +308,16 @@ def run_job(job_id: str) -> None:
             job.status, job.error = "failed", ctr("content.news_failed")
         db.commit()
     finally:
+        if lang is not None:
+            reset_campaign(lang)
         db.close()
 
 
 @router.get("/news/jobs", summary="List journalist jobs", response_model=list[NewsJobOut])
 def list_news_jobs(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
-    """GM only. All jobs, newest first. Jobs stuck `pending` for over 10 minutes are marked `failed` here."""
+    """GM only. All jobs, newest first. A job stuck `pending` for over 10 minutes turns `failed`."""
     jobs = (db.query(NewsJob).filter(NewsJob.campaign_id == v.campaign_id)
             .order_by(NewsJob.created_at.desc()).all())
-    _expire(db, jobs)
     links, bylines = _links(db, v, jobs), _bylines(db, v.campaign_id)
     return [_job_out(j, links[j.id], bylines) for j in jobs]
 
@@ -322,7 +326,6 @@ def list_news_jobs(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
 def news_jobs_summary(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
     """GM only. How many jobs are being written, how many drafts wait, how many failed — for a menu badge."""
     jobs = db.query(NewsJob).filter(NewsJob.campaign_id == v.campaign_id).all()
-    _expire(db, jobs)
     return {"pending": sum(j.status == "pending" for j in jobs),
             "drafts": sum(len(_live(j)) for j in jobs if j.status == "ready"),
             "failed": sum(j.status == "failed" for j in jobs)}
@@ -359,9 +362,7 @@ def order_news_job(body: NewsJobIn, tasks: BackgroundTasks, v: Viewer = Depends(
 @router.get("/news/jobs/{job_id}", summary="Get a job and its drafts", response_model=NewsJobOut)
 def get_news_job(job_id: str, v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
     """GM only. 404 once the job is closed (all drafts aired or dropped) or dropped."""
-    job = _job(db, v, job_id)
-    _expire(db, [job])
-    return _one_job(db, v, job)
+    return _one_job(db, v, _job(db, v, job_id))
 
 
 @router.patch("/news/jobs/{job_id}/drafts/{i}", summary="Edit a draft", response_model=NewsJobOut)

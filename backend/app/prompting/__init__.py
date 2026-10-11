@@ -1,71 +1,28 @@
-"""Промптинг: из описания ГМа в промпт рисующей модели.
+"""Промптинг: из описания ГМа в промпт рисующей модели и в депеши.
 
-Разделение модулей повторяет разделение ответственности:
-
-* ``lore``   — мир и работа с описанием ГМа; от рисующей модели не зависит;
-* ``schema`` — форма ответа хаба (слоты), контракт между Квеном и сборкой;
-* ``kit``    — дефолты плюс правки ГМа, сборка инструкции для хаба;
-* ``zimage`` — рендерер Z-Image-Turbo: строка тегов без весов и без негатива.
+* ``lore``     — мир для рисующей стороны: подтипы кадра, регистры, якоря, подмена земных слов;
+* ``prose``    — инструкция хабу и сборка строки промпта из его частей;
+* ``inpaint``  — инструкция правки области;
+* ``kit``      — дефолты плюс правки админа;
+* ``dispatch`` — депеши журналистов и отклики.
 """
 from __future__ import annotations
 
-from . import zimage
-from .kit import (
-    KIT_SECTIONS,
-    NEWS_SECTIONS,
-    WARDROBE_SLOTS,
-    apply_outfit,
-    default_kit,
-    kit_head_block,
-    kit_system_prompt,
-    merge_kit,
-    put_view,
-)
-from .lore import (
-    AGE_BANDS,
-    ARENAS,
-    EARTH_WORDS,
-    FRAME_ANCHORS,
-    KINDS,
-    PERSON_ROLES,
-    REGISTER_ORDER,
-    norm_register,
-    swap_earth_words,
-    VIEW_ORDER,
-    VIEWS,
-)
-from .schema import (
-    DEFAULT_INPAINT_META_PROMPT,
-    INPAINT_PROMPT_SCHEMA,
-    slots_schema,
-)
-from .zimage import build_prompt, instruction_addendum
+from .inpaint import DEFAULT_INPAINT_META_PROMPT, INPAINT_PROMPT_SCHEMA
+from .kit import KIT_SECTIONS, NEWS_SECTIONS, WARDROBE_SLOTS, default_kit, merge_kit
+from .lore import FRAME_ANCHORS, KINDS, VIEWS, norm_register, swap_earth_words
 
 __all__ = [
-    "AGE_BANDS",
-    "ARENAS",
     "DEFAULT_INPAINT_META_PROMPT",
-    "EARTH_WORDS",
     "FRAME_ANCHORS",
     "INPAINT_PROMPT_SCHEMA",
     "KINDS",
     "KIT_SECTIONS",
     "NEWS_SECTIONS",
-    "PERSON_ROLES",
-    "REGISTER_ORDER",
-    "norm_register",
     "VIEWS",
-    "VIEW_ORDER",
     "WARDROBE_SLOTS",
-    "apply_outfit",
-    "build_prompt",
     "default_kit",
-    "instruction_addendum",
-    "kit_head_block",
-    "kit_system_prompt",
     "merge_kit",
-    "put_view",
-    "slots_schema",
+    "norm_register",
     "swap_earth_words",
-    "zimage",
 ]

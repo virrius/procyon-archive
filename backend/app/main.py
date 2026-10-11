@@ -1,8 +1,11 @@
+import re
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
+from psycopg.errors import StringDataRightTruncation
 from sqlalchemy.exc import DataError
 
 from .api_schema import API_DESCRIPTION, API_TITLE, API_VERSION, TAGS, error_responses
@@ -57,12 +60,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+CAMPAIGN_PATH = re.compile(r"^/api/campaigns/([0-9a-f-]{36})(?:/|$)")
+
+
 @app.middleware("http")
 async def request_lang(request: Request, call_next):
+    """Язык ответа — читателя; язык того, что ляжет в кампанию, — самой кампании."""
     token = i18n.use(i18n.pick(request.headers.get("accept-language")))
+    hit = CAMPAIGN_PATH.match(request.url.path)
+    camp = i18n.use_campaign(hit.group(1) if hit else None)
     try:
         return await call_next(request)
     finally:
+        i18n.reset_campaign(camp)
         i18n.reset(token)
 
 
@@ -107,7 +117,10 @@ async def validation_error(request: Request, exc: RequestValidationError):
 
 @app.exception_handler(DataError)
 async def data_error(request: Request, exc: DataError):
-    """Id не того вида (не UUID) — такой строки нет. Сессию закрывает get_db, транзакция откатывается."""
+    """Слишком длинное значение — ошибка запроса; id не того вида (не UUID) — такой строки нет.
+    Сессию закрывает get_db, транзакция откатывается."""
+    if isinstance(exc.orig, StringDataRightTruncation):
+        return JSONResponse(status_code=400, content={"detail": i18n.tr("errors.too_long")})
     return JSONResponse(status_code=404, content={"detail": i18n.tr("errors.not_found")})
 
 
@@ -123,7 +136,7 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     patch_schema()
     ensure_admin()
-    images.start_hub_draw()
+    images.start_background()
 
 
 @app.get("/api/health", tags=["system"], summary="Liveness check", response_model=dict[str, bool])

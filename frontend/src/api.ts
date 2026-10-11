@@ -42,7 +42,7 @@ export class ApiError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status }
 }
 
-async function request(method: string, path: string, body?: any, raw = false): Promise<any> {
+async function request(method: string, path: string, body?: any): Promise<any> {
   const headers: Dict = { 'Accept-Language': lang() }
   if (store.token) headers['Authorization'] = `Bearer ${store.token}`
   if (store.viewAs) headers['X-View-As'] = store.viewAs
@@ -57,7 +57,6 @@ async function request(method: string, path: string, body?: any, raw = false): P
     try { const j = await res.json(); msg = j.detail || msg } catch { /* noop */ }
     throw new ApiError(res.status, typeof msg === 'string' ? msg : JSON.stringify(msg))
   }
-  if (raw) return res
   if (res.status === 204) return null
   return res.json()
 }
@@ -68,7 +67,6 @@ export const api = {
   patch: (p: string, b?: any) => request('PATCH', p, b),
   put: (p: string, b?: any) => request('PUT', p, b),
   del: (p: string) => request('DELETE', p),
-  raw: (p: string) => request('GET', p, undefined, true),
 }
 
 export const c = () => `/api/campaigns/${store.campaign}`

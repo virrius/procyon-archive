@@ -58,13 +58,10 @@ def nearest_size(width: int, height: int) -> str:
     return min(OPENAI_SIZES, key=lambda s: abs(math.log(int(s.split("x")[0]) / int(s.split("x")[1])) - want))
 
 
-def can_edit(kind: str, base_url: str) -> bool:
+def can_edit(base_url: str) -> bool:
     """Умеет ли настроенный сервис править область: только стандартный протокол."""
     base = base_url.rstrip("/")
-    if base in NO_EDITS:
-        return False
-    proto = kind if kind in ("openai", "async") else PROTOCOLS.get(base, "openai")
-    return proto == "openai"
+    return base not in NO_EDITS and PROTOCOLS.get(base, "openai") == "openai"
 
 
 def brief(exc: Exception) -> str:
@@ -88,22 +85,20 @@ def _detail(r: httpx.Response) -> str:
         return r.text[:300]
 
 
-def draw(kind: str, base_url: str, api_key: str, model: str, prompts: list[str],
+def draw(base_url: str, api_key: str, model: str, prompts: list[str],
          width: int, height: int, seed: int, alive=lambda: True, on_image=lambda png: None) -> int:
     """По PNG на строку prompts, подогнанному под width×height кадрированием; каждый
     готовый сразу уходит в on_image. alive — жива ли заявка: отменённую не дожидаемся.
     Возвращает, сколько картинок отдано."""
     base = base_url.rstrip("/")
-    proto = kind if kind in ("openai", "async") else PROTOCOLS.get(base, "openai")
     args = (base, api_key, model, prompts, width, height, seed, alive, on_image)
-    if proto == "openai":
+    if PROTOCOLS.get(base, "openai") == "openai":
         try:
             done = draw_openai(*args)
             PROTOCOLS[base] = "openai"
             return done
         except NoEndpoint:
-            if kind == "openai":
-                raise
+            pass
     PROTOCOLS[base] = "async"
     return draw_async(*args)
 
@@ -145,13 +140,13 @@ def _openai_image(r: httpx.Response) -> bytes:
     raise HubDrawError(ctr("content.draw_no_image"))
 
 
-def edit(kind: str, base_url: str, api_key: str, model: str, prompt: str,
+def edit(base_url: str, api_key: str, model: str, prompt: str,
          source_png: bytes, mask_png: bytes, count: int,
          alive=lambda: True, on_image=lambda png: None) -> int:
     """count вариантов правки области source_png по маске (белое — перерисовать), каждый
     подогнан под размер исходника и сразу уходит в on_image. Возвращает, сколько отдано."""
     base = base_url.rstrip("/")
-    if not can_edit(kind, base):
+    if not can_edit(base):
         raise NoEditing(ctr("content.edit_unsupported"))
     with Image.open(io.BytesIO(source_png)) as im:
         width, height = im.size

@@ -88,10 +88,6 @@
   font-family: var(--util); font-size: 10.5px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--dim2);
 }
-.mp-side-title {
-  font-size: 14px; font-weight: 600; min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
 .mp-side-body {
   flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   padding: 10px; scrollbar-width: thin; scrollbar-color: var(--line2) transparent;

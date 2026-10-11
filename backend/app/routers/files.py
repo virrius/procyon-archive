@@ -69,7 +69,7 @@ def attachment_item(a: Attachment, v: Viewer) -> dict:
 
 
 @router.post("/upload", summary="Upload a file", response_model=AttachmentOut,
-             responses=error_responses(413, 415))
+             responses=error_responses(403, 413, 415))
 async def upload(
     file: UploadFile = File(..., description="png, jpeg, webp, gif, svg, pdf, mp3, ogg, wav or txt; 25 MB max."),
     target_type: TargetType | None = Form(default=None, description="What the file hangs on; omit for a loose file."),
@@ -77,8 +77,8 @@ async def upload(
     caption: str = Form(default=""),
     visibility: Visibility | None = Form(default=None, description=(
         "Omitted → `crew`: unlike other rows, a file follows its parent — one on a hidden card or an "
-        "undelivered message stays hidden with it. Send `gm` to hide the file itself. A player's `gm` "
-        "becomes `crew`; board uploads are always `gm`.")),
+        "undelivered message stays hidden with it. Send `gm` to hide the file itself (GM only, 403 for a "
+        "player); board uploads are always `gm`.")),
     v: Viewer = Depends(editor),
     db: Session = Depends(get_db),
 ):
@@ -93,7 +93,7 @@ async def upload(
     # а интерфейс грузит портреты и фоны карт без видимости — умолчание `crew`, как было
     visibility = visibility or "crew"
     if not v.is_gm and visibility == "gm":
-        visibility = "crew"
+        raise HTTPException(403, tr("entities.player_no_gm_vis"))
     if target_type in BOARD_TARGETS:
         visibility = "gm"
     folder = os.path.join(settings.upload_dir, v.campaign_id)

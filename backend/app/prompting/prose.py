@@ -1,14 +1,14 @@
-"""Сборка промпта прозой: хаб пишет один абзац видимого, код ставит стиль, рамку и якорь.
+"""Сборка промпта прозой: хаб пишет части видимого, код склеивает их и ставит стиль, рамку и якорь.
 
 Z-Image читает текст энкодером Qwen3-4B, обученным на подписях-абзацах, а не на
 тегах. Стенд `train/bench/light` (10.10.2026, 19 кейсов × 2 сида) показал: короткая
-инструкция на ~3 тыс. знаков и абзац на 120–190 слов держат сеттинг не хуже
+инструкция на ~3 тыс. знаков и абзац на 90–150 слов держат сеттинг не хуже
 прежних 15 слотов по инструкции в 10–13 тыс. знаков, а текст ГМа — точнее.
 
 Что держит код, а не хаб:
 - голова стиля и рамка кадра — постоянны для направления;
 - якорь класса у кадра: хаб выбирает пункт из закрытого списка, фраза встаёт первой;
-- подмена земных слов (`wooden` → `riveted sheet`) — та же, что у тегов;
+- подмена земных слов (`suit`, `bike`, `alien`);
 - регистр — словарь места и людей, дописанный к инструкции; он перебивает общий мир.
 """
 from __future__ import annotations
@@ -16,6 +16,7 @@ from __future__ import annotations
 import random
 import re
 
+from ..translit import translit
 from .lore import EN, FRAME_ANCHORS, OTHER, REGISTERS, VIEW_LAWS, swap_earth_words
 
 _TASK = {
@@ -160,21 +161,10 @@ XENO_HUES = ("ochre", "rust red", "olive green", "deep blue", "violet", "teal", 
              "coal black", "mottled orange and brown", "pale pink", "moss green with dark spots",
              "striped grey and white", "copper", "bone white with blue veins")
 
-# парящий транспорт хаб зовёт каждый раз по-новому (skiff, frame, cycle), а модель
-# на любое «hover-существительное» с наездником дорисовывает колёса
-# Z-Image-Turbo почти не меняет кадр от сида к сиду: разных кандидатов дают только
-# разные абзацы. Хаб пишет их в том же вызове — те же факты, другой взгляд
-VARIANTS = 3
-VARIANTS_RULE = (f"Then write {VARIANTS} more paragraphs (variants) of the same picture by the same rules: the same "
-                 "subject, everything the GM named, the same clothing and the same place, but each one a "
-                 "different take — another moment or pose, seen from another side, higher or lower, another "
-                 "time of day and another light source. The variants differ from the paragraph and from each "
-                 "other. Each variant is read alone, never next to the paragraph: it is complete and as long, and "
-                 "describes in full again the body, the clothing and the place. A person or a creature is never seen from behind: the face stays visible.")
-
 # Сборка частями: хаб пишет именованные части, код склеивает их в абзац в постоянном
-# порядке. Общие части одни на все дубли — персонаж один, разные только кадры
-TAKES = 4
+# порядке. Общие части одни на все дубли — персонаж один, разные только кадры.
+# Z-Image-Turbo почти не меняет кадр от сида к сиду: разных кандидатов дают только
+# разные дубли, поэтому их столько же, сколько кандидатов в заявке
 PARTS = {
     "person": (("look", 0), ("face", 1), ("outfit", 0), ("pose", 1), ("place", 0), ("light", 1)),
     "frame": (("subject", 0), ("people", 0), ("place", 0), ("angle", 1), ("light", 1)),
@@ -215,19 +205,19 @@ def own_parts(kind: str, people: str = "") -> list[tuple[str, int]]:
     return [(k, t) for k, t in PARTS[kind] if not (k == "people" and people == "none")]
 
 
-def part_rule(kind: str, people: str = "") -> str:
+def part_rule(kind: str, people: str = "", takes: int = 4) -> str:
     parts = own_parts(kind, people)
     rule = {**PART_RULES, "subject": ACTION_SUBJECT} if kind == "action" else PART_RULES
     shared = "; ".join(f"{k} — {rule[k]}" for k, t in [("time", 0), *parts] if not t)
     take = "; ".join(f"{k} — {rule[k]}" for k, t in parts if t)
     order = ", ".join(k for k, _ in parts)
+    many = (f"Then {takes} takes of the same picture, each with: {take}. The takes differ from each other: "
+            f"another moment, side, height and light, while a time of day the GM named stays the same in all "
+            f"of them." if takes > 1 else f"Then one take of the picture with: {take}.")
     return (f"Write the picture as named parts, never as one paragraph: the code joins them in a fixed order — "
             f"{order} — into the paragraph the painter reads, so each part is plain visible description in full "
             f"sentences that reads on from the part before, and no part repeats another. Written once for the "
-            f"whole picture: {shared}. Then {TAKES} takes of the same picture, each with: {take}. The takes "
-            f"differ from each other: another moment, side, height and light, while a time of day the GM named "
-            f"stays the same in all of them. One take with the parts written "
-            f"once runs 90 to 150 words.")
+            f"whole picture: {shared}. {many} One take with the parts written once runs 90 to 150 words.")
 
 
 def xeno_look(rng: random.Random) -> str:
@@ -291,9 +281,6 @@ def picture_of(kind: str, slots: dict, take: int = 0) -> str:
     return " ".join(x for x in parts if x)
 
 
-HOVER = re.compile(r"(?<![\w-])hover(?:-[a-z]+?|[ ]?(?:bike|frame|cycle|skiff|skid|sled|vehicle|craft|car|board|platform))(s?)(?![\w-])",
-                   re.I)
-
 # планету с орбиты модель тянет к Земле, а при cfg 1 «no oceans or continents»
 # вносит в кадр именно океаны и материки: такие фразы выкидываются целиком
 PLANET_DENIAL = re.compile(r"\b(?:no|not|without|devoid|lacking|absent)\b[^.]*"
@@ -347,7 +334,7 @@ def gm_four_arms(text: str) -> bool:
 
 
 def system_prompt(doc: str, kit: dict, kind: str, register: str, view: str = "interior",
-                  outfit: dict | None = None, xeno: str = "", parts: bool = True, people: str = "") -> str:
+                  outfit: dict | None = None, xeno: str = "", people: str = "", takes: int = 4) -> str:
     """Инструкция ГМа плюс то, что задают развилки окна: закон подтипа, регистр, якоря, наряд."""
     law = ((kit.get("views") or {}).get(view) or {}).get("law") or VIEW_LAWS.get(view, "")
     if view == "ship":
@@ -371,23 +358,16 @@ def system_prompt(doc: str, kit: dict, kind: str, register: str, view: str = "in
         listed = "; ".join(f"{k} = {v}" for k, v in _anchors(kit, view).items() if v)
         lines.append("Also pick the class of the thing (anchor) from the fixed list — " + listed
                      + ". The nearest entry wins; " + OTHER + " only when nothing is close.")
-    if kind == "person":
-        if outfit and (outfit.get("wear") or outfit.get("gear")):
-            fixed = []
-            if outfit.get("wear"):
-                fixed.append("They wear exactly: " + "; ".join(outfit["wear"]) + ".")
-            if outfit.get("gear"):
-                fixed.append("They carry: " + "; ".join(outfit["gear"]) + ".")
-            lines.append("THEIR CLOTHING IS FIXED. " + " ".join(fixed)
-                         + " Describe these as they are, and list them as wear and gear.")
-        else:
-            lines.append("Also list what the picture puts on them (wear) and what they carry (gear), "
-                         "each as a short phrase.")
-    if xeno and kind != "frame":
+    if kind == "person" and (outfit or {}).get("wear"):
+        lines.append("THEIR CLOTHING IS FIXED: " + "; ".join(outfit["wear"]) + ". The code writes the outfit "
+                     "part from this list word for word: leave that part empty and describe no other clothing.")
+    elif kind == "person":
+        lines.append("Also list what the picture puts on them (wear), each garment as a short phrase.")
+    if xeno:
         lines.append(xeno)
     if people == "none" and kind != "person":
         lines.append(NOBODY)
-    lines.append(part_rule(kind, people) if parts else VARIANTS_RULE)
+    lines.append(part_rule(kind, people, takes))
     return "\n\n".join(lines)
 
 
@@ -397,42 +377,33 @@ def _picks_corner(register: str, kind: str, view: str) -> bool:
 
 
 def schema(kind: str, view: str = "interior", kit: dict | None = None, register: str = "",
-           parts: bool = True, people: str = "") -> dict:
-    props: dict = {"time": {"type": "string"}} if parts else {}
+           people: str = "", takes: int = 4, wear: bool = True) -> dict:
+    props: dict = {"time": {"type": "string"}}
     if _picks_corner(register, kind, view):
         props["corner"] = {"type": "string", "enum": list(_corners(kit))}
     if kind == "frame" and _anchors(kit or {}, view):
         props["anchor"] = {"type": "string", "enum": list(_anchors(kit or {}, view))}
-    if parts:
-        own = own_parts(kind, people)
-        for k, t in own:
-            if not t:
-                props[k] = {"type": "string"}
-        take = {k: {"type": "string"} for k, t in own if t}
-        props["takes"] = {"type": "array", "minItems": TAKES, "maxItems": TAKES, "items": {
-            "type": "object", "properties": take, "required": list(take), "additionalProperties": False}}
-    else:
-        props["picture"] = {"type": "string"}
-    if kind == "person":
-        arr = {"type": "array", "items": {"type": "string"}}
-        props["wear"] = arr
-        props["gear"] = arr
-    if not parts:
-        props["variants"] = {"type": "array", "items": {"type": "string"}, "minItems": VARIANTS,
-                             "maxItems": VARIANTS}
+    own = own_parts(kind, people)
+    for k, t in own:
+        if not t:
+            props[k] = {"type": "string"}
+    take = {k: {"type": "string"} for k, t in own if t}
+    props["takes"] = {"type": "array", "minItems": takes, "maxItems": takes, "items": {
+        "type": "object", "properties": take, "required": list(take), "additionalProperties": False}}
+    if kind == "person" and wear:
+        props["wear"] = {"type": "array", "items": {"type": "string"}}
     return {"type": "json_schema", "json_schema": {"name": "Picture", "strict": True, "schema": {
         "type": "object", "properties": props, "required": list(props), "additionalProperties": False}}}
 
 
 def build(kind: str, slots: dict, view: str = "interior", kit: dict | None = None, register: str = "",
           take: int = 0) -> str:
-    """Облик угла, рамка, якорь класса, абзац хаба с подменой земных слов, стиль ещё раз."""
+    """Облик угла, рамка, якорь класса, абзац хаба с подменой земных слов, стиль ещё раз.
+    Кириллицу, если хаб перенёс слово ГМа как есть, модель не читает — она уходит латиницей."""
     key = view if kind == "frame" else kind
     planet = kind == "frame" and view == "planet"
     style = STYLE if planet else _look(kit, register or str(slots.get("corner", "")))
-    text = picture_of(kind, slots, take) if "takes" in slots else str(slots.get("picture", "")).strip()
-    picture = HOVER.sub(lambda m: "hovering jet-sled" + m.group(1), text)
-    picture = swap_earth_words(picture, "frame" if kind == "frame" else kind, dedup=False)
+    picture = swap_earth_words(translit(picture_of(kind, slots, take)), "frame" if kind == "frame" else kind)
     anchor = _anchors(kit or {}, view).get(str(slots.get("anchor", ""))) if kind == "frame" else ""
     lead = f"The subject is a {anchor}. " if anchor else ""
     if planet:
@@ -444,11 +415,5 @@ def build(kind: str, slots: dict, view: str = "interior", kit: dict | None = Non
 
 def prompts(kind: str, slots: dict, view: str = "interior", kit: dict | None = None,
             register: str = "") -> list[str]:
-    """Строка на каждого кандидата: абзац хаба, затем его варианты той же сборкой."""
-    if "takes" in slots:
-        return [build(kind, slots, view, kit, register, i) for i in range(len(slots["takes"] or [{}]))]
-    out = [build(kind, slots, view, kit, register)]
-    for variant in slots.get("variants") or []:
-        if str(variant).strip():
-            out.append(build(kind, {**slots, "picture": variant}, view, kit, register))
-    return out
+    """Строка на каждый дубль хаба."""
+    return [build(kind, slots, view, kit, register, i) for i in range(len(slots.get("takes") or [{}]))]

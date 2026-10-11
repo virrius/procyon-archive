@@ -6,7 +6,7 @@
 
 Загрузка заводит новую кампанию: все id переписываются на свежие (архив можно залить
 дважды и на тот же сервер), участники остаются только те, чьи учётки есть на этом
-сервере, загрузивший становится ГМом. Канон книги переводится на язык экземпляра.
+сервере, загрузивший становится ГМом. Содержимое остаётся таким, каким было в архиве.
 """
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from sqlalchemy import DateTime, insert
 from .config import settings
 from .db import SessionLocal
 from .i18n import instance_lang
+from .translit import slugify
 from .models import (
     Attachment,
     Board,
@@ -45,7 +46,6 @@ from .models import (
     Message,
     News,
     NewsJob,
-    Note,
     User,
 )
 from .visibility import ANY_PLAYER
@@ -64,7 +64,6 @@ TABLES = [
     ("map_nodes", MapNode),
     ("map_markers", MapMarker),
     ("map_strokes", MapStroke),
-    ("notes", Note),
     ("boards", Board),
     ("board_cards", BoardCard),
     ("board_edges", BoardEdge),
@@ -76,9 +75,6 @@ TABLES = [
 ]
 # заявка в работе на новом месте не продолжится — заливаем её неудавшейся
 FINAL = {"image_gen_jobs": ("ready", "done", "failed"), "news_jobs": ("ready", "failed")}
-# ключи хаба в выгрузку не кладём: файл резервной копии уходит из рук. Адрес и модели —
-# тоже: это настройка сервера, на новом месте они стали бы запасными для всех кампаний
-HUB_COLUMNS = ("img_api_key", "news_api_key", "img_base_url", "news_base_url", "img_model", "news_model")
 UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 WORK_DIR = os.path.join(settings.upload_dir, "_transfers")
 KEEP_SECONDS = 6 * 3600
@@ -144,7 +140,7 @@ def dump(db, campaign_id: str, progress=None) -> dict:
         "format": FORMAT,
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "lang": camp.lang or instance_lang(),
-        "campaign": {k: v for k, v in _row(camp).items() if k not in HUB_COLUMNS},
+        "campaign": _row(camp),
     }
     for i, (name, model) in enumerate(TABLES):
         rows = db.query(model).filter(model.campaign_id == campaign_id).all()
@@ -158,11 +154,6 @@ def _flat_name(url) -> str:
     """Имя файла вложения без каталогов; пусто — имени нет."""
     name = os.path.basename(str(url or ""))
     return "" if name in (".", "..") else name
-
-
-def _slugify(name: str) -> str:
-    base = "".join(c if c.isalnum() else "-" for c in name.lower()).strip("-")[:40]
-    return base or "campaign"
 
 
 def start_export(campaign_id: str, with_files: bool) -> dict:
@@ -179,7 +170,7 @@ def _export(job: dict, with_files: bool) -> None:
         payload = dump(db, camp.id, lambda d, t: _set(job, done=d, total=t))
         os.makedirs(WORK_DIR, exist_ok=True)
         stamp = datetime.now().strftime("%Y-%m-%d")
-        nice = f"{_slugify(camp.name)}-{stamp}"
+        nice = f"{slugify(camp.name, 'campaign', 40)}-{stamp}"
         data = json.dumps(payload, ensure_ascii=False, indent=1).encode()
         if not with_files:
             path = os.path.join(WORK_DIR, f"{job['id']}.json")
@@ -293,7 +284,7 @@ def _import(job: dict) -> None:
 
         camp = _typed(Campaign, src)
         camp.setdefault("lang", payload.get("lang") if payload.get("lang") in ("ru", "en") else "")
-        camp.update(owner_id=importer.id, created_at=datetime.now(timezone.utc), **{col: "" for col in HUB_COLUMNS})
+        camp.update(owner_id=importer.id, created_at=datetime.now(timezone.utc))
         total = sum(len(payload.get(name, [])) for name, _m in TABLES)
         _set(job, stage="rows", done=0, total=total, name=src.get("name", ""))
         db.execute(insert(Campaign.__table__), [camp])
@@ -308,6 +299,13 @@ def _import(job: dict) -> None:
                     db.execute(insert(model.__table__), part)
                     done += len(part)
                     _set(job, done=done)
+
+        from .routers.rules import SEED, seed_rules
+
+        if not any(b.get("entity_type") == "rules" and b.get("block_type") == SEED
+                   for b in payload.get("content_blocks", [])):
+            gm = next(m["id"] for m in members if m["user_id"] == importer.id)
+            seed_rules(db, cid, gm, camp["lang"] or instance_lang())
 
         if z is not None:
             files = [i for i in z.infolist() if i.filename.startswith("files/") and not i.is_dir()]

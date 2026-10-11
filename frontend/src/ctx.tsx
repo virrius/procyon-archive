@@ -45,7 +45,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!campaignId || !token) { setLoaded(null); return }
     let live = true
-    api.get(c()).then(r => live && setLoaded(r)).catch(() => live && setLoaded(null))
+    api.get(c()).then(r => live && setLoaded(r)).catch((e: any) => {
+      if (!live) return
+      setLoaded(null)
+      // кампанию удалили или участника убрали: сперва снимаем «глазами игрока», потом саму кампанию
+      if (e?.status === 403 || e?.status === 404) {
+        if (store.viewAs) store.viewAs = null
+        else store.campaign = null
+        setTick(t => t + 1)
+      }
+    })
     return () => { live = false }
   }, [tick, token, campaignId])
 

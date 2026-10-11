@@ -38,12 +38,6 @@ ZIMAGE_CLIP = "qwen_3_4b_fp8_mixed.safetensors"
 ZIMAGE_VAE = "z_image_ae.safetensors"
 ZIMAGE_STEPS = 8
 ZIMAGE_SHIFT = 3.0
-# лёгкая композиционная подсказка на не-первый кандидат — нулевой индекс остаётся
-# «чистым» базовым промптом без добавок
-COMPOSITION_HINTS = [
-    "", "alternate pose and framing, ", "different camera angle, ",
-    "varied composition and lighting, ",
-]
 
 # что показывать в плашке воркера: имя весов, которыми он рисует на самом деле
 SHOWN_MODEL = f"{ZIMAGE_UNET} ({ZIMAGE_STEPS} шагов, cfg 1.0)"
@@ -240,8 +234,8 @@ def run_graph(graph: dict) -> bytes:
     r.raise_for_status()
     prompt_id = r.json()["prompt_id"]
 
-    # до 15 минут: очередь ComfyUI своя, и время в ней тоже идёт. Сервер считает
-    # заявку потерянной после 25 минут — воркер должен сдаться раньше и сказать об этом
+    # до 15 минут на кандидата: очередь ComfyUI своя, и время в ней тоже идёт. Пока пинг
+    # называет заявку, сервер её не трогает — сдаётся и сообщает о сбое сам воркер
     for _ in range(900):
         h = requests.get(f"{COMFY}/history/{prompt_id}", timeout=15).json()
         entry = h.get(prompt_id)
@@ -265,8 +259,9 @@ def run_graph(graph: dict) -> bytes:
 
 def handle_job(job: dict) -> None:
     job_id = job["id"]
-    # негатив задачи не читается: при cfg 1.0 он не участвует в выводе
     prompt = job["prompt"]
+    # строка на кандидата: дубли хаба или та же строка с подсказкой ракурса — их собирает сервер
+    variants = job.get("prompts") or [prompt]
     width = job["width"]
     height = job["height"]
     inpaint = job.get("kind") == "inpaint"
@@ -293,14 +288,8 @@ def handle_job(job: dict) -> None:
                 # кадр и композиция заданы исходником: разнообразие даёт только seed,
                 # подсказки вроде «другой ракурс» здесь были бы прямым вредом
                 graph = inpaint_workflow(prompt, source, mask, seed, denoise)
-            elif job.get("prompts"):
-                # варианты хаба — разные абзацы той же сцены: Turbo от сида почти
-                # не меняет кадр, разных кандидатов даёт только текст
-                variants = job["prompts"]
-                graph = workflow(variants[i % len(variants)], width, height, seed)
             else:
-                hint = COMPOSITION_HINTS[i % len(COMPOSITION_HINTS)]
-                graph = workflow(f"{hint}{prompt}", width, height, seed)
+                graph = workflow(variants[i % len(variants)], width, height, seed)
             try:
                 data = run_graph(graph)
             except Exception as exc:  # noqa: BLE001 — уже нарисованное дороже падения:

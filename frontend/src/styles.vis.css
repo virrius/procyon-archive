@@ -25,8 +25,6 @@ button.ibtn.danger:disabled:hover,
 }
 .ibtn:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 
-.ibtn-wait { font-family: var(--util); font-size: 12px; line-height: 1; color: var(--amber); }
-
 /* кнопка «иконка + слово» */
 button.btn-ico { display: inline-flex; align-items: center; gap: 6px; }
 button.btn-ico svg { display: block; }

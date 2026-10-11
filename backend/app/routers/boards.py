@@ -17,6 +17,7 @@ from ..deps import gm_only
 from ..i18n import ctr, tr
 from ..models import Board, BoardCard, BoardEdge, Clock, ContentBlock, Entity
 from ..langpack import names as N
+from ..translit import slugify
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["boards"], responses=AUTH_ERRORS)
 
@@ -53,13 +54,6 @@ ROWS_BY_KIND = {"entity": 5, "clock": 4, "image": 6, "text": 3, "sketch": 8,
 DEF_W = {"entity": 520.0, "text": 230.0, "image": 260.0, "clock": 230.0,
          "sketch": 420.0, "name": 260.0}
 
-_TRANSLIT = {
-    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e", "ж": "zh",
-    "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o",
-    "п": "p", "р": "r", "с": "s", "т": "t", "у": "u", "ф": "f", "х": "h", "ц": "c",
-    "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu",
-    "я": "ya",
-}
 
 
 # росчерк — ломаная в координатах карточки, подпись — точка с текстом. Ограничения
@@ -102,20 +96,6 @@ def norm_ink(ink: list | None) -> list[dict]:
     return out
 
 
-def slugify(text: str, fallback: str = "card") -> str:
-    """Ключ карточки латиницей: имя записи читается и в снимке, и в правке."""
-    out: list[str] = []
-    for ch in (text or "").strip().lower():
-        if ch in _TRANSLIT:
-            out.append(_TRANSLIT[ch])
-        elif ch.isalnum() and ch.isascii():
-            out.append(ch)
-        elif out and out[-1] != "-":
-            out.append("-")
-    slug = "".join(out).strip("-")[:48]
-    return slug or fallback
-
-
 def card_name(card: BoardCard, entity: Entity | None, clock: Clock | None) -> str:
     """Как карточка зовётся вслух: имя записи, имя счётчика или начало текста."""
     if entity is not None:
@@ -129,24 +109,22 @@ def card_name(card: BoardCard, entity: Entity | None, clock: Clock | None) -> st
     return ctr("content.extra") if card.kind == "name" else ""
 
 
-def fill_keys(db: Session, cards: list[BoardCard],
-              entities: dict, clocks: dict) -> None:
-    """Старым карточкам ключей не досталось — выдаём при первом же обращении."""
+def unique_key(base: str, taken: set[str]) -> str:
+    key, n = base, 2
+    while key in taken:
+        key, n = f"{base}-{n}", n + 1
+    return key
+
+
+def fill_keys(cards: list[BoardCard], entities: dict, clocks: dict) -> None:
+    """Ключ карточке, у которой его нет: по имени записи, счётчика или началу текста."""
     taken = {c.key for c in cards if c.key}
-    dirty = False
     for card in cards:
         if card.key:
             continue
-        base = slugify(card_name(card, entities.get(card.entity_id or ""),
-                                 clocks.get(card.clock_id or "")), card.kind)
-        key, n = base, 2
-        while key in taken:
-            key, n = f"{base}-{n}", n + 1
-        taken.add(key)
-        card.key = key
-        dirty = True
-    if dirty:
-        db.commit()
+        card.key = unique_key(slugify(card_name(card, entities.get(card.entity_id or ""),
+                                                clocks.get(card.clock_id or "")), card.kind), taken)
+        taken.add(card.key)
 
 
 def block_title(board: Board) -> str:
@@ -630,6 +608,10 @@ def create_card(body: CardIn, v=Depends(gm_only), db: Session = Depends(get_db))
         .scalar()
     )
     card = BoardCard(campaign_id=v.campaign_id, created_by=v.member_id, z=top + 1, **data)
+    keys = {k for (k,) in db.query(BoardCard.key).filter_by(campaign_id=v.campaign_id, board_id=body.board_id)}
+    fill_keys([card], {card.entity_id: db.get(Entity, card.entity_id)} if card.entity_id else {},
+              {card.clock_id: db.get(Clock, card.clock_id)} if card.clock_id else {})
+    card.key = unique_key(card.key, keys)
     db.add(card)
     db.flush()
     sync_block(db, v, card, board)

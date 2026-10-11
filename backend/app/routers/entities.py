@@ -34,7 +34,6 @@ from ..models import (
     MapNode,
     Message,
     News,
-    Note,
     now,
     uid,
 )
@@ -51,6 +50,7 @@ from ..visibility import (
     public_entity,
     strip_gm_fields,
 )
+from .files import drop_files
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", responses=AUTH_ERRORS)
 
@@ -62,7 +62,6 @@ HIDDEN_MAX = 40  # закрытых полей на карточку
 
 Kind = Literal["character", "npc", "faction", "ship", "location", "job", "item"]
 BlockType = Literal["text", "image", "attachment", "quote", "rumor", "secret", "warning", "map note"]
-NoteTarget = Literal["entity", "clock", "marker", "map"]
 BlockParent = Literal["entity", "clock", "marker", "map"]
 
 FIELDS_DOC = (
@@ -532,9 +531,10 @@ def purge_entity(entity_id: str, v: Viewer = Depends(editor), db: Session = Depe
     db.query(EntityLink).filter(EntityLink.campaign_id == cid,
                                 or_(EntityLink.from_id == eid, EntityLink.to_id == eid)).delete()
     db.query(ContentBlock).filter(ContentBlock.campaign_id == cid, ContentBlock.entity_id == eid).delete()
-    db.query(Note).filter(Note.campaign_id == cid, Note.target_id == eid).delete()
-    db.query(Attachment).filter(Attachment.campaign_id == cid, Attachment.target_type == "entity",
-                                Attachment.target_id == eid).delete()
+    for a in db.query(Attachment).filter(Attachment.campaign_id == cid, Attachment.target_type == "entity",
+                                         Attachment.target_id == eid):
+        drop_files(a)
+        db.delete(a)
     db.query(Clock).filter(Clock.campaign_id == cid, Clock.owner_id == eid).update({"owner_id": None})
     db.query(MapMarker).filter(MapMarker.campaign_id == cid, MapMarker.linked_id == eid).update(
         {"linked_id": None, "linked_type": None})
@@ -1065,142 +1065,5 @@ def delete_block(block_id: str, v: Viewer = Depends(editor), db: Session = Depen
                 entity_id=block_owner_entity(b), visibility=b.visibility,
                 before={"title": b.title, "content": b.content})
     db.delete(b)
-    db.commit()
-    return {"ok": True}
-
-
-# --- notes / comment threads --------------------------------------------------
-
-
-NOTE_STATUS_DOC = "`open` or `resolved`."
-
-
-class NoteIn(BaseModel):
-    target_type: NoteTarget = Field(description="What the note hangs on.")
-    target_id: str = Field(description="Id of that target.")
-    parent_id: str | None = Field(default=None, description="Id of the note this one replies to; `null` starts a thread.")
-    title: str = Field(default="", max_length=200)
-    body: str = ""
-    visibility: Visibility | None = vis_field()
-    visible_to: list[str] = Field(default=[], description=VISIBLE_TO_DOC)
-    status: str = Field(default="open", description=NOTE_STATUS_DOC)
-
-
-class NotePatch(BaseModel):
-    """Only the keys sent change; the target and the thread cannot be moved."""
-
-    title: str | None = Field(default=None, max_length=200)
-    body: str | None = None
-    visibility: Visibility | None = Field(default=None, description="Players may not set `gm`.")
-    visible_to: list[str] | None = Field(default=None, description=VISIBLE_TO_DOC)
-    status: str | None = Field(default=None, description=NOTE_STATUS_DOC)
-
-
-class NoteOut(BaseModel):
-    id: str
-    parent_id: str | None
-    title: str
-    body: str
-    status: str = Field(description=NOTE_STATUS_DOC)
-    author_member_id: str | None
-    visibility: Visibility | None = Field(default=None, description="GM only; `null` for players.")
-    created_at: datetime
-
-
-class NotePatched(NoteOut):
-    ok: bool = True
-
-
-def note_label(n: Note) -> str:
-    return (n.title or "").strip() or re.sub(r"\s+", " ", n.body or "").strip()[:80]
-
-
-def note_item(n: Note, v: Viewer) -> dict:
-    return {"id": n.id, "parent_id": n.parent_id, "title": n.title, "body": n.body,
-            "status": n.status, "author_member_id": n.author_member_id,
-            "visibility": n.visibility if v.is_gm else None, "created_at": n.created_at}
-
-
-@router.get("/notes/{target_type}/{target_id}", summary="List notes on a target", tags=["notes"],
-            response_model=list[NoteOut])
-def list_notes(
-    target_type: NoteTarget, target_id: str, v: Viewer = Depends(viewer), db: Session = Depends(get_db)
-):
-    """Notes the viewer may see, oldest first; threads are flat — group by `parent_id`.
-    404 when the target is not visible to a player."""
-    if not v.is_gm and not parent_visible(db, v, target_type, target_id):
-        raise HTTPException(404, tr("entities.not_found"))
-    q = db.query(Note).filter_by(
-        campaign_id=v.campaign_id, target_type=target_type, target_id=target_id
-    )
-    rows = apply_scope(q, Note, v).order_by(Note.created_at).all()
-    return [note_item(n, v) for n in rows]
-
-
-@router.post("/notes", summary="Add a note or a reply", tags=["notes"], response_model=NoteOut,
-             responses=error_responses(403))
-def create_note(body: NoteIn, v: Viewer = Depends(editor), db: Session = Depends(get_db)):
-    """A GM's note is `gm`-only unless `visibility` is sent. Journal entry. 403: player asked for `gm`.
-    404: the target is not visible."""
-    if not v.is_gm and body.visibility == "gm":
-        raise HTTPException(403, tr("entities.player_no_gm_vis"))
-    if not UUID_RE.fullmatch(body.target_id) or not parent_visible(db, v, body.target_type, body.target_id):
-        raise HTTPException(404, tr("entities.not_found"))
-    data = body.model_dump()
-    data["visibility"] = default_visibility(v, body.visibility)
-    n = Note(campaign_id=v.campaign_id, author_member_id=v.member_id, **data)
-    db.add(n)
-    db.flush()
-    journal.log(db, v, "note", "create", target_id=n.id, title=note_label(n),
-                entity_id=n.target_id if n.target_type == "entity" else None,
-                detail="" if n.target_type == "entity" else n.target_type,
-                visibility=n.visibility,
-                after={"title": n.title, "body": n.body})
-    db.commit()
-    return note_item(n, v)
-
-
-@router.patch("/notes/{note_id}", summary="Update a note", tags=["notes"], response_model=NotePatched,
-              responses=error_responses(403))
-def patch_note(
-    note_id: str, body: NotePatch, v: Viewer = Depends(editor), db: Session = Depends(get_db)
-):
-    """GM edits any note; a player only their own (403 otherwise). Journal entry on change."""
-    n = db.get(Note, note_id)
-    if not n or n.campaign_id != v.campaign_id or not can_see(n, v):
-        raise HTTPException(404, tr("entities.not_found"))
-    if not v.is_gm and n.author_member_id != v.member_id:
-        raise HTTPException(403, tr("entities.note_not_yours"))
-    patch = {k: val for k, val in body.model_dump(exclude_unset=True).items() if val is not None}
-    if not v.is_gm and patch.get("visibility") == "gm":
-        raise HTTPException(403, tr("entities.player_no_gm_vis"))
-    before, after = journal.changes(n, patch)
-    for k, val in patch.items():
-        setattr(n, k, val)
-    if after:
-        journal.log(db, v, "note", "update", target_id=n.id, title=note_label(n),
-                    entity_id=n.target_id if n.target_type == "entity" else None,
-                    detail="" if n.target_type == "entity" else n.target_type,
-                    visibility=n.visibility,
-                    before=before, after=after)
-    db.commit()
-    return {"ok": True, **note_item(n, v)}
-
-
-@router.delete("/notes/{note_id}", summary="Delete a note", tags=["notes"], response_model=Ok,
-               responses=error_responses(403))
-def delete_note(note_id: str, v: Viewer = Depends(editor), db: Session = Depends(get_db)):
-    """GM deletes any note; a player only their own. Replies are left in place. Journal entry."""
-    n = db.get(Note, note_id)
-    if not n or n.campaign_id != v.campaign_id or not can_see(n, v):
-        raise HTTPException(404, tr("entities.not_found"))
-    if not v.is_gm and n.author_member_id != v.member_id:
-        raise HTTPException(403, tr("entities.note_not_yours"))
-    journal.log(db, v, "note", "delete", target_id=n.id, title=note_label(n),
-                entity_id=n.target_id if n.target_type == "entity" else None,
-                detail="" if n.target_type == "entity" else n.target_type,
-                visibility=n.visibility,
-                before={"title": n.title, "body": n.body})
-    db.delete(n)
     db.commit()
     return {"ok": True}

@@ -44,7 +44,6 @@
 .st-asp i { display: inline-block; border: 1.5px solid currentColor; flex: none; }
 .st-go { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
 .st-go .primary { width: 100%; padding: 11px 13px; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; }
-.st-text-first { width: 100%; padding: 8px 13px; font-size: 11.5px; letter-spacing: .08em; }
 .st-hint { font-size: 12.5px; color: var(--dim2); line-height: 1.45; }
 .st-looks { display: flex; flex-wrap: wrap; gap: 6px; }
 .st-look {
@@ -106,8 +105,6 @@
 .st-att.one .st-att-main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(250px, 1fr); }
 .st-att.one .st-pr { border-bottom: none; border-left: 1px solid var(--line); order: 2; }
 .st-att.one .st-cands, .st-att.one .st-att-err { order: 1; }
-.st-att.one .st-pf-k { width: 100%; }
-.st-att.one .st-pg { grid-template-columns: 52px minmax(0, 1fr); }
 
 /* промпт попытки */
 .st-pr { padding: 8px 10px 9px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -120,7 +117,6 @@
 .st-pr-tabs .tb.on { color: var(--txt); border-color: var(--line2); background: var(--surface2); }
 .st-pill { font-family: var(--util); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--amber); border: 1px solid var(--amber-dim); padding: 0 6px; }
 .st-pill.warn { color: var(--rust); border-color: #4a2c23; }
-.st-pgs { display: flex; flex-direction: column; gap: 5px; }
 .st-parts { display: flex; flex-direction: column; gap: 6px; }
 .st-parts.stale { opacity: .4; pointer-events: none; }
 .st-part { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; align-items: start; margin: 0; }
@@ -129,31 +125,6 @@
 .st-pr .st-part textarea { resize: none; overflow: hidden; min-height: 0; field-sizing: content; line-height: 1.45; padding: 5px 8px; }
 .st-takes { display: inline-flex; gap: 2px; margin-left: 10px; }
 .st-opt-gap { width: 10px; }
-.st-pgs.stale .st-pg { opacity: .4; pointer-events: none; }
-.st-pg { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 4px 8px; align-items: start; }
-.st-pg + .st-pg { border-top: 1px solid var(--line); padding-top: 5px; }
-.st-pg-n { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--dim2); padding-top: 3px; }
-.st-pg-f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.st-pf { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
-.st-pf-k { font-family: var(--util); font-size: 10.5px; color: var(--dim2); width: 92px; flex: none; }
-.st-sl {
-  display: inline-flex; align-items: baseline; gap: 6px; max-width: 100%;
-  font-family: var(--util); font-size: 11.5px; line-height: 1.45; color: var(--txt);
-  background: #100f0d; border: 1px solid var(--line2); padding: 1px 6px;
-}
-.st-sl:hover { border-color: var(--dim2); }
-.st-sl.empty { color: var(--dim2); border-style: dashed; }
-.st-sl.off { opacity: .4; }
-.st-sl span { cursor: text; overflow-wrap: anywhere; }
-.st-sl b { font-weight: 400; color: var(--dim2); cursor: pointer; }
-.st-sl b:hover { color: var(--rust); }
-.st-sl input { font-family: var(--util); font-size: 11.5px; padding: 0; border: none; background: transparent; min-width: 220px; }
-.st-sl-add {
-  font-family: var(--util); font-size: 11px; padding: 0 6px; background: transparent;
-  border: 1px dashed var(--line2); color: var(--dim2); font-weight: 400; text-transform: uppercase; letter-spacing: .06em;
-}
-.st-sl-add:hover { color: var(--amber); border-color: var(--amber-dim); background: transparent; }
-.st-wd { width: auto; font-family: var(--util); font-size: 10.5px; padding: 1px 4px; color: var(--dim2); background: transparent; border: 1px solid var(--line); }
 .st-pr-str { font-family: var(--util); font-size: 11.5px; line-height: 1.5; color: var(--txt); overflow-wrap: anywhere; cursor: text; }
 .st-pr-src { font-size: 12px; color: var(--dim2); border-left: 2px solid var(--line2); padding-left: 8px; }
 .st-pr textarea { font-family: var(--util); font-size: 11.5px; line-height: 1.5; min-height: 96px; }
@@ -201,12 +172,5 @@
   .st-cand-bar { visibility: visible; }
 }
 @media (max-width: 640px) {
-  .st-pf-k { width: 100%; }
   .backdrop.st-backdrop { padding: 0; }
 }
-
-/* сборка прозой: одежда абзаца и гардероб — строкой над промптом */
-.st-pr-wd { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.st-pr-wd .sp { flex: 1; }
-.st-pr-wear { font-family: var(--util); font-size: 10.5px; color: var(--dim2); }
-.st-pr-wd .st-wd { width: auto; flex: none; margin: 0; }

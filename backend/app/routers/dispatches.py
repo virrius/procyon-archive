@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from ..api_schema import AUTH_ERRORS
 from ..db import get_db
@@ -110,7 +110,7 @@ def open_locations(db: Session, campaign_id: str) -> list[Entity]:
 
 def news_hub(camp: Campaign) -> dict:
     """Чем пишутся депеши и отклики: хаб сервера с моделью новостей."""
-    return {**hub_conf(camp, "news"),
+    return {**hub_conf(object_session(camp), "news"),
             "timeout": D().DISPATCH_TIMEOUT, "stop": D().DISPATCH_STOP,
             "attempts": D().DISPATCH_ATTEMPTS, "temperature": D().TEMPERATURE}
 

@@ -100,32 +100,6 @@
     "angle": "angle",
     "action": "action"
   },
-  "slot_group": {
-    "scene": "scene",
-    "light": "light",
-    "details": "details"
-  },
-  "slot": {
-    "who": "who",
-    "what": "what",
-    "pose": "pose",
-    "outfit": "outfit",
-    "place": "place",
-    "place_object": "object nearby",
-    "depth": "background",
-    "face": "face",
-    "build": "build",
-    "gear": "gear",
-    "tech_marker": "era marker",
-    "form": "form",
-    "surround": "surroundings",
-    "marks": "markings",
-    "action": "action",
-    "actors": "participants",
-    "crew_outfit": "group outfit",
-    "place_detail": "place details",
-    "effects": "effects"
-  },
   "brush": {
     "back": "← back to description",
     "area_edit": "Area edit",
@@ -155,14 +129,10 @@
   },
   "tab": {
     "parts": "parts",
-    "prompt": "prompt",
-    "slots": "slots",
-    "line": "line"
+    "prompt": "prompt"
   },
   "take": "take {{n}}",
   "take_hint": "take: its own face, pose and light",
-  "slot_off": "not included in the line",
-  "add_field": "add: {{label}}",
   "remove": "remove",
   "discard": "discard",
   "again_once": "again",
@@ -222,5 +192,8 @@
     "queued": "{{n}} queued",
     "last_error": "last error: {{error}}",
     "no_edit": "area editing unavailable"
-  }
+  },
+  "corner_auto": "the hub picked this corner of the world: no register was chosen",
+  "expires": "{{h}} h left",
+  "expires_hint": "unpicked candidates are removed after this"
 }

@@ -157,15 +157,6 @@ export function IconCrop(p: IconProps) {
   )
 }
 
-export function IconPin(p: IconProps) {
-  return (
-    <Glyph {...p}>
-      <path d="M13 6.8c0 3.6-5 7.9-5 7.9s-5-4.3-5-7.9a5 5 0 0 1 10 0Z" />
-      <circle cx="8" cy="6.7" r="1.8" />
-    </Glyph>
-  )
-}
-
 export function IconCalendar(p: IconProps) {
   return (
     <Glyph {...p}>

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api, c, isPublicView, type Dict, thumb } from '../api'
 import { useApp } from '../ctx'
-import { Modal, Notes, Select } from '../ui'
+import { Modal, Select } from '../ui'
+import { RecordsPanel } from './RecordsPanel'
 import { IconButton, IconClose, IconEdit, IconPlus, IconTrash } from './icons'
 import { ImgActions, ImgFlags } from './ImageTools'
 import Stub from './Stub'
@@ -601,7 +602,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
         </div>
       </Lane>
 
-      <Notes entityType="entity" entityId={ship.id} title={t('notes')} />
+      <RecordsPanel entityType="entity" entityId={ship.id} title={t('notes')} />
 
       {builder && (
         <SheetBuilder custom={custom} book={book} types={types} shipType={String(fields.ship_type || '')}

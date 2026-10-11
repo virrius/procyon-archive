@@ -32,7 +32,6 @@ from ..server_cfg import (
     draw_kinds,
     doc_override,
     draw_kind,
-    hub_fallback,
     prompt_overrides,
     server_row,
 )
@@ -53,14 +52,6 @@ class KeyOut(BaseModel):
     api_key_tail: str = Field(description="Last four characters of the stored key, for recognition.")
 
 
-class HubFallbackOut(KeyOut):
-    """Values taken from the first campaign that has them, used while the server fields are empty."""
-
-    base_url: str
-    img_model: str
-    news_model: str
-
-
 class HubOut(KeyOut):
     base_url: str = Field(description="OpenAI-compatible LLM hub (`/v1`): prompts and dispatches.")
     img_model: str = Field(description="Hub model that drafts image prompts.")
@@ -71,7 +62,6 @@ class HubOut(KeyOut):
     draw_api_key_set: bool
     draw_api_key_tail: str
     draw_kinds: dict[str, str] = Field(description="Allowed `draw_kind` values with labels in the request language.")
-    fallback: HubFallbackOut
 
 
 class LangOut(BaseModel):
@@ -134,7 +124,6 @@ class TransferStateOut(BaseModel):
 
 def _hub_out(db: Session) -> dict:
     s = server_row(db)
-    fb = hub_fallback(db)
     return {
         "base_url": s.hub_base_url if s else "",
         "img_model": s.img_model if s else "",
@@ -145,10 +134,6 @@ def _hub_out(db: Session) -> dict:
         **{f"draw_{k}": v for k, v in key_out(s.draw_api_key if s else "").items()},
         "draw_kinds": draw_kinds(),
         **key_out(s.hub_api_key if s else ""),
-        "fallback": {
-            "base_url": fb["base_url"], "img_model": fb["img_model"],
-            "news_model": fb["news_model"], **key_out(fb["api_key"]),
-        },
     }
 
 
@@ -234,12 +219,11 @@ def check_hub(body: HubCheck, db: Session = Depends(get_db)):
     key and returns the model ids. 400 without an address, 502 when the hub does not answer or
     answers with an error."""
     s = server_row(db)
-    fb = hub_fallback(db)
     draw = body.target == "draw" and s
     base = ((body.base_url or "").strip() or (draw and s.draw_base_url)
-            or (s.hub_base_url if s else "") or fb["base_url"])
+            or (s.hub_base_url if s else ""))
     key = ((body.api_key or "").strip() or (draw and s.draw_api_key)
-           or (s.hub_api_key if s else "") or fb["api_key"])
+           or (s.hub_api_key if s else ""))
     if not base:
         raise HTTPException(400, tr("admin.no_address"))
     try:
@@ -266,8 +250,8 @@ def _prompts_out(db: Session) -> dict:
     kit = P().merge_kit(_defaults(), prompt_overrides(db))
     base = _defaults()
     return {
-        "docs": {k: doc_override(db, k) or doc_default(kit, k) for k in DOC_COLUMNS},
-        "doc_defaults": {k: doc_default(kit, k) for k in DOC_COLUMNS},
+        "docs": {k: doc_override(db, k) or doc_default(k) for k in DOC_COLUMNS},
+        "doc_defaults": {k: doc_default(k) for k in DOC_COLUMNS},
         "kit": kit,
         "defaults": base,
         "news_sections": list(NEWS_SECTIONS),
@@ -310,11 +294,10 @@ def patch_prompts(body: PromptsIn, db: Session = Depends(get_db)):
         base = _defaults()
         over = strip_defaults(prune_nulls(P().merge_kit(over, body.kit, keep_nulls=True), base), base)
         s.img_prompt_kit = json.dumps(over, ensure_ascii=False) if over else ""
-    kit = P().merge_kit(_defaults(), over)
     docs.update({k: v.strip() for k, v in body.docs.items()})
     for key, column in DOC_COLUMNS.items():
         text = docs[key]
-        setattr(s, column, "" if text == doc_default(kit, key).strip() else text)
+        setattr(s, column, "" if text == doc_default(key).strip() else text)
     db.commit()
     return _prompts_out(db)
 

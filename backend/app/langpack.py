@@ -1,9 +1,9 @@
 """Модули, чьи тексты зависят от языка, загружены дважды.
 
 Оригинал — русский, двойник ``app.<имя>__en`` — тот же файл, загруженный под другим
-именем: язык модуль узнаёт из своего имени (``i18n.twin_lang``). Язык экземпляра
-админ меняет на лету, поэтому вызывающий берёт модуль на текущем языке в момент
-вызова: ``langpack.prompting().default_kit()``, а не ``from .prompting import ...``.
+именем: язык модуль узнаёт из своего имени (``i18n.twin_lang``). Модуль берётся на языке
+кампании, к которой относится запрос (вне кампании — экземпляра), в момент вызова:
+``langpack.prompting().default_kit()``, а не ``from .prompting import ...``.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import importlib.util
 import sys
 from types import ModuleType
 
-from .i18n import LANGS, instance_lang
+from .i18n import LANGS, content_lang
 
 TWINS = ("app.prompting", "app.schema_defs", "app.names")
 
@@ -39,7 +39,7 @@ _MODS: dict[str, dict[str, ModuleType]] = {
 
 
 def _pick(name: str, lang: str | None) -> ModuleType:
-    return _MODS[name][lang if lang in LANGS else instance_lang()]
+    return _MODS[name][lang if lang in LANGS else content_lang()]
 
 
 def prompting(lang: str | None = None) -> ModuleType:

@@ -13,8 +13,8 @@ from .. import history as journal
 from ..api_schema import AUTH_ERRORS, Ok, error_responses
 from ..db import get_db
 from ..deps import gm_only
-from ..i18n import LANGS, ctr, instance_lang, tr
-from ..models import Attachment, Campaign, ContentBlock
+from ..i18n import campaign_lang, ctr, tr
+from ..models import Attachment, ContentBlock
 from ..visibility import Viewer
 from .files import drop_files
 
@@ -36,9 +36,8 @@ def rules_dir(lang: str) -> str:
 
 
 def camp_lang(db: Session, v: Viewer) -> str:
-    """Книга кампании — на языке её материалов; у кампаний до выбора языка — язык экземпляра."""
-    lang = db.get(Campaign, v.campaign_id).lang
-    return lang if lang in LANGS else instance_lang()
+    """Книга кампании — на языке её материалов."""
+    return campaign_lang(v.campaign_id)
 
 
 def book_index(lang: str) -> dict:
@@ -146,12 +145,17 @@ def next_order(db: Session, v: Viewer, kind: str | tuple[str, ...], parent: str)
     return (rows[-1].order + 1) if rows else 0
 
 
-def make(v: Viewer, kind: str, parent: str, title: str, content: str, order: int):
+def block(campaign_id: str, member_id: str | None, kind: str, parent: str, title: str, content: str,
+          order: int) -> ContentBlock:
     return ContentBlock(
-        campaign_id=v.campaign_id, entity_type=OWNER, entity_id=parent,
+        campaign_id=campaign_id, entity_type=OWNER, entity_id=parent,
         block_type=kind, title=title[:200], content=content, order=order,
-        created_by=v.member_id, created_by_gm=True, visibility="gm",
+        created_by=member_id, created_by_gm=True, visibility="gm",
     )
+
+
+def make(v: Viewer, kind: str, parent: str, title: str, content: str, order: int):
+    return block(v.campaign_id, v.member_id, kind, parent, title, content, order)
 
 
 def item_out(b: ContentBlock, cid: str) -> dict:
@@ -167,34 +171,32 @@ def item_out(b: ContentBlock, cid: str) -> dict:
             "src": src, "attachment_id": att_id}
 
 
-def seed_from_book(db: Session, v: Viewer) -> None:
-    """Первый заход: раскладываем страницы из assets/rules по разделам как есть.
-    Дальше раздел живёт своей жизнью — ГМ правит и сносит что угодно, и второй раз
-    мы не вмешиваемся: об этом помнит блок-отметка."""
-    if blocks(db, v, SEED, ""):
+def seed_rules(db: Session, campaign_id: str, member_id: str | None, lang: str) -> None:
+    """Книга раскладывается по разделам при заведении кампании; дальше разделы живут своей
+    жизнью — ГМ правит и сносит что угодно. Блок-отметка говорит, что книга уже разложена:
+    у выгрузки кампании, где разделы так и не открывали, её нет, и загрузка раскладывает книгу."""
+    if db.query(ContentBlock.id).filter_by(campaign_id=campaign_id, entity_type=OWNER, block_type=SEED).first():
         return
-    lang = camp_lang(db, v)
-    db.add(make(v, SEED, "", tr("content.rules_seeded", lang=lang), "", 0))
+    db.add(block(campaign_id, member_id, SEED, "", tr("content.rules_seeded", lang=lang), "", 0))
     try:
         book = book_index(lang)
     except (OSError, ValueError):
         return
     for i, sec in enumerate(book.get("sections", [])):
-        section = make(v, SECTION, "", sec.get("title", ""), sec.get("note", ""), i)
+        section = block(campaign_id, member_id, SECTION, "", sec.get("title", ""), sec.get("note", ""), i)
         db.add(section)
         db.flush()
         for j, page in enumerate(sec.get("pages", [])):
             label = page.get("label", "")
-            db.add(make(v, SHOT, section.id, tr("content.page", lang=lang, label=label) if label else "",
-                        page_ref(page.get("file", ""), lang), j))
+            db.add(block(campaign_id, member_id, SHOT, section.id,
+                         tr("content.page", lang=lang, label=label) if label else "",
+                         page_ref(page.get("file", ""), lang), j))
 
 
 @router.get("/rules", summary="List rule sections with clippings", response_model=list[RulesSectionOut])
 def list_rules(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
-    """GM only. Sections in order, each with its clippings. On the first call for a campaign the
-    sections are seeded from the rendered rulebook (`assets/rules`); after that they are the GM's own."""
-    seed_from_book(db, v)
-    db.commit()
+    """GM only. Sections in order, each with its clippings. A new campaign starts with the rendered
+    rulebook laid out in sections; after that they are the GM's own."""
     return [
         {"id": s.id, "title": s.title, "note": s.content, "order": s.order,
          "items": [item_out(b, v.campaign_id) for b in blocks(db, v, (SHOT, TEXT), s.id)]}

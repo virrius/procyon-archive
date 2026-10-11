@@ -81,7 +81,6 @@ TAGS: list[dict] = [
     )},
     {"name": "blocks", "description": "Text blocks attached to an entity, clock, marker or map: descriptions, rumors, secrets. Each block has its own visibility."},
     {"name": "links", "description": "Directed, labelled links between two entities (`works for`, `where to find`). Each link has its own visibility."},
-    {"name": "notes", "description": "Threaded comment cards on a marker or any entity."},
     {"name": "clocks", "description": "Progress clocks: `filled` of `segments`; tick, complete, reopen. Owner may be an entity."},
     {"name": "messages", "description": "In-fiction mail to the crew: drafts the GM delivers; per-member read/pinned state."},
     {"name": "news", "description": "Sector news: GM writes items or orders journalist drafts (a job), then airs them to the table."},
@@ -141,7 +140,7 @@ any player may edit the card.
 ## Ids and lookup
 
 Ids are UUID strings. To turn a name into an id: `GET …/entities?q=` (cards), `GET …/search?q=`
-(cards, blocks, messages, news, notes), `GET …/clocks`, `GET …/boards-dump`. Links are found from
+(cards, blocks, messages, news), `GET …/clocks`, `GET …/boards-dump`. Links are found from
 either end: `GET …/entities/{entity_id}/links`. The boards batch takes entity and clock **names** directly.
 
 ## Writing

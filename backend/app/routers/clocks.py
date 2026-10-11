@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import case, inspect, text
+from sqlalchemy import case
 from sqlalchemy.orm import Session
 
 from .. import history as journal
@@ -363,16 +363,12 @@ def clock_history(clock_id: str, v: Viewer = Depends(viewer), db: Session = Depe
 
 @router.delete("/clocks/{clock_id}/purge", summary="Delete a clock for good", response_model=Ok)
 def purge_clock(clock_id: str, v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
-    """GM only. Removes the clock and its ticks; only the `purge` journal entry remains.
+    """GM only. Removes the clock; the journal keeps its history and adds a `purge` entry.
     For the normal way out use `DELETE /clocks/{clock_id}` (abandon)."""
     c = _get(db, v, clock_id)
     journal.log(db, v, "clock", "purge", target_id=c.id, title=clock_title(c, db),
                 entity_id=c.owner_id if c.owner_type == "entity" else None,
                 detail=f"{c.filled}/{c.segments}", visibility=c.visibility)
-    # старые тики лежат в clock_events, пока таблицу не снесли руками: на неё смотрит FK
-    if inspect(db.connection()).has_table("clock_events"):
-        db.execute(text("DELETE FROM clock_events WHERE clock_id = CAST(:id AS uuid)"),
-                   {"id": c.id})
     db.delete(c)
     db.commit()
     return {"ok": True}

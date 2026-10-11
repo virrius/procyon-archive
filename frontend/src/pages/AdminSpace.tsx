@@ -137,13 +137,11 @@ function HubCard() {
   if (err) return <div className="panel"><div className="eg-err">{err}</div></div>
   if (!data) return <div className="dim">{t('common:loading')}</div>
 
-  const fb = data.fallback || {}
   const dirty = Object.keys(form).some(k => form[k] !== data[k]) || !!key.trim() || !!drawKey.trim()
-  const keyShown = data.api_key_set ? data : fb
   const val = (k: string) => form[k] ?? data[k]
   const set = (k: string, v: string) => { setForm({ ...form, [k]: v }); setPhase('') }
   const drawKind = val('draw_kind')
-  const textBase = val('base_url') || fb.base_url
+  const textBase = val('base_url')
 
   async function runCheck(target: 'text' | 'draw') {
     setCheck({ busy: true, target })
@@ -191,14 +189,14 @@ function HubCard() {
           {HUB_FIELDS.map(([k, label]) => (
             <div className={`field${k === 'base_url' ? ' adm-hub-wide' : ''}`} key={k}>
               <label>{t(label)}</label>
-              <input value={val(k)} spellCheck={false} placeholder={fb[k] || ''}
+              <input value={val(k)} spellCheck={false}
                 onChange={e => set(k, e.target.value)} />
             </div>
           ))}
           <div className="field adm-hub-wide">
             <label>{t('hub.key')}</label>
             <input autoComplete="off" spellCheck={false} value={key}
-              placeholder={keyShown.api_key_set ? t('hub.key_set', { tail: keyShown.api_key_tail }) : t('hub.key_unset')}
+              placeholder={data.api_key_set ? t('hub.key_set', { tail: data.api_key_tail }) : t('hub.key_unset')}
               onChange={e => { setKey(e.target.value); setPhase('') }} />
           </div>
         </div>

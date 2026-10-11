@@ -13,6 +13,7 @@ from ..db import get_db
 from ..deps import gm_only
 from ..i18n import tr
 from ..models import Board, BoardCard, BoardEdge, Clock, Entity
+from ..translit import slugify
 from .boards import (
     CARD_KINDS,
     COL,
@@ -23,8 +24,8 @@ from .boards import (
     card_name,
     fill_keys,
     get_board,
-    slugify,
     sync_block,
+    unique_key,
 )
 from .entities import UUID_RE
 
@@ -105,13 +106,6 @@ def norm_notes(notes: list[dict] | None) -> list[dict]:
             "tag": str(n.get("tag") or ""),
         })
     return out
-
-
-def unique_key(base: str, taken: set[str]) -> str:
-    key, n = base, 2
-    while key in taken:
-        key, n = f"{base}-{n}", n + 1
-    return key
 
 
 def find_entity(db: Session, campaign_id: str, ref: str) -> Entity:
@@ -260,7 +254,6 @@ def dump_board(board_id: str, v=Depends(gm_only), db: Session = Depends(get_db))
         .all()
     )
     entities, clocks, owners = resolve(db, v.campaign_id, cards)
-    fill_keys(db, cards, entities, clocks)
     edges = (
         db.query(BoardEdge)
         .filter_by(campaign_id=v.campaign_id, board_id=board_id)
@@ -407,7 +400,7 @@ def batch_board(board_id: str, body: BatchIn = Body(examples=[BATCH_EXAMPLE]), v
         db.query(BoardCard).filter_by(campaign_id=v.campaign_id, board_id=board_id).all()
     )
     entities, clocks, _ = resolve(db, v.campaign_id, cards)
-    fill_keys(db, cards, entities, clocks)
+    fill_keys(cards, entities, clocks)
     by_key = {c.key: c for c in cards if c.key}
     boxes = [cell(c) for c in cards]
     top = max([c.z or 0 for c in cards], default=0)
@@ -462,6 +455,7 @@ def batch_board(board_id: str, body: BatchIn = Body(examples=[BATCH_EXAMPLE]), v
             by_key[key] = card
             boxes.append((col, row, cols, rows))
             done[key] = "created"
+            sync_block(db, v, card, board)
         else:
             if op.entity:
                 card.entity_id = find_entity(db, v.campaign_id, op.entity).id
@@ -488,7 +482,9 @@ def batch_board(board_id: str, body: BatchIn = Body(examples=[BATCH_EXAMPLE]), v
             if op.row is not None:
                 card.y = op.row * ROW
             done[card.key] = "updated"
-        sync_block(db, v, card, board)
+            # блок записи пересобирается, только когда меняются записки или то, к чему они приросли
+            if op.notes is not None or op.entity or op.clock:
+                sync_block(db, v, card, board)
 
     db.flush()
     applied = 0

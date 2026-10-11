@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -58,6 +58,12 @@ class MeOut(BaseModel):
     is_admin: bool
     password_default: bool = Field(description="True until the seeded default password is changed; until then every other call answers 403, except `POST /api/auth/password`.")
     campaigns: list[MyMembership]
+
+
+@router.get("/session", include_in_schema=False)
+def check_session(_: User = Depends(session_user)) -> Response:
+    """Для nginx: картинки книги правил отдаются только вошедшим (auth_request)."""
+    return Response(status_code=204)
 
 
 @router.get("/me", summary="Who am I", response_model=MeOut, responses=error_responses(401))

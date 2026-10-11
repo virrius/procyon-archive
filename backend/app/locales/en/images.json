@@ -16,8 +16,6 @@
   "bad_view": "frame subtype must be one of: {options}",
   "bad_register": "register must be one of: {options}",
   "describe": "describe what to generate",
-  "nothing_to_redress": "nothing to re-dress: the paragraph is empty",
-  "legacy_attempt": "this attempt was built from old chips — it can only be edited as a line",
   "describe_inpaint": "describe what should appear in the painted area",
   "generate_denied": "Only the GM or someone who can edit the entry can generate.",
   "prompt_english": "the prompt must be in English — the model doesn't understand Cyrillic",
@@ -49,5 +47,6 @@
   "prompt_required": "prompt required",
   "candidate_missing": "no such candidate",
   "job_not_ready": "the job is not ready yet",
-  "gm_only": "GM only"
+  "gm_only": "GM only",
+  "no_takes": "the slots have no takes — draft the prompt again"
 }

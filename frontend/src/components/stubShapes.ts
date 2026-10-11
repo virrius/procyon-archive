@@ -186,19 +186,6 @@ export const SIGIL: StubShape = {
   ribs: [[8, 'M13 78h124']],
 }
 
-/** досье: лист с загнутым углом */
-export const DOSSIER: StubShape = {
-  box: '0 0 160 170',
-  height: '64%',
-  paths: ['M22 14h94l24 24v124H22Z'],
-  cuts: [
-    'M116 14v26h24',
-    'M40 62h80v7H40ZM40 82h80v7H40ZM40 102h52v7H40Z',
-    'M104 108a18 18 0 1 0 0 36 18 18 0 0 0 0-36Z',
-  ],
-  marks: [[4, 'M96 126l6 7 12-13']],
-}
-
 /** работа: контракт с печатью */
 export const CONTRACT: StubShape = {
   box: '0 0 160 170',

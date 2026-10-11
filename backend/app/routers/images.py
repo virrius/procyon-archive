@@ -15,7 +15,7 @@ import httpx
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from PIL import Image, ImageFilter
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, object_session
 
 from .. import history as journal
@@ -23,11 +23,12 @@ from ..api_schema import AUTH_ERRORS, Ok, error_responses
 from ..config import settings
 from ..db import SessionLocal, get_db
 from ..deps import editor, gm_only, viewer
-from ..i18n import ctr, tr
+from ..i18n import campaign_lang, ctr, reset_campaign, tr, use_campaign
 from ..models import Attachment, Campaign, Entity, ImageGenJob
 from ..hub_draw import HubDrawError, NoEditing, brief, can_edit, draw, edit
-from ..server_cfg import campaign_kit, doc_override, draw_conf, hub_conf
+from ..server_cfg import campaign_kit, doc_override, draw_conf, hub_conf, parse_kit
 from ..langpack import prompting as P
+from ..translit import slugify, translit
 from ..visibility import Viewer, apply_scope, can_see, entity_editable
 from .entities import get_visible_entity
 from .files import ALLOWED, MAX_BYTES, drop_files
@@ -62,9 +63,8 @@ _hub_job: dict = {}
 # консоль) — вернуть её некому: она висит вечно, а картинка-исходник остаётся
 # занятой навсегда. Поэтому висяки подбираем сами.
 # grace — сколько ждём после claim, прежде чем верить пингу: первый пинг с job_id
-# приходит не мгновенно. max — потолок на всю пачку из 4 кандидатов
+# приходит не мгновенно
 CLAIM_GRACE = 90
-CLAIM_MAX = 25 * 60
 # «пинг свежий, но воркер занят другим» — сигнал слабее: воркеров может оказаться
 # запущено несколько, и пингом они перебивают друг друга. Поэтому по нему ждём
 # дольше самой длинной честной пачки из 4 кандидатов
@@ -74,8 +74,6 @@ MAX_ATTEMPTS = 2
 # и без срока таких набирается тысяча: файлы кандидатов лежат мёртвым весом, а форма
 # генерации показывает при заходе прошлонедельный кадр как свежий
 DRAFT_TTL = 24 * 3600
-DRAFT_SWEEP_EVERY = 300
-_draft_sweep = {"ts": 0.0}
 
 
 def key_out(key: str | None) -> dict:
@@ -84,51 +82,21 @@ def key_out(key: str | None) -> dict:
     return {"api_key_set": bool(key), "api_key_tail": key[-4:]}
 
 
-def kit_overrides(camp: Campaign) -> dict:
-    if not (camp.img_prompt_kit or "").strip():
-        return {}
-    try:
-        return json.loads(camp.img_prompt_kit)
-    except ValueError:
-        return {}
-
-
-def drop_nulls(node: dict) -> dict:
-    """null в правке — «убрать ключ», а не «записать пустоту». Так удаляется то,
-    чего в коде нет вовсе: наряд гардероба завёл стол, и вернуть его к дефолту
-    нечем — дефолт пуст."""
-    out = {}
-    for key, value in node.items():
-        if value is None:
-            continue
-        out[key] = drop_nulls(value) if isinstance(value, dict) else value
-    return out
-
-
-def save_kit(camp: Campaign, db: Session, patch: dict) -> None:
-    merged = drop_nulls(P().merge_kit(kit_overrides(camp), patch))
-    # секция, совпавшая с дефолтом, из переопределений уходит: иначе кампания
-    # навсегда застынет на старой версии текста, который правился в коде
-    base = P().default_kit()
-    merged = {k: v for k, v in merged.items() if v != base.get(k)}
-    camp.img_prompt_kit = json.dumps(merged, ensure_ascii=False) if merged else ""
+def save_wardrobe(camp: Campaign, db: Session, key: str, item: dict | None) -> None:
+    """Гардероб кампании: {"wardrobe": {ключ: наряд}}; None — наряд убран."""
+    ward = dict(parse_kit(camp.img_prompt_kit).get("wardrobe") or {})
+    if item is None:
+        ward.pop(key, None)
+    else:
+        ward[key] = item
+    camp.img_prompt_kit = json.dumps({"wardrobe": ward}, ensure_ascii=False) if ward else ""
     db.commit()
-
-
-TRANSLIT = str.maketrans({
-    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e", "ж": "zh",
-    "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o",
-    "п": "p", "р": "r", "с": "s", "т": "t", "у": "u", "ф": "f", "х": "h", "ц": "c",
-    "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu",
-    "я": "ya",
-})
 
 
 def outfit_key(title: str, taken: set[str]) -> str:
     """Ключ наряда из названия: он попадает в снимок формы карточки, поэтому
     остаётся латиницей и переживает переименование."""
-    slug = re.sub(r"[^a-z0-9]+", "-", title.lower().translate(TRANSLIT)).strip("-")
-    slug = slug[:40] or "outfit"
+    slug = slugify(title, "outfit", 40)
     key, n = slug, 2
     while key in taken:
         key, n = f"{slug}-{n}", n + 1
@@ -141,25 +109,17 @@ def wardrobe_out(camp: Campaign) -> dict:
 
 
 class OutfitIn(BaseModel):
-    """An outfit of the campaign wardrobe: a name plus the clothing slots a prompt draft produced."""
+    """An outfit of the campaign wardrobe: a name plus the clothing a prompt draft produced."""
 
-    title: str = Field(description="Outfit name; the key is derived from it (Latin slug) and never changes.")
+    title: str = Field(max_length=200, description="Outfit name; the key is derived from it (Latin slug) and never changes.")
     wear: list[str] = Field(default=[], description="Clothing phrases, as returned in `slots.wear` of a prompt draft. At least one.")
-    gear: list[str] = Field(default=[], description="Gear phrases (optional).")
-    register: str = Field(default="", description="Register key from `GET /registers`; empty = none.")
-    note: str = Field(default="", description="Free note for the GM.")
     image: str = Field(default="", description="URL of a candidate frame used as the outfit thumbnail (`/api/campaigns/{id}/files/{attachment_id}`).")
 
 
 class OutfitOut(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
     key: str = Field(description="Outfit key, used as `wardrobe` in prompt drafts.")
     title: str = ""
     wear: list[str] = []
-    gear: list[str] = []
-    register: str = ""
-    note: str = ""
     image: str = ""
 
 
@@ -184,9 +144,7 @@ def clean_outfit(body: OutfitIn) -> dict:
     wear = [x.strip() for x in body.wear if x.strip()]
     if not wear:
         raise HTTPException(400, tr("images.outfit_empty"))
-    register = P().norm_register(body.register)
-    return {"title": title, "wear": wear, "register": register,
-            "note": body.note.strip(), "image": body.image.strip()}
+    return {"title": title, "wear": wear, "image": body.image.strip()}
 
 
 def keep_outfit_image(db: Session, campaign_id: str, key: str, url: str) -> None:
@@ -206,7 +164,7 @@ def create_outfit(body: OutfitIn, v: Viewer = Depends(editor),
     ward = campaign_kit(camp).get("wardrobe") or {}
     key = outfit_key(item["title"], set(ward))
     keep_outfit_image(db, camp.id, key, item["image"])
-    save_kit(camp, db, {"wardrobe": {key: item}})
+    save_wardrobe(camp, db, key, item)
     return {"key": key, **wardrobe_out(camp)}
 
 
@@ -220,7 +178,7 @@ def update_outfit(key: str, body: OutfitIn, v: Viewer = Depends(gm_only),
         raise HTTPException(404, tr("images.outfit_missing"))
     item = clean_outfit(body)
     keep_outfit_image(db, camp.id, key, item["image"])
-    save_kit(camp, db, {"wardrobe": {key: item}})
+    save_wardrobe(camp, db, key, item)
     return wardrobe_out(camp)
 
 
@@ -233,7 +191,7 @@ def delete_outfit(key: str, v: Viewer = Depends(gm_only), db: Session = Depends(
     for a in db.query(Attachment).filter_by(campaign_id=camp.id, target_type=OUTFIT, target_id=key):
         drop_files(a)
         db.delete(a)
-    save_kit(camp, db, {"wardrobe": {key: None}})
+    save_wardrobe(camp, db, key, None)
     return wardrobe_out(camp)
 
 
@@ -254,13 +212,14 @@ class PromptDraftIn(BaseModel):
     sex: Literal["", "male", "female"] = Field(default="", description="Portrait: force the sex; empty lets the hub decide.")
     people: Literal["", "none", "some"] = Field(default="", description="Frame: `none` — nobody in shot, `some` — people present, empty — whatever fits.")
     seed_key: str = Field(default="", description="Entity id: keeps a xenos character tied to one animal kin across drafts.")
+    candidates: int = Field(default=4, ge=1, le=4, description="How many candidates the job will draw (4 for portraits, 1 for frames): the hub writes one take per candidate.")
 
 
 class PromptDraftOut(BaseModel):
     slots: dict = Field(description="Parts of the picture as the hub wrote them; edit and send to `/image-prompt/rebuild`.")
     wardrobe: str = ""
     prompt: str = Field(description="The prompt for the drawing model. Send it verbatim as `prompt` of an image job.")
-    prompts: list[str] = Field(description="Per-candidate variants of the prompt (the job uses them when `params.slots` is passed).")
+    prompts: list[str] = Field(description="One prompt per take (the job draws them as its candidates when `params.slots` is passed).")
     view: str | None = Field(default=None, description="Frame subtype; null for portraits.")
     register: str = ""
 
@@ -274,7 +233,7 @@ def hub_call(camp: Campaign, system: str, text: str, schema: dict,
              where: str = "") -> dict:
     """Поход в LLM-хаб со structured output. Возвращает разобранный ответ; битый JSON — повтор.
     Адрес, модель и ключ — хаба картинок, если вызов не принёс своих; where — где их искать ГМу."""
-    hub = hub_conf(camp)
+    hub = hub_conf(object_session(camp))
     base_url = base_url or hub["base_url"]
     model = model or hub["model"]
     api_key = api_key or hub["api_key"]
@@ -320,19 +279,28 @@ def hub_call(camp: Campaign, system: str, text: str, schema: dict,
     raise HTTPException(502, tr("images.hub_silent"))
 
 
+def dress(slots: dict, wear: list[str]) -> dict:
+    """Наряд встаёт в часть одежды дословно — и в первом черновике, и при смене наряда."""
+    return {**slots, "wear": wear, "outfit": "They wear " + "; ".join(wear) + "."}
+
+
 def draft_slots(camp: Campaign, kind: str, register: str, text: str,
                 view: str = "interior", wardrobe: str = "", who: str = "", sex: str = "",
-                people: str = "", seed_key: str = "", parts: bool = True) -> dict:
+                people: str = "", seed_key: str = "", takes: int = CANDIDATES_PER_JOB) -> dict:
     """Промпт для рисующей модели: хаб пишет части видимого, код склеивает их и ставит стиль,
     рамку и якорь."""
     kit = campaign_kit(camp)
-    doc = doc_override(object_session(camp), kind, camp) or P().prose.DOCS[kind]
-    outfit = P().kit.outfit_slots(kit, wardrobe) if kind == "person" and wardrobe else {}
-    xeno = P().prose.cast_rule(who, sex, seed_key, text) if kind == "person" else P().prose.xeno_seed()
+    doc = doc_override(object_session(camp), kind) or P().prose.DOCS[kind]
+    wear = P().kit.outfit_slots(kit, wardrobe).get("wear") if kind == "person" and wardrobe else None
+    xeno = {"person": lambda: P().prose.cast_rule(who, sex, seed_key, text),
+            "action": lambda: P().prose.xeno_seed()}.get(kind, lambda: "")()
     people = people if kind != "person" else ""
-    system = P().prose.system_prompt(doc, kit, kind, register, view, outfit, xeno, parts, people)
-    parsed = P().prose.fold_time(hub_call(camp, system, text, P().prose.schema(kind, view, kit, register, parts,
-                                                                                people), max_tokens=3000))
+    system = P().prose.system_prompt(doc, kit, kind, register, view, {"wear": wear} if wear else None, xeno,
+                                     people, takes)
+    schema = P().prose.schema(kind, view, kit, register, people, takes, wear=not wear)
+    parsed = P().prose.fold_time(hub_call(camp, system, text, schema, max_tokens=3000))
+    if wear:
+        parsed = dress(parsed, wear)
     # руки в абзаце хаб мог выдумать: анатомию плеч код дописывает только по слову ГМа
     parsed["four_arms"] = P().prose.gm_four_arms(text)
     if people == "none":
@@ -349,13 +317,8 @@ def draft_slots(camp: Campaign, kind: str, register: str, text: str,
 
 
 def draft_inpaint_prompt(camp: Campaign, system: str, text: str) -> dict:
-    """Правка по маске — единственный случай, где негатив зависит от контекста кадра,
-    там его по-прежнему пишет модель."""
     parsed = hub_call(camp, system, text, P().INPAINT_PROMPT_SCHEMA)
-    return {
-        "prompt": str(parsed.get("prompt", "")).strip(),
-        "negative_prompt": str(parsed.get("negative_prompt", "")).strip(),
-    }
+    return {"prompt": translit(str(parsed.get("prompt", "")).strip())}
 
 
 def check_draft_choices(kind: str, view: str, register: str, kit: dict) -> None:
@@ -405,7 +368,7 @@ def create_image_prompt(
     camp = db.get(Campaign, v.campaign_id)
     check_draft_choices(body.kind, body.view, body.register, campaign_kit(camp))
     return draft_slots(camp, body.kind, body.register, text, body.view, body.wardrobe,
-                       body.who, body.sex, body.people, body.seed_key)
+                       body.who, body.sex, body.people, body.seed_key, body.candidates)
 
 
 class PromptRebuildIn(BaseModel):
@@ -415,7 +378,7 @@ class PromptRebuildIn(BaseModel):
     kind: PromptKind = "person"
     register: str = ""
     view: FrameView = "interior"
-    wardrobe: str = Field(default="", description="Outfit key to dress the slots in; no hub call unless the draft is a paragraph.")
+    wardrobe: str = Field(default="", description="Outfit key to dress the slots in.")
 
 
 @router.post("/image-prompt/rebuild", tags=["images"], summary="Rebuild a prompt from edited slots",
@@ -423,25 +386,17 @@ class PromptRebuildIn(BaseModel):
 def rebuild_image_prompt(
     body: PromptRebuildIn, v: Viewer = Depends(editor), db: Session = Depends(get_db)
 ):
-    """Reassemble the prompt from edited `slots` in code — instant, no hub call (except re-dressing a
-    paragraph-style draft, which goes to the hub). 409 — the slots come from an old draft format."""
+    """Reassemble the prompt from edited `slots` in code — instant, no hub call. 400 — the slots have
+    no `takes`."""
     body.register = P().norm_register(body.register)
     camp = db.get(Campaign, v.campaign_id)
-    check_draft_choices(body.kind, body.view, body.register, campaign_kit(camp))
-    if body.kind == "person" and body.wardrobe and "takes" in body.slots:
-        # у частей одежда — своя часть: наряд встаёт в неё дословно, без хаба
-        wear = P().kit.outfit_slots(campaign_kit(camp), body.wardrobe).get("wear") or []
-        if wear:
-            body.slots = {**body.slots, "wear": wear, "outfit": "They wear " + "; ".join(wear) + "."}
-    elif body.kind == "person" and body.wardrobe:
-        # наряд в абзац кодом не вписать: хаб переписывает прежний абзац в этой одежде
-        text = str(body.slots.get("picture", "")).strip()
-        if not text:
-            raise HTTPException(400, tr("images.nothing_to_redress"))
-        return draft_slots(camp, body.kind, body.register, text, body.view, body.wardrobe)
-    if "picture" not in body.slots and "takes" not in body.slots:
-        raise HTTPException(409, tr("images.legacy_attempt"))
     kit = campaign_kit(camp)
+    check_draft_choices(body.kind, body.view, body.register, kit)
+    if not isinstance(body.slots.get("takes"), list):
+        raise HTTPException(400, tr("images.no_takes"))
+    wear = P().kit.outfit_slots(kit, body.wardrobe).get("wear") if body.kind == "person" and body.wardrobe else None
+    if wear:
+        body.slots = dress(body.slots, wear)
     return {
         "slots": body.slots,
         "wardrobe": body.wardrobe,
@@ -457,21 +412,18 @@ class InpaintPromptIn(BaseModel):
 
     text: str = Field(description="What to put into the masked area, any language.")
     base_prompt: str = Field(default="", description="Prompt the source image was drawn with (`GET /inpaint-base/{id}`).")
-    base_negative: str = Field(default="", description="Negative prompt of the source, if any.")
 
 
 class InpaintPromptOut(BaseModel):
-    prompt: str = Field(description="Full-frame prompt for the edit job — pass it verbatim.")
-    negative_prompt: str
+    prompt: str = Field(description="Prompt for the edit job — pass it verbatim.")
 
 
 class InpaintBaseOut(BaseModel):
     prompt: str = Field(description="Prompt the image was drawn with; empty when unknown.")
-    negative_prompt: str
     caption: str
 
 
-def source_prompt(db: Session, campaign_id: str, a: Attachment) -> tuple[str, str]:
+def source_prompt(db: Session, campaign_id: str, a: Attachment) -> str:
     """Промпт, которым нарисован исходник: заявка после выбора не удаляется, а
     правка области без исходного промпта вырождается в перерисовку всего кадра.
 
@@ -490,8 +442,8 @@ def source_prompt(db: Session, campaign_id: str, a: Attachment) -> tuple[str, st
             .first()
         )
     if not job or job.campaign_id != campaign_id:
-        return "", ""
-    return job.prompt or "", job.negative_prompt or ""
+        return ""
+    return job.prompt or ""
 
 
 @router.get("/inpaint-base/{attachment_id}", tags=["frames"], summary="Prompt behind an image",
@@ -502,8 +454,7 @@ def get_inpaint_base(
     """The prompt an entity portrait or a campaign frame was drawn with — feed it to `/inpaint-prompt`.
     Same access rules as creating an edit job (see `POST /inpaint-jobs`)."""
     src = inpaint_source(db, v, attachment_id)
-    prompt, negative = source_prompt(db, v.campaign_id, src)
-    return {"prompt": prompt, "negative_prompt": negative, "caption": src.caption}
+    return {"prompt": source_prompt(db, v.campaign_id, src), "caption": src.caption}
 
 
 @router.post("/inpaint-prompt", tags=["frames"], summary="Draft a prompt for an area edit",
@@ -511,18 +462,17 @@ def get_inpaint_base(
 def create_inpaint_prompt(
     body: InpaintPromptIn, v: Viewer = Depends(editor), db: Session = Depends(get_db)
 ):
-    """Merge the GM's request into the source prompt via the hub: the edit conditions the whole
-    canvas, so the result is a full prompt, not a fragment. 400 — empty text or hub not configured; 502 — hub failed."""
+    """Turn the GM's request into the prompt for the masked area via the hub, with the source prompt as
+    context. 400 — empty text or hub not configured; 502 — hub failed."""
     text = body.text.strip()
     if not text:
         raise HTTPException(400, tr("images.describe_inpaint"))
     camp = db.get(Campaign, v.campaign_id)
     said = "\n".join([
         f"ORIGINAL PROMPT: {body.base_prompt.strip() or '(unknown)'}",
-        f"ORIGINAL NEGATIVE: {body.base_negative.strip() or '(none)'}",
         f"MASKED AREA REQUEST: {text}",
     ])
-    return draft_inpaint_prompt(camp, doc_override(db, "inpaint", camp) or P().DEFAULT_INPAINT_META_PROMPT, said)
+    return draft_inpaint_prompt(camp, doc_override(db, "inpaint") or P().DEFAULT_INPAINT_META_PROMPT, said)
 
 
 JobStatus = Literal["pending", "claimed", "ready", "failed", "done"]
@@ -538,14 +488,14 @@ class ImageJobOut(BaseModel):
     entity_id: str | None = Field(description="Card the portrait is for; null for campaign frames.")
     kind: Literal["txt2img", "inpaint"] = Field(description="`txt2img` — drawn from the prompt; `inpaint` — an area of a source image redrawn by mask.")
     prompt: str
-    negative_prompt: str
     width: int
     height: int
     n_images: int = Field(description="Candidates requested: 4 for portraits and edits, 1 for frames.")
     denoise: float = Field(description="Edit strength (inpaint): 1.0 rewrites the area, lower keeps the source shape.")
     status: JobStatus = Field(description="`pending` → `claimed` (drawing; finished candidates appear as they come) → `ready` (choose) | `failed` (see `error`); `done` after pick/keep.")
     error: str
-    candidates: list[CandidateOut] = Field(description="Filled while `claimed`/`ready`; unpicked candidates are deleted 24 h after the job was created.")
+    candidates: list[CandidateOut] = Field(description="Filled while `claimed`/`ready`.")
+    expires_at: datetime | None = Field(default=None, description="`ready` only: when the unpicked candidates are deleted together with the job.")
     source_url: str | None = Field(description="Inpaint: the image being edited.")
     params: dict = Field(description="Draft choices and slots the job was built from (what was sent in `params`).")
     created_at: datetime
@@ -575,7 +525,6 @@ def job_out(job: ImageGenJob, db: Session) -> dict:
         "entity_id": job.entity_id,
         "kind": job.kind or "txt2img",
         "prompt": job.prompt,
-        "negative_prompt": job.negative_prompt,
         "width": job.width,
         "height": job.height,
         "n_images": job.n_images,
@@ -583,6 +532,7 @@ def job_out(job: ImageGenJob, db: Session) -> dict:
         "status": job.status,
         "error": job.error,
         "candidates": candidates,
+        "expires_at": job.created_at + timedelta(seconds=DRAFT_TTL) if job.status == "ready" else None,
         "source_url": f"/api/campaigns/{job.campaign_id}/files/{src}" if src else None,
         "params": job.params or {},
         "created_at": job.created_at,
@@ -596,9 +546,10 @@ def worker_fresh() -> bool:
 def reap_stale_jobs(db: Session) -> None:
     """Вернуть в очередь заявки, которые держит мёртвый воркер.
 
-    Живой воркер пингует каждые 10 с и называет заявку, над которой сидит. Пинг
-    пропал — рисовать некому, заявка потеряна. Пинг есть, но про другую заявку —
-    сигнал слабее (воркеров может быть запущено несколько), и такую ждём дольше.
+    Живой воркер пингует каждые 10 с и называет заявку, над которой сидит: такую не
+    трогаем, сколько бы она ни рисовалась — свой потолок на кандидата воркер держит
+    сам. Пинг пропал — рисовать некому, заявка потеряна. Пинг есть, но про другую
+    заявку — сигнал слабее (воркеров может быть запущено несколько), и такую ждём дольше.
 
     Первый заход возвращаем в pending: чаще всего воркер просто перезапустили, и он
     дорисует сам. Второй — гасим в failed, чтобы не гонять по кругу сбоящую задачу.
@@ -614,17 +565,16 @@ def reap_stale_jobs(db: Session) -> None:
         claimed = job.claimed_at
         if claimed and claimed.tzinfo is None:
             claimed = claimed.replace(tzinfo=timezone.utc)
-        # заявка из времён до этой колонки: возраста нет, считаем потерянной
-        age = (now - claimed).total_seconds() if claimed else CLAIM_MAX + 1
-        if age <= CLAIM_GRACE or job.id == _hub_job.get("id"):
+        age = (now - claimed).total_seconds() if claimed else float("inf")
+        if age <= CLAIM_GRACE or job.id in (_hub_job.get("id"), live):
             continue
-        # воркер жив и держит именно эту заявку — не трогаем до самого потолка
-        if age < CLAIM_MAX and (live == job.id or (fresh and age < CLAIM_IDLE)):
+        if fresh and age < CLAIM_IDLE:
             continue
+        lang = campaign_lang(job.campaign_id)
         if job.attempts >= MAX_ATTEMPTS:
-            job.status, job.error = "failed", ctr("content.lost_final")
+            job.status, job.error = "failed", tr("content.lost_final", lang=lang)
         else:
-            job.status, job.error = "pending", ctr("content.lost_error")
+            job.status, job.error = "pending", tr("content.lost_error", lang=lang)
         job.claimed_at = None
         changed = True
     if changed:
@@ -638,11 +588,8 @@ def sweep_stale_drafts(db: Session) -> None:
     калибровки на тысячу кадров так и осталась лежать гигабайтами кандидатов, а
     форма кадра при заходе подхватывала как свой недорисованный кадр черновик
     недельной давности. Сохранённые кадры и портреты не трогаем — у них статус
-    `done`, а вложение уже не кандидат.
+    `done`, а вложение уже не кандидат. Срок виден в ленте (`expires_at`).
     """
-    if time.time() - _draft_sweep["ts"] < DRAFT_SWEEP_EVERY:
-        return
-    _draft_sweep["ts"] = time.time()
     cutoff = datetime.now(timezone.utc) - timedelta(seconds=DRAFT_TTL)
     rows = (
         db.query(ImageGenJob)
@@ -655,7 +602,7 @@ def sweep_stale_drafts(db: Session) -> None:
         drop_job_attachments(db, job, (CANDIDATE, *JOB_TEMP))
         db.delete(job)
     db.commit()
-    print(f"[images] снято просроченных черновиков: {len(rows)}")
+    log.info("снято просроченных черновиков: %d", len(rows))
 
 
 def get_own_job(db: Session, campaign_id: str, job_id: str) -> ImageGenJob:
@@ -682,76 +629,52 @@ class ImageJobIn(BaseModel):
     """A drawing request. `prompt` must come from `POST /image-prompt` verbatim."""
 
     prompt: str = Field(description="Prompt for the drawing model, Latin script only (400 otherwise). Take it from `/image-prompt` unchanged.",
-                        examples=["Oil painting, three-quarter portrait of a weathered xenos smuggler..."])
+                        examples=["Painterly sci-fi concept art with visible brush strokes... A full-body view of a single person..."])
     seed: int = Field(default=0, description="0 — random; any other value makes two builds of the prompt comparable.")
-    width: int = Field(default=896, description="Pixels, clamped to 256–1536.")
-    height: int = Field(default=1152, description="Pixels, clamped to 256–1536.")
-    params: dict = Field(default={}, description="Draft choices to remember with the attempt (`kind`, `view`, `register`, `slots`, `wardrobe`, `hand`). With `slots` present each candidate gets its own prompt variant. ≤16 KB.")
+    width: int = Field(default=832, description="Pixels, clamped to 256–1536. Native sizes: 832×1216, 1216×832, 1344×768, 1024×1024, 768×1344.")
+    height: int = Field(default=1216, description="Pixels, clamped to 256–1536.")
+    params: dict = Field(default={}, description="Draft choices to remember with the attempt (`kind`, `view`, `register`, `slots`, `wardrobe`, `hand`). With `slots` from `/image-prompt` each candidate is drawn from its own take; without them the candidates get the same prompt with different camera hints. ≤16 KB.")
 
 
 MAX_PARAMS_BYTES = 16_000
 
 
 MIN_SIDE, MAX_SIDE = 256, 1536
-# CLIP-энкодер не понимает кириллицу — промпт должен быть на английском
+# энкодер рисующей модели кириллицу не читает — промпт должен быть на английском
 CYRILLIC = re.compile(r"[а-яёА-ЯЁ]")
-
-
-def tag_words(text: str) -> list[str]:
-    low = text.lower()
-    for ch in "(),.:":
-        low = low.replace(ch, " ")
-    # веса словами не считаем: (arm:1.3) и (arm:1.2) — один и тот же тег
-    return [w for w in low.split() if not w.replace(".", "").isdigit()]
-
-
-def drop_self_negation(prompt: str, negative: str) -> str:
-    """Выкинуть из негатива то, что просят нарисовать в позитиве.
-
-    Хаб регулярно кладёт заказанное и в негатив («протез» в обоих полях): модель тогда
-    обходит область стороной и заполняет её тем, что вокруг. Ловим здесь, а не только в
-    воркере, — тот живёт на машине ГМа и обновляется отдельно.
-    """
-    words = set(tag_words(prompt))
-    keep = []
-    for tag in negative.split(","):
-        t = tag.strip()
-        if not t:
-            continue
-        parts = tag_words(t)
-        if parts and all(w in words for w in parts):
-            continue
-        keep.append(t)
-    return ", ".join(keep)
-
-
 PROMPT_MAX = 3200
+# Z-Image-Turbo почти не меняет кадр от сида к сиду: строку без дублей хаба (правленую
+# руками или пришедшую по API без slots) кандидаты повторяют с подсказкой ракурса
+COMPOSITION_HINTS = ("", "alternate pose and framing, ", "different camera angle, ",
+                     "varied composition and lighting, ")
 
 
-def check_prompt(prompt: str, negative: str) -> tuple[str, str]:
-    prompt, negative = prompt.strip(), negative.strip()
+def check_prompt(prompt: str) -> str:
+    prompt = prompt.strip()
     if not prompt:
         raise HTTPException(400, tr("images.prompt_required"))
-    if CYRILLIC.search(prompt) or CYRILLIC.search(negative):
+    if CYRILLIC.search(prompt):
         raise HTTPException(400, tr("images.prompt_english"))
-    return prompt, drop_self_negation(prompt, negative)
+    return prompt
 
 
 def candidate_prompts(db: Session, v: Viewer, params: dict, prompt: str, n_images: int) -> list[str]:
-    """Строка на каждого кандидата из вариантов хаба. Строку, правленую руками,
-    варианты не повторяют — тогда воркер рисует её одну с подсказками ракурса."""
-    slots = params.get("slots") or {}
-    if (n_images < 2 or params.get("hand") or not (slots.get("variants") or slots.get("takes"))
-            or params.get("kind") not in P().KINDS):
+    """Строка на каждого кандидата: дубли хаба, а без них — та же строка с подсказкой ракурса.
+    Воркер и рисование по API берут этот список одинаково."""
+    if n_images < 2:
         return []
-    kit = campaign_kit(db.get(Campaign, v.campaign_id))
-    out = P().prose.prompts(params["kind"], slots, params.get("view") or "interior", kit,
-                        P().norm_register(params.get("register") or ""))
-    return [prompt] + [p[:PROMPT_MAX] for p in out[1:n_images]]
+    slots = params.get("slots") or {}
+    if not params.get("hand") and slots.get("takes") and params.get("kind") in P().KINDS:
+        kit = campaign_kit(db.get(Campaign, v.campaign_id))
+        out = P().prose.prompts(params["kind"], slots, params.get("view") or "interior", kit,
+                                P().norm_register(params.get("register") or ""))
+        if len(out) >= n_images:
+            return [prompt] + [p[:PROMPT_MAX] for p in out[1:n_images]]
+    return [f"{COMPOSITION_HINTS[i % len(COMPOSITION_HINTS)]}{prompt}"[:PROMPT_MAX] for i in range(n_images)]
 
 
 def build_job(db: Session, v: Viewer, body: ImageJobIn, entity_id: str | None, n_images: int) -> ImageGenJob:
-    prompt, _ = check_prompt(body.prompt, "")
+    prompt = check_prompt(body.prompt)
     if len(json.dumps(body.params)) > MAX_PARAMS_BYTES:
         raise HTTPException(400, tr("images.params_too_big"))
     prompt = prompt[:PROMPT_MAX]
@@ -791,8 +714,6 @@ def is_new_inpaint(job: ImageGenJob) -> bool:
 
 def list_attempts(db: Session, v: Viewer, entity_id: str | None) -> list[dict]:
     """Лента мастерской: свои незакрытые попытки — рисуются, ждут выбора или сорвались."""
-    reap_stale_jobs(db)
-    sweep_stale_drafts(db)
     fresh = datetime.now(timezone.utc) - timedelta(seconds=DRAFT_TTL)
     q = db.query(ImageGenJob).filter(
         ImageGenJob.campaign_id == v.campaign_id,
@@ -820,7 +741,7 @@ MAX_FORM_BYTES = 16_000  # снимок формы, а не хранилище: 
 
 
 class GenFormOut(BaseModel):
-    form: dict = Field(description="Snapshot of the generation form (direction, register, slots, prompt, size); `{}` when nothing was stored.")
+    form: dict = Field(description="Snapshot of the generation form (direction, subtype, register, format, outfit; the description only when it was edited); `{}` when nothing was stored.")
 
 
 class GenFormIn(BaseModel):
@@ -830,25 +751,8 @@ class GenFormIn(BaseModel):
 @router.get("/entities/{entity_id}/gen-form", tags=["workshop"], summary="Last generation form of a card",
             response_model=GenFormOut)
 def get_gen_form(entity_id: str, v: Viewer = Depends(editor), db: Session = Depends(get_db)):
-    """What the card was last generated with. Without a stored snapshot, the prompt and size of the
-    last job are returned instead. Open to whoever may generate for the card."""
-    e = editable_entity(db, v, entity_id)
-    if e.gen_form:
-        return {"form": e.gen_form}
-    last = (
-        db.query(ImageGenJob)
-        .filter(ImageGenJob.campaign_id == v.campaign_id, ImageGenJob.entity_id == entity_id,
-                ImageGenJob.kind == "txt2img")
-        .order_by(ImageGenJob.created_at.desc())
-        .first()
-    )
-    if not last:
-        return {"form": {}}
-    return {"form": {
-        "prompt": last.prompt,
-        "width": last.width,
-        "height": last.height,
-    }}
+    """What the card was last generated with. Open to whoever may generate for the card."""
+    return {"form": editable_entity(db, v, entity_id).gen_form or {}}
 
 
 @router.put("/entities/{entity_id}/gen-form", tags=["workshop"], summary="Store the generation form of a card",
@@ -893,7 +797,7 @@ class WorkerStatusOut(BaseModel):
     age_s: float | None = Field(description="Seconds since the worker's last heartbeat; null when none.")
     comfy: str | None = Field(description="ComfyUI state reported by the worker.")
     checkpoint: str | None = Field(description="Model drawing now (worker checkpoint or the API model label).")
-    inpaint_checkpoint: str | None = Field(description="Model the worker edits areas with.")
+    inpaint_checkpoint: str | None = Field(description="How the worker edits areas.")
     job: WorkerJobOut | None = Field(description="Job being drawn right now.")
     edit: bool = Field(description="Whether area editing (inpaint) is available: a live worker, or an image API that supports edits.")
     hub: bool = Field(description="Whether the LLM hub is configured, i.e. `POST /image-prompt` can draft prompts. If false, a server admin sets it with `PATCH /api/admin/hub`.")
@@ -907,14 +811,11 @@ def image_worker_status(v: Viewer = Depends(editor), db: Session = Depends(get_d
     """Drawing capacity: worker heartbeat or the configured image API, queue of this campaign, last error.
     Check `state` before queueing many jobs; `edit` tells whether inpaint jobs will be served;
     `hub` whether prompts can be drafted at all."""
-    # воркер может быть выключен совсем — тогда его поллинг висяки не разгребёт,
-    # а плашку статуса интерфейс дёргает и без него
-    reap_stale_jobs(db)
     beat = _worker_beat
     age = time.time() - beat["ts"] if beat else None
     drawer = draw_conf(db)
     # правку области воркер забирает себе, пока жив; без него — сервис, если умеет
-    editing = worker_fresh() or bool(drawer and can_edit(drawer["kind"], drawer["base_url"]))
+    editing = worker_fresh() or bool(drawer and can_edit(drawer["base_url"]))
     if drawer:
         state = "online"
         beat = {"checkpoint": drawer["label"], "job": _hub_job.get("job")}
@@ -949,7 +850,7 @@ def image_worker_status(v: Viewer = Depends(editor), db: Session = Depends(get_d
         "inpaint_checkpoint": beat.get("inpaint_checkpoint") if beat else None,
         "job": beat.get("job") if state != "offline" else None,
         "edit": editing,
-        "hub": all(hub_conf(db.get(Campaign, v.campaign_id)).get(x) for x in ("base_url", "api_key", "model")),
+        "hub": all(hub_conf(db).get(x) for x in ("base_url", "api_key", "model")),
         "queue": queue,
         "last_error": last_failed.error if last_failed else None,
     }
@@ -1177,7 +1078,7 @@ MASK_MIN_WHITE = 16
 FEATHER_DIVISOR = 170
 # запас окружения вокруг закрашенного, долями его размера с каждой стороны
 CROP_PAD = 0.55
-# к этой стороне тянем вырезанный кусок: рабочее разрешение SDXL
+# к этой стороне тянем вырезанный кусок: рабочее разрешение модели
 INPAINT_TARGET = 1024
 INPAINT_BUSY = ("pending", "claimed")
 
@@ -1275,7 +1176,7 @@ def prepare_inpaint_pair(
             full = full.crop((x, y, x + cw, y + ch))
             mask = mask.crop((x, y, x + cw, y + ch))
             crop = f"{x},{y},{cw},{ch}"
-            # мелкий кусок тянем к рабочему разрешению SDXL: на 300 px модель рисует
+            # мелкий кусок тянем к рабочему разрешению модели: на 300 px она рисует
             # кашу, вклеиваем всё равно с уменьшением обратно
             if max(full.size) != INPAINT_TARGET:
                 side = INPAINT_TARGET - INPAINT_TARGET % 8
@@ -1352,8 +1253,7 @@ def own_inpaint_job(db: Session, v: Viewer, job_id: str) -> ImageGenJob:
              response_model=ImageJobOut, responses=error_responses(400, 403, 409, 410, 413, 415, 422))
 async def create_inpaint_job(
     source_attachment_id: str = Form(..., description="Attachment to edit: an entity portrait (GM only), a campaign frame (author or GM) or your own unpicked candidate."),
-    prompt: str = Form(..., description="Full-frame prompt from `POST /inpaint-prompt`, verbatim; Latin script only."),
-    negative_prompt: str = Form(default="", description="Negative prompt from `/inpaint-prompt`."),
+    prompt: str = Form(..., description="Prompt from `POST /inpaint-prompt`, verbatim; Latin script only."),
     denoise: float = Form(default=1.0, description="0.2–1.0: 1.0 repaints the area from scratch, lower keeps the source shape. Ignored when an image API draws."),
     text: str = Form(default="", description="The GM's request in plain words, kept with the attempt (≤1000 chars)."),
     mask: UploadFile = File(..., description="PNG/JPEG the size of the image: white = repaint, black = keep. Soft edges are fine."),
@@ -1370,9 +1270,7 @@ async def create_inpaint_job(
     raw = await mask.read()
     if len(raw) > MAX_BYTES:
         raise HTTPException(413, tr("images.mask_heavy"))
-    prompt, negative = check_prompt(prompt, negative_prompt)
-    # висяк от умершего воркера иначе навсегда закрывает эту картинку для правки
-    reap_stale_jobs(db)
+    prompt = check_prompt(prompt)
     busy = (
         db.query(ImageGenJob)
         .filter(ImageGenJob.campaign_id == v.campaign_id, ImageGenJob.kind == "inpaint",
@@ -1405,7 +1303,7 @@ async def create_inpaint_job(
         campaign_id=v.campaign_id, kind="inpaint", params=params,
         # правка портрета остаётся при карточке: так её видно в аудите и уборке
         entity_id=entity_id,
-        source_attachment_id=src.id, prompt=prompt[:PROMPT_MAX], negative_prompt=negative[:1000],
+        source_attachment_id=src.id, prompt=prompt[:PROMPT_MAX],
         # размер держим полный: кандидат вклеивается обратно в целый кадр, а окно
         # правки и галерея показывают пропорции исходника, а не куска
         width=width, height=height, crop_box=crop, n_images=CANDIDATES_PER_JOB,
@@ -1419,30 +1317,9 @@ async def create_inpaint_job(
     return job_out(job, db)
 
 
-@router.get("/inpaint-jobs/active", tags=["frames"], summary="Open edit of an image", response_model=ActiveJobOut)
-def get_active_inpaint_job(
-    source_attachment_id: str = Query(description="Attachment id of the image being edited."),
-    v: Viewer = Depends(editor), db: Session = Depends(get_db),
-):
-    """The unfinished edit job of this image (pending, drawing or awaiting a pick), or null. Players see only their own."""
-    reap_stale_jobs(db)
-    job = (
-        db.query(ImageGenJob)
-        .filter(ImageGenJob.campaign_id == v.campaign_id, ImageGenJob.kind == "inpaint",
-                ImageGenJob.source_attachment_id == source_attachment_id,
-                ImageGenJob.status.in_(ACTIVE_STATUSES))
-        .order_by(ImageGenJob.created_at.desc())
-        .first()
-    )
-    if job and not v.is_gm and job.created_by != v.member_id:
-        job = None
-    return {"job": job_out(job, db) if job else None}
-
-
 @router.get("/inpaint-jobs/{job_id}", tags=["frames"], summary="Get an edit job", response_model=ImageJobOut)
 def get_inpaint_job(job_id: str, v: Viewer = Depends(viewer), db: Session = Depends(get_db)):
     """Poll until `status` is `ready` or `failed`. Players get 404 for someone else's edit."""
-    reap_stale_jobs(db)
     return job_out(own_inpaint_job(db, v, job_id), db)
 
 
@@ -1562,7 +1439,7 @@ def again_inpaint_job(
     }
     if set(blobs) != set(JOB_TEMP):
         raise HTTPException(410, tr("images.mask_dropped"))
-    prompt, _ = check_prompt(body.prompt or old.prompt, "")
+    prompt = check_prompt(body.prompt or old.prompt)
     params = dict(old.params or {})
     params["hand"] = bool(params.get("hand")) or prompt != old.prompt
     job = ImageGenJob(
@@ -1685,8 +1562,6 @@ def worker_auth(authorization: str | None = Header(default=None)) -> None:
 class HeartbeatIn(BaseModel):
     comfy: str = "unknown"
     checkpoint: str | None = None
-    # чем воркер правит область: без отдельного inpaint-чекпоинта правка идёт базой
-    # и мылит стык — ГМ должен видеть это в плашке, а не гадать
     inpaint_checkpoint: str | None = None
     job_id: str | None = None
     progress: str | None = None
@@ -1713,10 +1588,6 @@ def next_image_job(
 ):
     """caps — что воркер умеет, через запятую. Воркер без inpaint не должен получить
     заявку на правку: он нарисует по её промпту обычную картинку и молча подменит кадр."""
-    # поллинг воркера — самый частый тик в системе: на нём и подбираем висяки,
-    # и снимаем просроченные черновики (сам сборщик реже, по своему таймеру)
-    reap_stale_jobs(db)
-    sweep_stale_drafts(db)
     can = {c.strip() for c in caps.split(",") if c.strip()}
     q = db.query(ImageGenJob).filter_by(status="pending")
     if "inpaint" not in can:
@@ -1730,11 +1601,11 @@ def next_image_job(
     db.commit()
     return {"job": {
         "id": job.id, "campaign_id": job.campaign_id, "kind": job.kind or "txt2img",
-        "prompt": job.prompt, "negative_prompt": job.negative_prompt,
+        "prompt": job.prompt,
         "width": job.width, "height": job.height,
         "n_images": job.n_images or CANDIDATES_PER_JOB, "denoise": job.denoise,
         "seed": job.seed or 0,
-        # строка на кандидата: варианты хаба; пусто — одна строка на всех
+        # строка на кандидата (см. candidate_prompts); пусто — одна строка на всех
         "prompts": (job.params or {}).get("prompts") or [],
     }}
 
@@ -1869,13 +1740,14 @@ def _job_status(job_id: str) -> str | None:
 def hub_draw_once() -> bool:
     """Одна заявка с хаба. False — рисовать нечего или нечем."""
     db = SessionLocal()
+    lang = None
     try:
         conf = draw_conf(db)
         if not conf:
             return False
         # правку области воркер забирает себе, пока жив (см. next_image_job)
         kinds = ("txt2img",)
-        if not worker_fresh() and can_edit(conf["kind"], conf["base_url"]):
+        if not worker_fresh() and can_edit(conf["base_url"]):
             kinds += ("inpaint",)
         job = (
             db.query(ImageGenJob)
@@ -1888,6 +1760,7 @@ def hub_draw_once() -> bool:
             return False
         claim_job(job)
         db.commit()
+        lang = use_campaign(job.campaign_id)
         count = job.n_images or CANDIDATES_PER_JOB
         variants = (job.params or {}).get("prompts") or [job.prompt]
         prompts = [variants[i % len(variants)] for i in range(count)]
@@ -1918,10 +1791,10 @@ def hub_draw_once() -> bool:
                     src_png = fh.read()
                 with open(job_blob_row(db, job_id, MASK)[1], "rb") as fh:
                     mask_png = fh.read()
-                edit(conf["kind"], conf["base_url"], conf["api_key"], conf["model"], job.prompt,
+                edit(conf["base_url"], conf["api_key"], conf["model"], job.prompt,
                      src_png, mask_png, count, alive=alive, on_image=got)
             else:
-                draw(conf["kind"], conf["base_url"], conf["api_key"], conf["model"], prompts,
+                draw(conf["base_url"], conf["api_key"], conf["model"], prompts,
                      job.width, job.height, job.seed or 0, alive=alive, on_image=got)
             error = ""
             requeue = False
@@ -1949,20 +1822,43 @@ def hub_draw_once() -> bool:
         db.commit()
         return True
     finally:
+        if lang is not None:
+            reset_campaign(lang)
         _hub_job.clear()
         db.close()
 
 
-def hub_draw_loop() -> None:
+# уборка не ждёт запросов: чтение ленты или плашки ничего не меняет
+HOUSEKEEP_EVERY = 10
+
+
+def housekeeping() -> None:
+    """Висяки воркера — в очередь или в сбой, просроченные черновики и задания новостей — прочь."""
+    from .news import fail_stale_jobs
+
+    db = SessionLocal()
+    try:
+        reap_stale_jobs(db)
+        sweep_stale_drafts(db)
+        fail_stale_jobs(db)
+    finally:
+        db.close()
+
+
+def background_loop() -> None:
+    last = 0.0
     while True:
+        busy = False
         try:
+            if time.time() - last >= HOUSEKEEP_EVERY:
+                last = time.time()
+                housekeeping()
             busy = hub_draw_once()
         except Exception as exc:  # noqa: BLE001 — цикл не должен умирать
-            print(f"[hub-draw] {exc}")
-            busy = False
+            log.warning("background: %s", exc)
         if not busy:
             time.sleep(HUB_IDLE)
 
 
-def start_hub_draw() -> None:
-    threading.Thread(target=hub_draw_loop, daemon=True, name="hub-draw").start()
+def start_background() -> None:
+    threading.Thread(target=background_loop, daemon=True, name="background").start()

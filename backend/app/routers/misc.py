@@ -17,10 +17,8 @@ from ..models import (
     Clock,
     ContentBlock,
     Entity,
-    MapMarker,
     Message,
     News,
-    Note,
 )
 from ..visibility import Viewer, apply_scope, can_see
 from .entities import block_visible, parent_visible, peer_brief
@@ -29,15 +27,14 @@ router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["search"], respo
 
 
 class SearchHit(BaseModel):
-    type: Literal["entity", "block", "message", "news", "note"] = Field(description="What matched.")
-    kind: str = Field(description="Entity kind, block type, message type, news byline or note target type - depends on `type`.")
+    type: Literal["entity", "block", "message", "news"] = Field(description="What matched.")
+    kind: str = Field(description="Entity kind, block type, message type or news byline - depends on `type`.")
     id: str = Field(description="Id of the matched row (for a block: the id of the entity/clock it sits on).")
     title: str
     snippet: str = Field(description="Up to 180 characters around the match.")
     status: str
     target_type: str = Field(description="Where it leads: `entity` | `clock` | `rule` | `message` | `news` | `marker` | `map`.")
     target_id: str
-    map_id: str | None = Field(default=None, description="For a note on a map marker: the map it belongs to.")
 
 
 def block_shown(db: Session, v: Viewer, b: ContentBlock) -> bool:
@@ -70,7 +67,7 @@ def search(
     limit: int = Query(40, ge=1, le=200, description="Per result type; the answer holds at most 2 x limit rows."),
 ):
     """Substring search over entities (name, alias, summary; GM also over `fields`), content
-    blocks, messages, news and notes - filtered by what the viewer may see. The usual way to
+    blocks, messages and news - filtered by what the viewer may see. The usual way to
     turn a name into an id; for entities alone `GET /entities?q=` returns full cards."""
     like = f"%{q}%"
     results: list[dict] = []
@@ -132,21 +129,6 @@ def search(
             "type": "news", "kind": n.byline, "id": n.id,
             "title": n.headline or tr("misc.search.from", name=n.byline), "snippet": n.body[:180], "status": "",
             "target_type": "news", "target_id": n.id,
-        })
-
-    nq = db.query(Note).filter(
-        Note.campaign_id == v.campaign_id,
-        or_(Note.title.ilike(like), Note.body.ilike(like)),
-    )
-    notes = apply_scope(nq, Note, v)
-    for n in islice((n for n in notes
-                     if v.is_gm or parent_visible(db, v, n.target_type, n.target_id)), limit):
-        marker = db.get(MapMarker, n.target_id) if n.target_type == "marker" else None
-        results.append({
-            "type": "note", "kind": n.target_type, "id": n.target_id,
-            "title": n.title or tr("misc.search.map_note"), "snippet": n.body[:180], "status": n.status,
-            "target_type": n.target_type, "target_id": n.target_id,
-            "map_id": marker.map_id if marker else "",
         })
 
     return results[: limit * 2]

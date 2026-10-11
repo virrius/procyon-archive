@@ -7,10 +7,12 @@ export type Attempt = {
   id: string; kind: 'txt2img' | 'inpaint'; status: Status; error: string
   entity_id: string | null; candidates: Candidate[]; n_images: number
   prompt: string; width: number; height: number; denoise: number
-  source_url: string | null; params: Dict; created_at: string
+  source_url: string | null; params: Dict; created_at: string; expires_at?: string | null
 }
 
 export const isLive = (s: Status) => s === 'pending' || s === 'claimed'
+/** Сколько часов осталось невыбранным кандидатам: потом сервер их снесёт */
+export const hoursLeft = (iso: string) => Math.max(0, Math.ceil((+new Date(iso) - Date.now()) / 3600e3))
 export const CYRILLIC = /[а-яёА-ЯЁ]/
 
 /* Родные размеры Z-Image: стороны кратны 16 при бюджете около мегапикселя */
@@ -87,60 +89,13 @@ export const PART_LABELS: Record<string, string> = {
   light: 'part.light', subject: 'part.subject', people: 'part.people', angle: 'part.angle',
 }
 
-/* Плашки — слоты, которые код кладёт в строку. cap — сколько элементов сборка
-   берёт; лишние в строку не попадают */
-export type SlotField = { key: string; label: string; arr?: boolean; cap?: number }
-export type SlotGroup = { name: string; fields: SlotField[] }
-export const SLOT_GROUPS: Record<PromptKind, SlotGroup[]> = {
-  person: [
-    { name: 'scene', fields: [
-      { key: 'subject', label: 'who' },
-      { key: 'pose', label: 'pose' },
-      { key: 'wear', label: 'outfit', arr: true },
-      { key: 'location', label: 'place', arr: true, cap: 3 },
-      { key: 'place_object', label: 'place_object' },
-      { key: 'depth', label: 'depth' },
-    ] },
-    { name: 'light', fields: [{ key: 'light', label: '' }] },
-    { name: 'details', fields: [
-      { key: 'face', label: 'face', arr: true },
-      { key: 'build', label: 'build' },
-      { key: 'gear', label: 'gear', arr: true, cap: 3 },
-      { key: 'tech_marker', label: 'tech_marker' },
-    ] },
-  ],
-  frame: [
-    { name: 'scene', fields: [
-      { key: 'subject', label: 'what' },
-      { key: 'form', label: 'form', arr: true },
-      { key: 'surround', label: 'surround', arr: true, cap: 3 },
-    ] },
-    { name: 'light', fields: [{ key: 'light', label: '' }] },
-    { name: 'details', fields: [
-      { key: 'marks', label: 'marks', arr: true, cap: 3 },
-      { key: 'tech_marker', label: 'tech_marker' },
-    ] },
-  ],
-  action: [
-    { name: 'scene', fields: [
-      { key: 'action', label: 'action' },
-      { key: 'actors', label: 'actors', arr: true },
-      { key: 'crew', label: 'crew_outfit', arr: true, cap: 2 },
-      { key: 'place', label: 'place' },
-      { key: 'place_detail', label: 'place_detail', arr: true, cap: 2 },
-    ] },
-    { name: 'light', fields: [{ key: 'light', label: '' }] },
-    { name: 'details', fields: [{ key: 'effects', label: 'effects', arr: true, cap: 2 }] },
-  ],
-}
-
 export const STRENGTH: [string, number][] = [
   ['replace', 1.0],
   ['touch_up', 0.75],
 ]
 export const strengthTitle = (d: number) => i18n.t(`studio:strength.${d >= 0.99 ? STRENGTH[0][0] : STRENGTH[1][0]}`)
 
-export type Outfit = { key: string; title: string; wear: string[]; gear: string[]; image?: string }
+export type Outfit = { key: string; title: string; wear: string[]; image?: string }
 
 /** Куда ложится выбранный вариант попытки */
 export type Dest = 'entity' | 'scene' | 'replace'

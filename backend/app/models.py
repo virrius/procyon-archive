@@ -64,40 +64,14 @@ class Campaign(Base, PK, Stamps):
     lang: Mapped[str] = mapped_column(String(5), default="")
     members: Mapped[list[CampaignMember]] = relationship(back_populates="campaign")
 
-    # --- генерация картинок: редактируемые инструкции для LLM-хаба
-    # (OpenAI-совместимый API), который собирает из описания ГМа слоты промпта для
-    # рисующей модели. Пусто — берётся голова из набора блоков (prompting/kit.py) ---
-    # инструкция для персонажа
-    img_meta_prompt: Mapped[str] = mapped_column(Text, default="")
-    # инструкция для предмета: корабль, оружие, артефакт — всё, внутри чего никого нет
-    img_object_prompt: Mapped[str] = mapped_column(Text, default="")
-    # инструкция для локации: на входе описание места от ГМа, а не карточка сущности
-    img_scene_prompt: Mapped[str] = mapped_column(Text, default="")
-    # третья инструкция: правка уже готовой картинки по маске. На входе исходный
-    # промпт кадра и просьба ГМа переписать область (см. DEFAULT_INPAINT_META_PROMPT)
-    img_inpaint_prompt: Mapped[str] = mapped_column(Text, default="")
-    # остальные блоки промпт-кита, которые правит ГМ: планы персонажа, словари
-    # регистров, разметка слотов, списки нот, негативы и манеры. JSON с только теми
-    # ключами, что ГМ действительно менял — остальное берётся из кода
+    # гардероб кампании: {"wardrobe": {ключ: наряд}} — одежда удачных кадров стола
     img_prompt_kit: Mapped[str] = mapped_column(Text, default="")
-    # рисующая модель: у SDXL промпт — теги с весами и рабочий негатив, у z-image
-    # теги без весов и без негатива вовсе. Профиль выбирает рендерер сборки, и от
-    # него зависит, какие поля вообще имеют смысл в окне кадра
-    img_renderer: Mapped[str] = mapped_column(String(20), default="zimage")
-    img_base_url: Mapped[str] = mapped_column(String(300), default="")
-    img_model: Mapped[str] = mapped_column(String(100), default="")
-    img_api_key: Mapped[str] = mapped_column(String(200), default="")
-    # хаб депеш и откликов; пустые адрес, модель и ключ — те же, что у картинок
-    news_base_url: Mapped[str] = mapped_column(String(300), default="")
-    news_model: Mapped[str] = mapped_column(String(100), default="")
-    news_api_key: Mapped[str] = mapped_column(String(200), default="")
     # игровое время — дней от 1261.1.1; год, неделя и день недели считаются из него
     world_day: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class ServerSettings(Base):
-    """Настройки сервера, общие для всех кампаний: хаб, модели и промпты.
-    Одна строка с id «main»; пустое поле — значение кампании (переходный период)."""
+    """Настройки сервера, общие для всех кампаний: хаб, модели и промпты. Одна строка с id «main»."""
 
     __tablename__ = "server_settings"
     id: Mapped[str] = mapped_column(String(20), primary_key=True, default="main")
@@ -111,18 +85,14 @@ class ServerSettings(Base):
     draw_model: Mapped[str] = mapped_column(String(100), default="")
     draw_base_url: Mapped[str] = mapped_column(String(300), default="")
     draw_api_key: Mapped[str] = mapped_column(String(200), default="")
-    # смысл колонок тот же, что у одноимённых в campaigns
-    img_meta_prompt: Mapped[str] = mapped_column(Text, default="")
-    img_object_prompt: Mapped[str] = mapped_column(Text, default="")
-    img_scene_prompt: Mapped[str] = mapped_column(Text, default="")
+    # инструкции хабу: правка области и три направления; пусто — текст из кода
     img_inpaint_prompt: Mapped[str] = mapped_column(Text, default="")
-    # инструкции хабу под сборку прозой; прежние img_*_prompt писались под слоты
     img_prose_person: Mapped[str] = mapped_column(Text, default="")
     img_prose_frame: Mapped[str] = mapped_column(Text, default="")
     img_prose_action: Mapped[str] = mapped_column(Text, default="")
-    # правки набора без гардероба: гардероб остаётся у кампании
+    # правки кита без гардероба: гардероб остаётся у кампании
     img_prompt_kit: Mapped[str] = mapped_column(Text, default="")
-    # язык экземпляра: интерфейс, канон книги, генерация; пусто — русский
+    # язык экземпляра: интерфейс и генерация; пусто — английский
     lang: Mapped[str] = mapped_column(String(5), default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
 
@@ -146,8 +116,6 @@ class VisMixin:
 
     visibility: Mapped[str] = mapped_column(String(20), default="crew")
     visible_to: Mapped[list] = mapped_column(JSONB, default=list)
-    # не читается; в живой базе NOT NULL без DEFAULT — ORM заполняет, пока колонку не снесут
-    knowledge_status: Mapped[str] = mapped_column(String(20), default="confirmed")
 
 
 class Entity(Base, PK, Stamps, VisMixin):
@@ -288,12 +256,6 @@ class MapNode(Base, PK, Stamps, VisMixin):
     name: Mapped[str] = mapped_column(String(200))
     level: Mapped[str] = mapped_column(String(20), default="sector")
     image_url: Mapped[str] = mapped_column(String(500), default="")
-    # order, x, y, node_kind и color не читаются; в живой базе NOT NULL без DEFAULT
-    order: Mapped[int] = mapped_column(Integer, default=0)
-    x: Mapped[float] = mapped_column(Float, default=0.5)
-    y: Mapped[float] = mapped_column(Float, default=0.5)
-    node_kind: Mapped[str] = mapped_column(String(20), default="system")
-    color: Mapped[str] = mapped_column(String(20), default="")
 
 
 class MapMarker(Base, PK, Stamps, VisMixin):
@@ -307,10 +269,6 @@ class MapMarker(Base, PK, Stamps, VisMixin):
     icon: Mapped[str] = mapped_column(String(20), default="dot")
     label: Mapped[str] = mapped_column(String(200), default="")
     size: Mapped[int] = mapped_column(Integer, default=0)
-    # orbit, status и layer не читаются; в живой базе NOT NULL без DEFAULT
-    orbit: Mapped[int] = mapped_column(Integer, default=0)
-    status: Mapped[str] = mapped_column(String(30), default="rumored")
-    layer: Mapped[str] = mapped_column(String(30), default="crew")
     linked_type: Mapped[str | None] = mapped_column(String(30))
     linked_id: Mapped[str | None] = mapped_column(String(64))
     created_by: Mapped[str | None] = mapped_column(String(64))
@@ -325,23 +283,7 @@ class MapStroke(Base, PK, Stamps, VisMixin):
     points: Mapped[list] = mapped_column(JSONB, default=list)
     color: Mapped[str] = mapped_column(String(20), default="amber")
     width: Mapped[int] = mapped_column(Integer, default=3)
-    # не читается; в живой базе NOT NULL без DEFAULT
-    layer: Mapped[str] = mapped_column(String(20), default="crew")
     created_by: Mapped[str | None] = mapped_column(String(64))
-
-
-class Note(Base, PK, Stamps, VisMixin):
-    """Threaded note attached to a marker or any entity (Miro-style comment card)."""
-
-    __tablename__ = "notes"
-    campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
-    target_type: Mapped[str] = mapped_column(String(30), index=True)
-    target_id: Mapped[str] = mapped_column(String(64), index=True)
-    parent_id: Mapped[str | None] = mapped_column(String(64), index=True)
-    title: Mapped[str] = mapped_column(String(200), default="")
-    body: Mapped[str] = mapped_column(Text, default="")
-    status: Mapped[str] = mapped_column(String(20), default="open")
-    author_member_id: Mapped[str | None] = mapped_column(String(64))
 
 
 class Board(Base, PK, Stamps):
@@ -454,7 +396,6 @@ class ImageGenJob(Base, PK, Stamps):
     # 1.0 — переписать область начисто, ниже — подправить, сохранив исходную форму
     denoise: Mapped[float] = mapped_column(Float, default=1.0)
     prompt: Mapped[str] = mapped_column(Text, default="")
-    negative_prompt: Mapped[str] = mapped_column(Text, default="")
     width: Mapped[int] = mapped_column(Integer, default=768)
     height: Mapped[int] = mapped_column(Integer, default=960)
     n_images: Mapped[int] = mapped_column(Integer, default=4)

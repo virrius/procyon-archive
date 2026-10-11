@@ -40,26 +40,11 @@ a.t:hover { color: var(--amber); }
 .tag-entry > input:focus { border: none; }
 .tag-entry > input:focus-visible { outline: none; }
 
-.tag-ns {
-  flex: 0 0 auto; max-width: 116px;
-  font-family: var(--util); font-size: 11.5px; line-height: 1.5;
-  color: var(--dim); background: var(--surface2);
-  border: 1px solid var(--line2); padding: 1px 4px;
-}
-.tag-ns:hover { color: var(--txt); border-color: var(--dim2); }
-.tag-ns:focus { color: var(--txt); border-color: var(--amber); }
-
 /* подсказка живёт в портале на body: fixed — иначе её режут прокрутка колонки и карточки */
 .tag-pop {
   position: fixed; min-width: 200px;
   max-width: 320px; max-height: 236px; overflow-y: auto; z-index: 320;
   background: var(--surface); border: 1px solid var(--line2);
-}
-.tag-grp {
-  font-family: var(--util); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--dim2);
-  background: var(--surface2); padding: 4px 9px;
-  border-bottom: 1px solid var(--line);
 }
 .tag-opt {
   display: flex; gap: 6px; align-items: baseline; width: 100%;
@@ -144,7 +129,6 @@ input.dos-name-in {
   font-size: 15px; font-weight: 600; letter-spacing: .05em; text-transform: none;
 }
 .drop-pop.ent-class-pick { min-width: 170px; }
-
 
 /* --- печать статуса: оттиск на кадре, а не строка под ним --------------------- */
 
@@ -242,16 +226,6 @@ input.dos-name-in {
 }
 .dos-prose textarea { max-width: 72ch; margin-bottom: 0; }
 
-/* загрузка вложения — кнопка, а не системное поле выбора файла */
-.dos-file {
-  position: relative; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
-  font-size: 11px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
-  padding: 3px 8px; color: var(--dim); background: transparent; border: 1px solid var(--line);
-}
-.dos-file:hover { background: var(--surface2); color: var(--txt); }
-.dos-file:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
-.dos-file > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-
 /* ранг — латунная табличка с римской цифрой */
 .rank-gauge {
   display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 auto;
@@ -323,15 +297,6 @@ input.dos-name-in {
   /* закрытое поле не выносит рустовый кант за габарит панели */
   .dos .shut { margin-left: 0; margin-right: 0; padding-left: 6px; }
 }
-
-/* --- инлайн-контролы в заголовке карточки ----------------------------------- */
-
-select.ent-inline-sel {
-  width: auto; min-height: 22px; margin: 0; padding: 1px 5px;
-  font-family: var(--util); font-size: 11px; letter-spacing: .04em;
-  color: var(--dim); background: var(--surface2); border: 1px solid var(--line2);
-}
-select.ent-inline-sel:hover { color: var(--txt); border-color: var(--dim2); }
 
 /* --- вложения: миниатюры плиткой ------------------------------------------- */
 
@@ -446,7 +411,6 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
 @media (max-width: 700px) {
   .lnk-acts { flex-direction: column; }
 }
-
 
 /* правка на месте: значение подсвечивается под курсором, клик открывает поле */
 .ed-able { cursor: text; border-radius: 2px; transition: background .08s linear; }

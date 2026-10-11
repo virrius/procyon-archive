@@ -1,7 +1,5 @@
 /* «Кадры кампании»: сверху генерация, снизу коллекция кадров одного размера */
 
-.frames-empty h3 { margin: 0; }
-
 .frames-panel { gap: 12px; }
 .frames-bar { gap: 6px; align-items: center; }
 .frames-bar h3 { margin: 0; }
@@ -107,9 +105,6 @@ button.frame-cap:hover { color: var(--amber); }
 }
 
 .frame-when { font-family: var(--util); font-size: 10px; color: var(--dim2); }
-
-/* подпись сразу после генерации — та же ячейка, но в панели кадра */
-.frame-cap-slot { flex: 1 1 220px; min-width: 0; }
 
 /* трафарет карточки: пустая плитка того же размера, свой файл кладут прямо в неё */
 .frame-add {

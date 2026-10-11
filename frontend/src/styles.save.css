@@ -21,8 +21,3 @@
   background: var(--surface2); color: var(--dim2);
   border-color: var(--line2); cursor: default;
 }
-
-.sv-dot {
-  display: inline-block; width: 6px; height: 6px; margin-left: 6px;
-  background: var(--amber); vertical-align: middle;
-}

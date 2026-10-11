@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, c, store, thumbFull, type Dict } from '../../api'
+import { useApp } from '../../ctx'
 import { useLayer } from '../../layers'
 import { GenWorkerBadge } from '../GenWorkerBadge'
 import Lightbox from '../Lightbox'
@@ -33,6 +34,13 @@ const PEOPLE = ['some', 'none']
 
 const sceneKey = () => `pa_scene_form:${store.campaign || ''}`
 
+/** Что пульт карточки помнит на сервере: развилки, а описание — только если ГМ его правил.
+ *  Непраленое описание собирается из карточки заново: правка облика в карточке доезжает сюда сама */
+function formOf(p: Pult, auto: string): Dict {
+  const { draft, ...forks } = p
+  return draft.trim() && draft.trim() !== auto.trim() ? { ...forks, draft, edited: true } : forks
+}
+
 function loadScene(): Partial<Pult> {
   try {
     const raw = JSON.parse(localStorage.getItem(sceneKey()) || '{}')
@@ -53,6 +61,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
   onChanged?: (how?: Pick) => void
 }) {
   const { t } = useTranslation('studio')
+  const { isGM } = useApp()
   const scene = !entity
   const base = useMemo<Pult>(() => {
     if (scene) {
@@ -73,8 +82,11 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity?.id])
 
-  const [pult, setPult] = useState<Pult>(base)
+  const [pult, setPultRaw] = useState<Pult>(base)
   const [loaded, setLoaded] = useState(scene)
+  // память пульта пишется только после действия ГМа: открыть мастерскую — не правка
+  const touched = useRef(false)
+  const setPult: typeof setPultRaw = v => { touched.current = true; setPultRaw(v) }
   const [attempts, setAttempts] = useState<Attempt[]>([])
   const [kept, setKept] = useState<Record<string, { att: Attempt; id: string; label: string }>>({})
   const [draftAtt, setDraftAtt] = useState<Attempt | null>(null)
@@ -148,8 +160,8 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
       .then(r => {
         if (dead) return
         const f = (r?.form || {}) as Dict
-        setPult(p => ({
-          draft: f.draft || p.draft,
+        setPultRaw(p => ({
+          draft: (f.edited && f.draft) || p.draft,
           kind: f.kind || p.kind,
           view: f.view || p.view,
           register: f.register || '',
@@ -157,21 +169,22 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
           outfit: f.outfit || '',
           who: f.who || '', sex: f.sex || '', people: f.people || '',
         }))
+        setLoaded(true)
       })
+      // память не прочиталась — пульт работает, но сохранённое не затирает
       .catch(() => {})
-      .finally(() => { if (!dead) setLoaded(true) })
     return () => { dead = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity?.id])
 
   useEffect(() => {
-    if (!loaded) return
+    if (!loaded || !touched.current) return
     if (scene) {
       try { localStorage.setItem(sceneKey(), JSON.stringify(pult)) } catch { /* полный диск */ }
       return
     }
     const t = window.setTimeout(() => {
-      api.put(`${c()}/entities/${entity!.id}/gen-form`, { form: pult }).catch(() => {})
+      api.put(`${c()}/entities/${entity!.id}/gen-form`, { form: formOf(pult, base.draft) }).catch(() => {})
     }, SAVE_MS)
     return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -197,7 +210,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
       const r = await api.post(`${c()}/image-prompt`,
         { text, kind: pult.kind, register: pult.register, view: pult.view, wardrobe: outfit,
           who: pult.kind === 'person' ? pult.who : '', sex: pult.kind === 'person' ? pult.sex : '',
-          people: pult.kind === 'person' ? '' : pult.people, seed_key: entity?.id || '' })
+          people: pult.kind === 'person' ? '' : pult.people, seed_key: entity?.id || '', candidates: n })
       const box = aspectOf(pult.aspect)
       const params = {
         kind: pult.kind, view: pult.kind === 'frame' ? pult.view : undefined,
@@ -275,7 +288,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
   }
 
   // образ — одежда удачного кадра: дальше её подставляют в каждый кадр дословно
-  const saveOutfit = async (slots: Dict, register: string, image: string) => {
+  const saveOutfit = async (slots: Dict, image: string) => {
     const wear = ((slots.wear as string[]) || []).filter(Boolean)
     if (!wear.length) { setErr(t('err.no_wear')); return }
     const base = entity?.name ? `${entity.name}` : t('look_default')
@@ -283,7 +296,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     let title = base
     for (let i = 2; taken.has(title); i++) title = `${base} ${i}`
     try {
-      const r = await api.post(`${c()}/wardrobe`, { title, wear, register, image })
+      const r = await api.post(`${c()}/wardrobe`, { title, wear, image })
       setWardrobe(r?.wardrobe || [])
       if (r?.key) setPult(p => ({ ...p, outfit: r.key }))
     } catch (e: any) { setErr(e?.message || t('err.look_save_failed')) }
@@ -322,7 +335,8 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     mic.stop()
     setErr(''); setPhase('hub')
     try {
-      const baseRow = await api.get(`${c()}/inpaint-base/${brushSrc.id}`).catch(() => ({}))
+      // без исходного промпта правка области перерисует весь кадр: сбой чтения — стоп, а не догадка
+      const baseRow = await api.get(`${c()}/inpaint-base/${brushSrc.id}`)
       const r = await api.post(`${c()}/inpaint-prompt`, { text: said, base_prompt: baseRow?.prompt || '' })
       const prompt = String(r.prompt || '').trim()
       if (!prompt || CYRILLIC.test(prompt)) throw new Error(t('err.not_english'))
@@ -479,7 +493,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
           ) : (
             <div className="st-hint">{t('look_hint')}</div>
           )}
-          {curOutfit && (
+          {curOutfit && isGM && (
             <div className="st-look-cur">
               <span className="w">{curOutfit.wear.join(' · ')}</span>
               <div className="st-opts">
@@ -579,7 +593,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
           onAgain={ch => again(a, ch)}
           onDiscard={() => discard(a)}
           onZoom={setZoom}
-          onSaveOutfit={(s, url) => saveOutfit(s, a.params?.register || '', url)}
+          onSaveOutfit={(s, url) => saveOutfit(s, url)}
           onError={setErr} />
       ))}
       {!feed.length && !draftAtt && phase !== 'hub' && !brushSrc && (

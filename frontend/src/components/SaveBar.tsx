@@ -33,10 +33,3 @@ export function SaveBar({
     </div>
   )
 }
-
-/** Пометка «изменено» без кнопок — для строк и заголовков. */
-export function DirtyDot({ on }: { on: boolean }) {
-  const { t } = useTranslation('common')
-  if (!on) return null
-  return <span className="sv-dot" title={t('unsaved')} />
-}

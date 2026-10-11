@@ -30,13 +30,12 @@ function searchHref(r: Dict): string {
     case 'message': return `/crew/mail?open=${id}`
     case 'news': return `/news?open=${id}`
     case 'rule': return `/gm/rules?open=${id}`
-    case 'marker': return r.map_id ? `/map/${encodeURIComponent(r.map_id)}?m=${id}` : ''
     default: return ''
   }
 }
 
 const HIT_WORD: Dict = {
-  message: 'message', news: 'news', note: 'note',
+  message: 'message', news: 'news',
   'block:entity': 'block_entity', 'block:clock': 'block_clock', 'block:rule': 'block_rule',
 }
 

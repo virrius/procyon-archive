@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { api, c, thumbFull, type Dict } from '../../api'
 import { IconBrush } from '../icons'
 import {
-  CYRILLIC, PARTS, PART_LABELS, SLOT_GROUPS, aspectBySize, isLive, kindTitle, registerTitle, strengthTitle, when,
+  CYRILLIC, PARTS, PART_LABELS, aspectBySize, hoursLeft, isLive, kindTitle, registerTitle, strengthTitle, when,
   type Attempt, type Candidate, type Dest, type PromptKind,
 } from './kit'
 
@@ -21,30 +21,6 @@ function Part({ label, take, value, onChange }: {
       <textarea rows={2} value={value} onChange={e => onChange(e.target.value)}
         ref={el => { if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px` } }} />
     </label>
-  )
-}
-
-/** Плашка: значение, по клику — поле. Крестик только у элемента массива */
-function Slot({ value, off, onChange, onRemove }: {
-  value: string; off?: boolean; onChange: (v: string) => void; onRemove?: () => void
-}) {
-  const { t } = useTranslation('studio')
-  const [edit, setEdit] = useState(false)
-  const [buf, setBuf] = useState(value)
-  useEffect(() => { if (!edit) setBuf(value) }, [value, edit])
-  const commit = () => { setEdit(false); if (buf !== value) onChange(buf) }
-  return (
-    <span className={`st-sl${off ? ' off' : ''}${value.trim() ? '' : ' empty'}`}
-      title={off ? t('slot_off') : undefined}>
-      {edit
-        ? <input autoFocus value={buf} onChange={e => setBuf(e.target.value)} onBlur={commit}
-            onKeyDown={e => {
-              if (e.key === 'Enter') { e.preventDefault(); commit() }
-              if (e.key === 'Escape') { e.stopPropagation(); setBuf(value); setEdit(false) }
-            }} />
-        : <span onClick={() => setEdit(true)}>{value.trim() || '—'}</span>}
-      {onRemove && <b onClick={onRemove} title={t('remove')}>×</b>}
-    </span>
   )
 }
 
@@ -67,13 +43,10 @@ export default function AttemptCard({
   const { t } = useTranslation('studio')
   const p = att.params || {}
   const kind = p.kind as PromptKind | undefined
-  // сборка прозой: хаб пишет абзац, плашек нет — правится сама строка
-  const prose = !!p.slots && ('picture' in p.slots || 'takes' in p.slots)
+  // хаб пишет части, код склеивает строку; без частей (правка области, строка по API) правится строка
   const parted = !!p.slots && 'takes' in p.slots
-  // плашки старой сборки код больше не собирает: такая попытка правится только строкой
-  const baseSlots: Dict | null = null
   const inpaint = att.kind === 'inpaint'
-  const [tab, setTab] = useState<'slots' | 'parts' | 'line'>(parted ? 'parts' : baseSlots ? 'slots' : 'line')
+  const [tab, setTab] = useState<'parts' | 'line'>(parted ? 'parts' : 'line')
   const [ti, setTi] = useState(0)
   const [over, setOver] = useState<Change | null>(null)
   const [editLine, setEditLine] = useState(false)
@@ -82,7 +55,7 @@ export default function AttemptCard({
   const [keepSrc, setKeepSrc] = useState(false)
   const sig = useRef('')
 
-  const slots = over?.slots ?? (prose ? p.slots : baseSlots)
+  const slots = over?.slots ?? (parted ? p.slots : null)
   const prompt = over?.prompt ?? att.prompt
   const hand = over ? over.hand : !!p.hand
   const changed = !!over && (over.prompt !== att.prompt || over.hand !== !!p.hand)
@@ -130,8 +103,9 @@ export default function AttemptCard({
     if (p.register) chips.push(registerTitle(p.register))
     chips.push(aspectBySize(att.width, att.height))
   }
-
-  const groups = kind ? SLOT_GROUPS[kind] : []
+  // регистр не выбран — угол мира со своей палитрой выбрал хаб
+  const corner = !inpaint && !p.register && p.slots?.corner ? registerTitle(p.slots.corner) : ''
+  const left = att.status === 'ready' && att.expires_at ? hoursLeft(att.expires_at) : null
   const canRemember = kind === 'person' && !!slots
     && !!(slots.wear as string[] | undefined)?.length
 
@@ -193,58 +167,10 @@ export default function AttemptCard({
             ))}
           </span>
         )}
-        {baseSlots && (
-          <button type="button" className={`tb${tab === 'slots' ? ' on' : ''}`}
-            onClick={() => setTab('slots')}>{t('tab.slots')}</button>
-        )}
-        {baseSlots && (
-          <button type="button" className={`tb${tab === 'line' ? ' on' : ''}`}
-            onClick={() => setTab('line')}>{t('tab.line')}</button>
-        )}
         <span className="sp" />
         {hand && <span className="st-pill">{t('hand_edited')}</span>}
         {cyr && <span className="st-pill warn">{t('cyrillic')}</span>}
       </div>
-
-      {tab === 'slots' && slots && (
-        <div className={`st-pgs${hand ? ' stale' : ''}`}>
-          {groups.map(g => {
-            const fields = g.fields.filter(f => f.key in slots)
-            if (!fields.length) return null
-            return (
-              <div className="st-pg" key={g.name}>
-                <span className="st-pg-n">{t(`slot_group.${g.name}`)}</span>
-                <div className="st-pg-f">
-                  {fields.map(f => {
-                    if (!f.arr) return (
-                      <div className="st-pf" key={f.key}>
-                        {f.label && <span className="st-pf-k">{t(`slot.${f.label}`)}</span>}
-                        <Slot value={String(slots[f.key] ?? '')} onChange={v => setField(f.key, v)} />
-                      </div>
-                    )
-                    const arr: string[] = Array.isArray(slots[f.key]) ? slots[f.key] : []
-                    const room = !f.cap || arr.length < f.cap
-                    return (
-                      <div className="st-pf" key={f.key}>
-                        <span className="st-pf-k">{t(`slot.${f.label}`)}</span>
-                        {arr.map((v, i) => (
-                          <Slot key={i} value={v} off={!!f.cap && i >= f.cap}
-                            onChange={nv => setField(f.key, arr.map((x, j) => (j === i ? nv : x)))}
-                            onRemove={() => setField(f.key, arr.filter((_, j) => j !== i))} />
-                        ))}
-                        {room && (
-                          <button type="button" className="st-sl-add" title={t('add_field', { label: t(`slot.${f.label}`) })}
-                            onClick={() => setField(f.key, [...arr, ''])}>+</button>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
 
       {tab === 'parts' && slots && kind && (
         <div className={`st-parts${hand ? ' stale' : ''}`}>
@@ -271,7 +197,7 @@ export default function AttemptCard({
 
       {(changed || draft) && (
         <div className="st-pr-ft">
-          {hand && (baseSlots || prose) && (
+          {hand && parted && (
             <button type="button" className="ghost tiny"
               onClick={() => (slots ? void rebuild(slots) : setOver(null))}>{t('restore_build')}</button>
           )}
@@ -294,9 +220,14 @@ export default function AttemptCard({
         <span className="st-att-no">{draft ? t('draft_title') : t('attempt_no', { no })}</span>
         {!draft && <span className="st-att-when">{when(att.created_at)}</span>}
         {chips.map(t => <span key={t} className="st-chip">{t}</span>)}
+        {corner && <span className="st-chip auto" title={t('corner_auto')}>{corner}</span>}
         <span className="sp" />
         <span onClick={e => e.stopPropagation()} className="st-att-acts">
-          {!draft && <span className={`st-chip st-st ${att.status}`}>{t(`status.${att.status}`)}</span>}
+          {!draft && (
+            <span className={`st-chip st-st ${att.status}`} title={left !== null ? t('expires_hint') : undefined}>
+              {t(`status.${att.status}`)}{left !== null && ` · ${t('expires', { h: left })}`}
+            </span>
+          )}
           {dest === 'replace' && att.status === 'ready' && !kept && (
             <label className="st-keep-src">
               <input type="checkbox" checked={keepSrc} onChange={e => setKeepSrc(e.target.checked)} />

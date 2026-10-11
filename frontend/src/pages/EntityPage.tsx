@@ -20,13 +20,8 @@ import VisibilityMenu from '../components/VisibilityMenu'
 import { ANY_PLAYER, OwnerMenu } from '../components/OwnerMenu'
 import { AffiliationPicker, AffiliationView } from '../components/AffiliationPicker'
 import PasteImage from '../paste'
-import * as LinksPanelMod from '../components/LinksPanel'
-import * as RecordsPanelMod from '../components/RecordsPanel'
-
-// соседние компоненты пишутся параллельно: берём именованный экспорт либо default
-const pick = (m: any, name: string): any => (m && m[name]) || (m && m.default)
-const LinksPanel = pick(LinksPanelMod, 'LinksPanel')
-const RecordsPanel = pick(RecordsPanelMod, 'RecordsPanel')
+import LinksPanel from '../components/LinksPanel'
+import { RecordsPanel } from '../components/RecordsPanel'
 
 // маршрут ещё умеет /profile,/records,/links,/media — подвкладок больше нет,
 // весь контент рисуется одной страницей, редирект оставлен ради старых ссылок

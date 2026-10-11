@@ -63,8 +63,6 @@ h3 {
 .spacer { flex: 1; }
 .grid { display: grid; gap: 14px; }
 .g2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
-.g3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-.g4 { grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); }
 
 /* --- каркас: узкая шапка, слева меню, справа содержимое --- */
 .app { display: flex; flex-direction: column; height: 100%; min-width: 0; }
@@ -90,10 +88,6 @@ h3 {
 .brand.inline { font-size: 13px; letter-spacing: .18em; white-space: nowrap; }
 .brand.inline span { display: inline; margin-left: 6px; font-size: 10.5px; letter-spacing: .24em; }
 
-.camp {
-  color: var(--dim2); border-left: 1px solid var(--line); padding-left: 10px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;
-}
 .top-search { position: relative; flex: 1 1 200px; min-width: 120px; max-width: 420px; }
 .viewas-pick { flex: 0 1 200px; width: auto; }
 
@@ -115,11 +109,6 @@ button.wt-face:hover, button.wt-face[aria-expanded="true"] { background: var(--s
 .wt-now.bad { border-color: var(--rust); }
 .wt-row { display: grid; grid-template-columns: 34px 1fr 34px; gap: 8px; align-items: center; text-align: center; }
 .wt-row button { padding: 3px 0; font-size: 15px; line-height: 1.2; }
-
-.tab-bar { background: #100f0d; border-bottom: 1px solid var(--line); }
-.tab-bar .frame-in { padding: 4px 14px 0; }
-.tab-bar .tabs > button,
-.tab-bar .tabs > button.on { border-bottom: none; padding: 7px 15px 8px; font-size: 12px; }
 
 .content { padding: 12px 14px 20px; min-width: 0; flex: 1; }
 
@@ -257,13 +246,10 @@ td { padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--txt);
 tbody tr:hover td { background: var(--surface2); }
 
 /* --- часы --- */
-.clock-wrap { display: flex; gap: 10px; align-items: center; }
 .clock svg { display: block; }
 .seg { fill: #100f0d; stroke: var(--line2); stroke-width: 1; }
 .seg.on { fill: var(--amber); }
 .seg.hidden-on { fill: var(--plum); }
-
-/* закладки — в styles.tabs.css (компонент components/Tabs.tsx) */
 
 /* --- аудитория блока --- */
 .crew-block  { border-left: 3px solid var(--line2); padding: 2px 0 2px 12px; }
@@ -308,13 +294,6 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
 }
 
 /* --- карта --- */
-.map-stage {
-  position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden;
-  background: #0b0a09; border: 1px solid var(--line2); cursor: crosshair;
-}
-.map-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.map-stage svg.sky { position: absolute; inset: 0; width: 100%; height: 100%; }
-
 .marker {
   position: absolute; transform: translate(-50%, -50%); min-width: 20px; height: 20px;
   padding: 0 5px; display: grid; place-items: center; cursor: pointer;
@@ -322,7 +301,6 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
   background: #1c1a17; border: 1px solid var(--dim2);
 }
 .marker:hover { border-color: var(--amber); }
-.marker.threat { border-color: var(--rust); color: #e79a83; }
 .marker.secret { border-color: var(--plum); color: #c9aed6; }
 .marker.rumor  { border-color: var(--amber-dim); color: var(--amber); }
 .marker.sys {
@@ -332,38 +310,8 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
   text-shadow: 0 1px 3px #000, 0 0 8px #000;
 }
 .marker.sys:hover { color: var(--amber); }
-.marker.pl {
-  background: none; border: none; height: auto; padding: 0 0 0 12px; color: var(--txt);
-  font-family: var(--util); transform: translate(0, -50%); white-space: nowrap;
-  text-shadow: 0 1px 3px #000, 0 0 6px #000;
-}
-.marker.pl::before {
-  content: ""; position: absolute; left: 0; top: 50%; margin-top: -3.5px;
-  width: 7px; height: 7px; border-radius: 50%; background: var(--txt);
-}
-.marker.pl:hover { color: var(--amber); }
-.marker.pl.threat { color: #e79a83; }
-.marker.pl.threat::before { background: var(--rust); }
-.marker.pl.secret { color: #c9aed6; }
-.marker.pl.secret::before { background: var(--plum); }
-.marker.pl.rumor { color: var(--amber); }
-.marker.pl.rumor::before { background: var(--amber); }
-.marker.active-sel { outline: 2px solid var(--amber); outline-offset: 2px; }
-.marker .cnt {
-  position: absolute; top: -7px; right: -8px; background: var(--amber); color: #17140f;
-  font-family: var(--util); font-size: 9px; padding: 0 3px;
-}
-.map-legend {
-  display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--util); font-size: 11.5px;
-  color: var(--dim2);
-}
 
-/* --- выдвижная панель и окна --- */
-.drawer {
-  position: fixed; top: 0; right: 0; width: min(460px, 100%); height: 100vh; z-index: 60;
-  background: var(--surface); border-left: 1px solid var(--line2); padding: 16px;
-  overflow-y: auto;
-}
+/* --- окна --- */
 .backdrop {
   position: fixed; inset: 0; background: #0a0908ee; z-index: 70;
   display: grid; place-items: center; padding: 20px;
@@ -385,17 +333,6 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
 .ask-box p { color: var(--dim2); margin: 8px 0 14px; }
 
 /* --- служебное --- */
-.kv { display: grid; grid-template-columns: 210px 1fr; gap: 8px 16px; }
-.kv .k {
-  font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em;
-  color: var(--dim2); padding-top: 3px;
-}
-.kv .v { white-space: pre-wrap; }
-
-.crumb {
-  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-  border-bottom: 1px solid var(--line); padding-bottom: 8px;
-}
 .viewas-bar {
   background: #2a1f10; color: var(--amber); border-bottom: 1px solid var(--amber-dim);
   padding: 6px 20px; font-size: 12.5px; letter-spacing: .04em;
@@ -423,12 +360,8 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
 
 @media (max-width: 900px) {
   :root { --navbar-h: 41px; }
-
-  .kv { grid-template-columns: 1fr; }
   .content { padding: 14px 12px 28px; }
   .top-in { padding: 6px 12px; flex-wrap: wrap; min-height: var(--navbar-h); }
-  .camp { border-left: none; padding-left: 0; }
-  .tab-bar .frame-in { padding: 5px 12px 0; }
   /* страница скроллится целиком, шапка с кнопкой меню остаётся у верхнего края */
   .app { height: auto; min-height: 100%; }
   .shell { display: block; min-height: 0; }
@@ -471,7 +404,6 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
 @media (max-width: 760px) {
   .backdrop { padding: 8px; }
   .modal { padding: 12px; max-height: 94vh; }
-  .drawer { padding: 12px; }
 }
 
 /* --- выпадающий список: своё меню вместо системного ------------------------- */
@@ -559,14 +491,6 @@ tr.gm-only > td:first-child { box-shadow: inset 3px 0 0 var(--rust); }
 
 /* окна промптов: поля по высоте текста, вставки шаблонов */
 .kit textarea { field-sizing: content; max-height: 70vh; }
-.kit-models { color: var(--dim); }
-.kit-models b { color: var(--amber); font-weight: 600; }
-.kit-group { gap: 8px; }
-.kit-group-title { margin: 12px 2px 0; font-size: 13px; font-weight: 600; color: var(--dim); }
-.kit-slots { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; color: var(--dim); }
-.kit-slot code { color: var(--amber); }
-.kit-slot.off { opacity: .7; }
-.kit-slot-miss, .kit-slot.bad { color: var(--rust); }
 
 /* язык стартовых материалов кампании */
 .setup-lang { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }

@@ -14,6 +14,7 @@ from ..deps import editor, viewer
 from ..i18n import ctr, tr
 from ..models import Attachment, Campaign, Entity, Message, MessageState
 from ..visibility import Viewer, apply_scope, can_see
+from .files import drop_files
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["messages"], responses=AUTH_ERRORS)
 
@@ -234,18 +235,6 @@ def patch_message(
     return _out(m, v, None, _card(db, m))
 
 
-@router.post("/messages/{message_id}/deliver", summary="Deliver a message to the crew", response_model=MessageOut)
-def deliver_message(message_id: str, v: Viewer = Depends(editor), db: Session = Depends(get_db)):
-    """GM only. Status → `delivered`, `delivered_at` = now, journal `deliver`.
-    Identical to `PATCH` with `{"status": "delivered"}`. The crew sees it only if `visibility` allows."""
-    if not v.is_gm:
-        raise HTTPException(403, tr("comms.gm_only"))
-    m = _get(db, v, message_id)
-    _deliver(db, v, m)
-    db.commit()
-    return _out(m, v, None, _card(db, m))
-
-
 @router.delete("/messages/{message_id}", summary="Delete a message", response_model=Ok)
 def delete_message(message_id: str, v: Viewer = Depends(editor), db: Session = Depends(get_db)):
     """GM only. Deletes the message, its per-member states and its attachments. Journal: `delete`."""
@@ -253,9 +242,9 @@ def delete_message(message_id: str, v: Viewer = Depends(editor), db: Session = D
         raise HTTPException(403, tr("comms.gm_only"))
     m = _get(db, v, message_id)
     db.query(MessageState).filter_by(message_id=m.id).delete()
-    db.query(Attachment).filter_by(
-        campaign_id=v.campaign_id, target_type="message", target_id=m.id
-    ).delete()
+    for a in db.query(Attachment).filter_by(campaign_id=v.campaign_id, target_type="message", target_id=m.id):
+        drop_files(a)
+        db.delete(a)
     journal.log(db, v, "message", "delete", target_id=m.id,
                 title=m.subject or ctr("content.no_subject"), detail=ctr("content.from", who=m.sender_display),
                 visibility=m.visibility, before={"subject": m.subject, "body": m.body})

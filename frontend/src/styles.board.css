@@ -8,7 +8,6 @@
   font-family: var(--util); font-size: 10.5px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--dim2);
 }
-.bd-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
 .bd-zoom {
   font-family: var(--util); font-size: 11px; color: var(--dim);
   min-width: 44px; text-align: center;
@@ -101,7 +100,6 @@
 .bd-x:hover { color: var(--danger, #d06a5a); }
 
 .bd-card-body { display: flex; flex-direction: column; gap: 6px; padding: 7px 8px 8px; }
-.bd-card-foot { display: flex; align-items: center; gap: 6px; }
 
 /* запись на доске лежит горизонтально: снимок слева, имя и описание справа.
    Фото и описание — из самой записи, правка только в её окне */
@@ -121,10 +119,6 @@
   font-size: 17px; line-height: 1.15; color: var(--txt); font-weight: 500;
   /* break-word, не anywhere: слово уезжает под цифру целиком, а не рвётся по буквам */
   overflow-wrap: break-word;
-}
-.bd-ent-kind {
-  font-family: var(--util); font-size: 9.5px; letter-spacing: .12em;
-  text-transform: uppercase; color: #6b615a;
 }
 /* ранг фракции читается с любого зума: одна золотая цифра справа от имени */
 .bd-ent-rank {
@@ -158,9 +152,6 @@
 .bd-in:hover { border-color: #262220; }
 .bd-in:focus { border-color: var(--line2); color: var(--txt); outline: none; }
 .bd-area { resize: none; overflow: hidden; min-height: 24px; white-space: pre-wrap; }
-
-.bd-dots { display: inline-flex; gap: 3px; }
-.bd-dots .sw { width: 14px; height: 14px; }
 
 /* кромки-хваты: наводишь на вертикальную границу — тянешь ширину */
 .bd-edge {
@@ -203,13 +194,6 @@
   text-transform: none; letter-spacing: normal;
 }
 .bd-clock-name:hover { color: var(--amber); }
-.bd-clock-pick {
-  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
-  padding: 6px 8px; background: var(--surface2); border: 1px solid var(--line);
-  color: var(--txt); cursor: pointer;
-}
-.bd-clock-pick:hover { border-color: var(--amber); }
-.bd-clock-pick-n { flex: 1 1 auto; min-width: 0; }
 
 /* --- меню нити ------------------------------------------------------------- */
 
@@ -219,20 +203,6 @@
   background: var(--surface); border: 1px solid var(--line2); box-shadow: 0 6px 18px #0009;
 }
 .bd-thread-menu .sw { width: 14px; height: 14px; }
-
-/* --- окно «взять из карточки» ---------------------------------------------- */
-
-.bd-pull { gap: 6px; max-height: 60vh; overflow-y: auto; }
-.bd-pull-row {
-  display: flex; gap: 8px; align-items: flex-start; padding: 7px 8px;
-  border: 1px solid var(--line); background: var(--surface2); cursor: pointer;
-}
-.bd-pull-row.on { border-color: var(--amber); }
-.bd-pull-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.bd-pull-text {
-  color: var(--dim); font-size: 12.5px; white-space: pre-wrap;
-  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
-}
 
 /* доска живёт во всю ширину окна — общий предел колонки её не касается */
 .content:has(.bd-wrap) { max-width: none; padding: 12px 14px 18px; }
