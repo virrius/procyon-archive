@@ -14,7 +14,6 @@ import json
 import logging
 import os
 import re
-import secrets
 import shutil
 import threading
 import time
@@ -24,10 +23,9 @@ from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, insert
 
-from .canon import retranslate
 from .config import settings
 from .db import SessionLocal
-from .i18n import LANGS, instance_lang
+from .i18n import instance_lang
 from .models import (
     Attachment,
     Board,
@@ -294,8 +292,7 @@ def _import(job: dict) -> None:
                     job_row["status"] = "failed"
 
         camp = _typed(Campaign, src)
-        camp.update(owner_id=importer.id, slug=f"{_slugify(src.get('name', ''))}-{secrets.token_hex(3)}",
-                    created_at=datetime.now(timezone.utc), **{col: "" for col in HUB_COLUMNS})
+        camp.update(owner_id=importer.id, created_at=datetime.now(timezone.utc), **{col: "" for col in HUB_COLUMNS})
         total = sum(len(payload.get(name, [])) for name, _m in TABLES)
         _set(job, stage="rows", done=0, total=total, name=src.get("name", ""))
         db.execute(insert(Campaign.__table__), [camp])
@@ -326,9 +323,6 @@ def _import(job: dict) -> None:
                         _set(job, done=done)
             z.close()
 
-        _set(job, stage="canon", done=0, total=0)
-        lang = payload.get("lang") if payload.get("lang") in LANGS else "ru"
-        retranslate(db, cid, lang, instance_lang())
         db.commit()
         _set(job, status="done", stage="done", campaign_id=cid)
     except Exception as exc:  # noqa: BLE001 — ошибку показываем в Admin space

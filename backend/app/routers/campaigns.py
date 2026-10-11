@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import secrets
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -23,11 +22,6 @@ router = APIRouter(prefix="/api", tags=["campaigns"], responses=AUTH_ERRORS)
 class CampaignIn(BaseModel):
     name: str = Field(max_length=200, examples=["The Procyon Run"])
     description: str = ""
-
-
-def _slug(name: str) -> str:
-    base = "".join(c if c.isalnum() else "-" for c in name.lower()).strip("-")[:60]
-    return f"{base or 'campaign'}-{secrets.token_hex(3)}"
 
 
 # --- vocabulary ---------------------------------------------------------------------------
@@ -103,7 +97,6 @@ def get_lang():
 class CampaignBrief(BaseModel):
     id: str
     name: str
-    slug: str
     status: str
     role: Role = Field(description="Your role in this campaign.")
     member_id: str = Field(description="Your member id here — what `visible_to`, `owner_member_id` and `X-View-As` take.")
@@ -118,7 +111,6 @@ def list_campaigns(user: User = Depends(current_user), db: Session = Depends(get
         {
             "id": m.campaign.id,
             "name": m.campaign.name,
-            "slug": m.campaign.slug,
             "status": m.campaign.status,
             "role": m.role,
             "member_id": m.id,
@@ -129,7 +121,6 @@ def list_campaigns(user: User = Depends(current_user), db: Session = Depends(get
 
 class CampaignCreated(BaseModel):
     id: str
-    slug: str
 
 
 @router.post("/campaigns", summary="Create a campaign (admin)", response_model=CampaignCreated,
@@ -142,7 +133,7 @@ def create_campaign(
     if not user.is_admin:
         raise HTTPException(403, tr("campaigns.admin_creates"))
     c = Campaign(
-        name=body.name, description=body.description, slug=_slug(body.name), owner_id=user.id
+        name=body.name, description=body.description, owner_id=user.id
     )
     db.add(c)
     db.flush()
@@ -154,7 +145,7 @@ def create_campaign(
     db.add(Entity(campaign_id=c.id, kind="ship", name=ctr("content.ship_unnamed")))
     seed_campaign(db, c.id, instance_lang())
     db.commit()
-    return {"id": c.id, "slug": c.slug}
+    return {"id": c.id}
 
 
 class CampaignPatch(BaseModel):
@@ -190,7 +181,6 @@ class MemberOut(BaseModel):
 class CampaignOut(BaseModel):
     id: str
     name: str
-    slug: str
     description: str
     status: str
     world_day: int = Field(description="Game day counter (0 = campaign start); year/week/day are derived by the UI.")
@@ -210,7 +200,6 @@ def get_campaign(v: Viewer = Depends(viewer), db: Session = Depends(get_db)):
     return {
         "id": c.id,
         "name": c.name,
-        "slug": c.slug,
         "description": c.description,
         "status": c.status,
         "world_day": c.world_day,

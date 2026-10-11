@@ -40,7 +40,6 @@ export default function Campaigns() {
             <button className="primary" onClick={() => pick(cp.id)}>{t('campaigns.open')}</button>
             <strong>{cp.name}</strong>
             <Chip tone={cp.role === 'gm' ? 'red' : 'cyan'}>{cp.role === 'gm' ? t('role.gm') : L(cp.role)}</Chip>
-            <span className="mono dim2">{cp.slug}</span>
             {cp.role === 'gm' && (
               <button className="ghost tiny" onClick={() => setRen({ id: cp.id, name: cp.name })}>
                 {t('campaigns.rename')}

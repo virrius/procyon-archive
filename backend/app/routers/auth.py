@@ -49,7 +49,6 @@ class MyMembership(BaseModel):
     member_id: str = Field(description="Your member id in that campaign.")
     role: Role
     name: str
-    slug: str
 
 
 class MeOut(BaseModel):
@@ -77,7 +76,6 @@ def me(user: User = Depends(session_user), db: Session = Depends(get_db)):
                 "member_id": m.id,
                 "role": m.role,
                 "name": m.campaign.name,
-                "slug": m.campaign.slug,
             }
             for m in memberships
         ],

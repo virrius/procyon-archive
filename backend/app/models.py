@@ -57,7 +57,6 @@ class User(Base, PK, Stamps):
 class Campaign(Base, PK, Stamps):
     __tablename__ = "campaigns"
     name: Mapped[str] = mapped_column(String(200))
-    slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     description: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(30), default="active")
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"))

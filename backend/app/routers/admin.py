@@ -20,8 +20,7 @@ from ..config import settings
 from ..db import Base, get_db
 from ..deps import admin_only
 from .. import transfer
-from ..canon import retranslate
-from ..i18n import LANGS, instance_lang, set_instance_lang, tr
+from ..i18n import LANGS, set_instance_lang, tr
 from ..models import AuditLog, Campaign, CampaignMember, Message, MessageState, User
 from ..langpack import prompting as P
 from ..prompting import KIT_SECTIONS, NEWS_SECTIONS
@@ -112,7 +111,6 @@ class UserOut(BaseModel):
 class AdminCampaignOut(BaseModel):
     id: str
     name: str
-    slug: str
     created_at: datetime
     gms: list[str] = Field(description="Display names of the GMs.")
     players: int = Field(description="Members other than GMs.")
@@ -125,7 +123,7 @@ class TransferStateOut(BaseModel):
     id: str
     kind: Literal["export", "import"]
     status: Literal["running", "done", "failed"]
-    stage: str = Field(description="`upload`, `read`, `rows`, `files`, `canon`, `done` — what is being processed.")
+    stage: str = Field(description="`upload`, `read`, `rows`, `files`, `done` — what is being processed.")
     done: int = Field(description="Progress inside the stage (rows or bytes).")
     total: int
     error: str
@@ -206,21 +204,17 @@ def patch_hub(body: HubIn, db: Session = Depends(get_db)):
 
 
 class LangIn(BaseModel):
-    lang: Literal["ru", "en"] = Field(description="Instance language: UI, rulebook canon, generated texts.")
+    lang: Literal["ru", "en"] = Field(description="Instance language: the interface, the rulebook canon of new campaigns, generated texts.")
 
 
 @router.patch("/lang", summary="Switch the instance language", response_model=LangOut,
               responses=error_responses(400))
 def patch_lang(body: LangIn, db: Session = Depends(get_db)):
-    """Admin only. Changes the language of the whole instance. Rulebook canon in every campaign
-    that the GM has not edited is re-translated; GM edits and player texts stay as they are."""
+    """Admin only. Changes the language of the interface and of campaigns created from now on;
+    existing campaigns stay as they were created."""
     if body.lang not in LANGS:
         raise HTTPException(400, tr("admin.bad_lang"))
-    old = instance_lang()
     server_row(db, create=True).lang = body.lang
-    if old != body.lang:
-        for camp in db.query(Campaign).all():
-            retranslate(db, camp.id, old, body.lang)
     db.commit()
     set_instance_lang(body.lang)
     return {"lang": body.lang}
@@ -352,7 +346,6 @@ def admin_list_campaigns(user: User = Depends(admin_only), db: Session = Depends
         out.append({
             "id": camp.id,
             "name": camp.name,
-            "slug": camp.slug,
             "created_at": camp.created_at,
             "gms": [m.display_name or m.user.display_name for m in members if m.role == "gm"],
             "players": sum(m.role != "gm" for m in members),

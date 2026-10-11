@@ -89,6 +89,8 @@ _DROP_COLUMNS: list[tuple[str, str]] = [
     ("campaigns", "img_llm_url"),
     ("campaigns", "img_llm_model"),
     ("campaigns", "img_llm_key"),
+    # кампанию везде адресует id
+    ("campaigns", "slug"),
 ]
 
 # (index name, table, column) — matches what create_all would emit for a fresh DB
