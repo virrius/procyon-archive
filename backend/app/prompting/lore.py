@@ -269,9 +269,9 @@ REGISTERS: dict[str, dict] = {
                      "externally clamped conduit"),
     },
     "frontier": {
-        # Обжитой космос — люди здесь живут и сделали угол своим: тепло, цвет,
-        # уход. Словарь — качества, а не опись: перечисленные шлюзы, лифты и
-        # трафареты хаб переносил в любое место, и кантина выходила ангаром
+        # Обжитой космос — люди здесь живут и сделали угол своим. Словарь —
+        # качества, а не опись: перечисленные шлюзы, лифты и трафареты хаб
+        # переносил в любое место, и кантина выходила ангаром
         "title": "обжитой космос",
         "vocab_person": ("clothing here is practical working gear made to last: a short jacket "
                          "or vest over a work shirt, utility trousers tucked into boots, belts, "
@@ -279,17 +279,19 @@ REGISTERS: dict[str, dict] = {
                          "scuffed with use, colours faded but whole, a crew or ship mark on "
                          "the shoulder"),
         "vocab": ("this is the ordinary lived-in space of the sector, where people work and live and "
-                  "have made their corner their own. It is made to a spacefaring design and finished "
-                  "for living in: rounded modular forms, smooth panels with soft corners, light and "
-                  "readouts set into the surfaces, padded and moulded fittings, in painted metal and "
-                  "composite of strong warm and deep colours, with hand-painted marks and signs. "
-                  "Everything is used every day and looked after: edges worn smooth and bright by "
-                  "hands, paint softened where hands and sun reach, repairs made properly and "
-                  "painted to match. People have made it theirs, and it shows as colour, comfort "
-                  "and their own things kept close at hand. It is full of life: people of many "
-                  "kinds at their business, things in use. Light is warm and plentiful: many lamps "
-                  "of warm colour, glowing signs and readouts, warm pools of light against cool "
-                  "shadow. Whatever the GM named looks loved and lived in"),
+                  "have made their corner their own. It is built to the design of the far future, not "
+                  "to an earlier century's idea of the future: functional forms with crisp edges and "
+                  "clear panel lines, matte composite and brushed alloy in a neutral base of warm grey "
+                  "and graphite, technical fabric and worn upholstery, fittings made to be serviced, "
+                  "light built into the structure as strips and panels. Colour comes as warm accents "
+                  "of rust red, ochre and warm light on fabric, markings and wherever people gather, "
+                  "never as an all-over cast. Everything is used every day and looked after: edges "
+                  "polished by hands, scuffs where things are moved, fabric creased, repairs made "
+                  "properly; visibly worn, never dirty or broken. People live here and it shows: their own "
+                  "belongings, something green growing, things left where they were last used, a "
+                  "little clutter. It is full of life: people of many kinds at their business, things "
+                  "in use. Light is mixed: even light built into the structure, with warm pools where "
+                  "people sit and work. Whatever the GM named looks used and lived in"),
         "tags": ("painted plate scuffed by use", "stencilled numbers and hazard stripes",
                  "busy working bay"),
         "tags_person": ("practical working gear", "scuffed boots and belts",
@@ -461,7 +463,7 @@ REGISTER_ORDER = ("derelict", "junk", "frontier", "hightech", "hegemony", "luxe"
 REGISTER_HINTS = {
     "derelict": "брошено и не чинено: пыль, иней, плесень, мёртвые пульты, вырванные жгуты, свет только сквозь пролом",
     "junk": "лом и ржавчина: груды хлама, разобранные корпуса, лачуги и лотки из листа, старьёвщики",
-    "frontier": "люди здесь живут: крашеный металл в тёплых цветах, вещи в деле и под присмотром, много тёплого света",
+    "frontier": "люди здесь живут: отделка далёкого будущего в нейтральных тонах с тёплыми акцентами, вещи в деле, свои мелочи и зелень, износ от рук, не грязь",
     "hightech": "гильдии и центр: спроектировано и вылизано, скрытые стыки, хардлайт, ровный свет",
     "hegemony": "власть и порядок: тёмный сплав, строй и ранги, гербы, холодный свет с красным",
     "luxe": "выбрано, а не выдано: простор и скульптурные изгибы, светящийся камень, сады и вода в доме, техника спрятана",
@@ -476,8 +478,8 @@ if EN:
         "derelict": "abandoned and never repaired: dust, frost, mold, dead consoles, torn-out cable looms, "
                     "light only through a breach",
         "junk": "scrap and rust: heaps of junk, gutted hulls, shacks and stalls of sheet metal, scavengers",
-        "frontier": "people live here: painted metal in warm colours, things in use and cared for, plenty "
-                    "of warm light",
+        "frontier": "people live here: far future fittings in neutral tones with warm accents, things in use, "
+                    "personal belongings and greenery, wear from hands, not grime",
         "hightech": "the Guilds and the Core: designed and immaculate, hidden joins, hardlight, even light",
         "hegemony": "power and order: dark alloy, ranks and formations, heraldry, cold light with red",
         "luxe": "chosen, not issued: space and sculpted curves, glowing stone, gardens and water indoors, "

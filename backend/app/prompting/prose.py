@@ -76,9 +76,10 @@ LOOKS = {
                  "faded paint and frosted blue-grey, shafts of light cutting through dust and darkness, atmospheric depth."),
     "junk": ("Painterly sci-fi concept art with visible brush strokes, a dusty palette of rust orange, oxidised "
              "green and sun-bleached grey, harsh light and drifting dust, heaps of scrap detail."),
-    "frontier": ("Painterly sci-fi concept art with visible brush strokes, a warm lived-in far future palette of "
-                 "amber lamplight, ochre, deep red and olive green paint, many warm lamps against cool blue shadow, "
-                 "busy cared-for detail, atmospheric depth."),
+    "frontier": ("Painterly sci-fi concept art with visible brush strokes, a lived-in far future of matte composite, "
+                 "brushed alloy, technical fabric and light built into the surfaces, a neutral base of warm grey and "
+                 "graphite with accents of rust red, ochre and warm light, everyday clutter and wear from use, "
+                 "atmospheric depth."),
     "hightech": ("Painterly sci-fi concept art with visible brush strokes, a clean bright palette of white, pale "
                  "grey and chrome with cool cyan accents, even luminous light, sleek far future design."),
     "hegemony": ("Painterly sci-fi concept art with visible brush strokes, a stern palette of black, gunmetal "
