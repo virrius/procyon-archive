@@ -1113,7 +1113,6 @@ ORGS: list[dict] = [
 PROCYON: list[dict] = [
     {
         "system": "Rin",
-        "art": "book/rin.png",
         "blurb": "The entry point to the Procyon sector: the seat of the sector's administration and "
                  "the Guild head, with gates to three systems, including the only path deeper into "
                  "the Hegemony. Colonized a little over a hundred years ago by House Nim-Amar; "
@@ -1125,7 +1124,7 @@ PROCYON: list[dict] = [
         "gates": "3: Rin—Ecliptis (a path towards the Core), Rin—Holt (unstable gate), Rin—Iota.",
         "worlds": [
             {
-                "name": "Warren", "map": (0.148, 0.669), "kind": "planet", "art": "book/hive.png",
+                "name": "Warren", "map": (0.148, 0.669), "kind": "planet",
                 "tags": ["capital", "ecumenopolis", "moon of Aleph"],
                 "text": "A moon of Aleph covered by an ecumenopolis—a city spanning its entire "
                         "surface: the system's capital and the residence of Governor Ritam "
@@ -1152,7 +1151,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "SB-176", "map": (0.271, 0.593), "kind": "station", "art": "book/sb176.png",
+                "name": "SB-176", "map": (0.271, 0.593), "kind": "station",
                 "tags": ["Guild of Engineers", "mining platform", "Guild HQ"],
                 "text": "A combination “mining” platform and space colony extracting resources from "
                         "Vet, the gas giant below: the mining rigs, mostly manned by Urbots, send "
@@ -1177,7 +1176,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "The Cove", "map": (0.261, 0.506), "kind": "station", "art": "book/bay.png",
+                "name": "The Cove", "map": (0.261, 0.506), "kind": "station",
                 "tags": ["Maelstrom pirates", "Ashtari Cloud", "moves about"],
                 "text": "The Maelstrom pirates' station made of derelict freighters, cargo "
                         "containers, and stolen scrap metal, the size of a planetoid. It moves "
@@ -1232,7 +1231,6 @@ PROCYON: list[dict] = [
     },
     {
         "system": "Holt",
-        "art": "book/holt.png",
         "blurb": "The second Procyon system to be colonized, though the Rin-Holt gate had to be "
                  "forced open and stabilized with Ur keys—it remains temperamental and has been "
                  "known to open on its own. The Holt star burns white, though it is far older "
@@ -1243,7 +1241,7 @@ PROCYON: list[dict] = [
         "gates": "2: Holt—Rin (unstable gate), Holt—Hantu (unopened).",
         "worlds": [
             {
-                "name": "Mem", "map": (0.312, 0.199), "kind": "planet", "art": "book/mem.png",
+                "name": "Mem", "map": (0.312, 0.199), "kind": "planet",
                 "tags": ["ocean planet", "home of the Memish", "gravity wells"],
                 "text": "This ocean planet was colonized by the Hegemony for almost a hundred years "
                         "before aquatic xenos made themselves (and their planetary claims) known; "
@@ -1272,7 +1270,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "Sonhandra", "map": (0.397, 0.31), "kind": "planet", "art": "book/sonhandra.png",
+                "name": "Sonhandra", "map": (0.397, 0.31), "kind": "planet",
                 "tags": ["tidally locked", "lax trade policies", "twilight border zone"],
                 "text": "A tidally locked planet: the day side is blistering, and all light sources "
                         "extinguish about a kilometer into the night side. Most settlements are in "
@@ -1300,7 +1298,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "Vos", "map": (0.497, 0.281), "kind": "planet", "art": "book/vos.png",
+                "name": "Vos", "map": (0.497, 0.281), "kind": "planet",
                 "tags": ["“Glimmer”", "crystals", "Guild-monitored"],
                 "text": "An enormous planet known as “Glimmer”: its surface is made of graphite and "
                         "diamond, and at night the largest crystal formations glow with unearthly "
@@ -1352,7 +1350,6 @@ PROCYON: list[dict] = [
     },
     {
         "system": "Iota",
-        "art": "book/iota.png",
         "blurb": "A twin star system: the planets orbit a yellow sun (Iota-1) and a brown dwarf "
                  "(Iota-2). Both asteroid belts were clearly planets once, but nobody is sure "
                  "what calamity shattered them. The Guilds set up the Iota shipyards, servicing "
@@ -1363,7 +1360,7 @@ PROCYON: list[dict] = [
         "gates": "2: Iota—Rin, Iota—Brekk.",
         "worlds": [
             {
-                "name": "Amerath", "map": (0.555, 0.748), "kind": "planet", "art": "book/amerat.png",
+                "name": "Amerath", "map": (0.555, 0.748), "kind": "planet",
                 "tags": ["garden planet", "pharmaceuticals", "Mendicant temple"],
                 "text": "A lush planet well known for pharmaceuticals research: many regions are "
                         "well tended, the garden city of Rost is in perennial bloom, and warm, "
@@ -1391,7 +1388,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "Indri", "map": (0.486, 0.744), "kind": "planet", "art": "book/indri.png",
+                "name": "Indri", "map": (0.486, 0.744), "kind": "planet",
                 "tags": ["manufacturing planet", "thick clouds", "orbital warehouses"],
                 "text": "Over 25 percent of all goods manufactured in the Procyon sector come from "
                         "this incredibly industrialized planet. Thick, rust-colored clouds create "
@@ -1419,7 +1416,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "Lithios", "map": (0.557, 0.908), "kind": "planet", "art": "book/lithios.png",
+                "name": "Lithios", "map": (0.557, 0.908), "kind": "planet",
                 "tags": ["ice planet", "ice palaces", "Yaru creche"],
                 "text": "Ancient ice palaces of a long-passed race dot the surface of this frozen "
                         "planet; entry has been restricted after a string of mysterious explorer "
@@ -1471,7 +1468,6 @@ PROCYON: list[dict] = [
     },
     {
         "system": "Brekk",
-        "art": "book/brekk.png",
         "blurb": "Considered more civilized than the rest of Procyon, the sector's cultural capital: "
                  "education, art, and culture—and a strong Legion presence guarding that wealth. "
                  "The elite strike deals on the neon-lit streets of Nightfall, researchers head "
@@ -1481,7 +1477,7 @@ PROCYON: list[dict] = [
         "gates": "1: Brekk—Iota.",
         "worlds": [
             {
-                "name": "Aketi", "map": (0.871, 0.466), "kind": "planet", "art": "book/aketi.png",
+                "name": "Aketi", "map": (0.871, 0.466), "kind": "planet",
                 "tags": ["jungle", "hostile natural life", "“nature preserve”"],
                 "text": "A massive, largely unexplored jungle planet that resists taming. Rapidly "
                         "spreading carnivorous plants, seasonally rampaging beasts, and "
@@ -1508,7 +1504,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "Nightfall", "map": (0.869, 0.31), "kind": "planet", "art": "book/eclipse.png",
+                "name": "Nightfall", "map": (0.869, 0.31), "kind": "planet",
                 "tags": ["center of culture", "13 moons", "51st Legion"],
                 "text": "Named for frequent eclipses caused by the planet's 13 moons, whose erratic "
                         "movements make night only predictable by computer. The city of Yaw, where "
@@ -1535,7 +1531,7 @@ PROCYON: list[dict] = [
                 ],
             },
             {
-                "name": "Shimaya", "map": (0.781, 0.353), "kind": "planet", "art": "book/shimaya.png",
+                "name": "Shimaya", "map": (0.781, 0.353), "kind": "planet",
                 "tags": ["desert", "Khalud Academy", "electrical storms"],
                 "text": "A desert planet ravaged by electrical storms that occasionally clear colored "
                         "sand off mineral deposits essential to space travel, or turn it to glass, "

@@ -22,7 +22,6 @@ AUTHOR_COLUMNS = {
     "entity_links": "created_by",
     "map_markers": "created_by",
     "map_strokes": "created_by",
-    "notes": "author_member_id",
 }
 
 
@@ -66,11 +65,13 @@ def can_see(obj: Any, viewer: Viewer, owner_member_id: str | None = None) -> boo
     scope = getattr(obj, "visibility", "crew")
     if scope == "crew":
         return True
+    owner = owner_member_id if owner_member_id is not None else owner_attr(obj)
+    mine = bool(owner) and owner == viewer.member_id
     if scope == "selected":
-        return viewer.member_id in (getattr(obj, "visible_to", None) or [])
+        # автор не выпадает из своего круга: «выбранным» без отметок — как «только мне»
+        return mine or viewer.member_id in (getattr(obj, "visible_to", None) or [])
     if scope == "owner":
-        owner = owner_member_id if owner_member_id is not None else owner_attr(obj)
-        return bool(owner) and owner == viewer.member_id
+        return mine
     return False  # gm
 
 
@@ -86,7 +87,7 @@ def scope_filter(model, viewer: Viewer):
         )
         owner = owner_attr(model)
         if owner is not None:
-            conds.append((model.visibility == "owner") & (owner == viewer.member_id))
+            conds.append(model.visibility.in_(("owner", "selected")) & (owner == viewer.member_id))
     return or_(*conds)
 
 
