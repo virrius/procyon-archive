@@ -1,0 +1,92 @@
+/* Записи сущности — из них собирается всё, что известно.
+   Сплошные поверхности, 1px канты, левый кант = аудитория записи.
+   Без сеток, прозрачностей и свечения. */
+
+.rec-panel { display: flex; flex-direction: column; gap: 10px; }
+
+.rec-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--line);
+}
+.rec-hd .t {
+  font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dim2);
+}
+.rec-count { font-family: var(--util); font-size: 11px; color: var(--dim2); }
+
+.rec-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* каркас карточки задан двумя классами — иначе его перебивают .crew-block/.gm-block */
+.rec-list > .rec {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 9px 11px 7px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.rec-list > .rec:hover {
+  border-top-color: var(--line2); border-right-color: var(--line2);
+  border-bottom-color: var(--line2);
+}
+/* аудитория записи — левый кант, те же цвета, что в общей теме */
+.rec-list > .rec.crew-block   { border-left: 3px solid var(--line2); }
+.rec-list > .rec.sel-block    { border-left: 3px solid var(--amber); }
+.rec-list > .rec.secret-block { border-left: 3px solid var(--plum); }
+.rec-list > .rec.gm-block     { border-left: 3px solid var(--rust); background: #1f1512; }
+
+.rec-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.rec-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; color: var(--txt); }
+.rec-acts { display: flex; gap: 6px; align-items: center; flex: 0 0 auto; }
+
+.rec-lock {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--util); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+  color: #e08a70; background: #251712; border: 1px solid #5c3327; padding: 1px 6px;
+}
+.rec-lock i { position: relative; display: inline-block; width: 9px; height: 10px; }
+.rec-lock i::before {
+  content: ""; position: absolute; left: 0; bottom: 0;
+  width: 9px; height: 6px; background: currentColor;
+}
+.rec-lock i::after {
+  content: ""; position: absolute; left: 2px; top: 0; width: 5px; height: 5px;
+  border: 1.5px solid currentColor; border-bottom: none; border-radius: 3px 3px 0 0;
+}
+
+.rec-text {
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  font-size: 13.5px; line-height: 1.6; color: var(--txt);
+}
+.rec-text.none { color: var(--dim2); font-style: italic; }
+
+.rec-meta {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  padding-top: 6px; border-top: 1px solid var(--line);
+  font-family: var(--util); font-size: 11px; color: var(--dim2);
+}
+.rec-meta .who { color: var(--dim); }
+.rec-meta .sep { color: var(--line2); }
+.rec-meta .chip { font-size: 10.5px; }
+
+.rec-empty { color: var(--dim2); font-style: italic; padding: 6px 0; }
+.rec-err {
+  font-family: var(--util); font-size: 11.5px;
+  color: #e08a70; background: #251712; border: 1px solid #5c3327; padding: 5px 8px;
+}
+.rec-form-acts { display: flex; gap: 8px; align-items: center; }
+
+@media (max-width: 700px) {
+  .rec-list > .rec { padding: 8px 9px 6px 10px; }
+}
+
+/* связи записи */
+.rec-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.rec-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--util); font-size: 11px; letter-spacing: .03em;
+  padding: 2px 7px; background: var(--surface2); border: 1px solid var(--line2);
+  color: var(--txt); text-decoration: none;
+}
+.rec-link:hover { border-color: var(--amber-dim); color: var(--amber); }
+.rec-link.off { color: var(--dim2); }
+.rec-link .ibtn { width: 18px; height: 18px; }

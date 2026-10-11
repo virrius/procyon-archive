@@ -1,0 +1,61 @@
+/* «Вырезки из правил»: страницы корника картинками, раздел — раскрывающаяся панель */
+
+.rules-sec summary { cursor: pointer; }
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  align-items: start;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.rules-page {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  cursor: zoom-in;
+}
+.rules-page:hover { border-color: var(--dim2); }
+
+.rules-page img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+
+.rules-page span { padding: 0 0 4px; text-align: center; }
+
+/* залитая вырезка: картинка, подпись правится на месте, кнопка сноса */
+.rules-cut { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rules-cut .rules-page { flex: none; }
+.rules-cap { font-size: 12px; padding: 2px 6px; }
+
+.rules-oops {
+  color: #e08a70; background: #251712; border: 1px solid #5c3327; padding: 5px 8px;
+}
+
+@media (max-width: 720px) {
+  .rules-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+/* раздел правится на месте: название, заметка и текстовая вырезка */
+.rules-title { font-size: 13px; font-weight: 600; max-width: 320px; }
+.rules-note { font-size: 12px; }
+
+.rules-text {
+  display: block; width: 100%; text-align: left; padding: 8px 9px;
+  background: var(--surface2); border: 1px solid var(--line); color: var(--txt);
+  font-family: var(--ui); font-size: 12.5px; font-weight: 400; line-height: 1.45;
+  text-transform: none; letter-spacing: normal; white-space: pre-wrap;
+  max-height: 260px; overflow: hidden; cursor: text;
+}
+.rules-text:hover { border-color: var(--dim2); }
+
+/* приход из поиска: найденный раздел и вырезка — янтарным кантом */
+.rules-sec.lit { border-color: var(--amber-dim); }
+.rules-cut.lit .rules-page, .rules-cut.lit .rules-text { border-color: var(--amber); }

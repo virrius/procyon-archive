@@ -1,0 +1,136 @@
+{
+  "leave_confirm": "Changes are not saved. Leave without saving?",
+  "sections_label": "Sections",
+  "admin_chip": "admin",
+  "back_campaigns": "campaigns",
+  "signed_in": "login",
+  "logout": "sign out",
+  "sections": {
+    "hub": "LLM",
+    "images": "Images",
+    "news": "News",
+    "campaigns": "Campaigns",
+    "users": "Users",
+    "lang": "Language"
+  },
+  "lang": {
+    "ui": "Interface language"
+  },
+  "hub": {
+    "url": "URL",
+    "img_model": "Image prompt model",
+    "news_model": "News model",
+    "check_failed": "failed",
+    "use_prompts": "prompts",
+    "use_news": "news",
+    "draw": "drawing",
+    "text": "text",
+    "checking": "checking…",
+    "check": "check",
+    "key": "Key",
+    "key_set": "set · …{{tail}}",
+    "key_unset": "not set",
+    "draw_kind": "Who draws",
+    "as_text_url": "same as text · {{url}}",
+    "as_text": "same as text",
+    "model": "Model",
+    "models": "models",
+    "copy": "copy",
+    "copied": "copied"
+  },
+  "camps": {
+    "campaign": "Campaign",
+    "gm": "GM",
+    "players": "Players",
+    "created": "Created",
+    "open": "open",
+    "new": "new campaign",
+    "create": "create"
+  },
+  "roles": {
+    "gm": "GM",
+    "player": "player",
+    "observer": "observer"
+  },
+  "users": {
+    "revoke_confirm": "Revoke {{login}}'s access to “{{name}}”?",
+    "user": "User",
+    "login": "Login",
+    "access": "Campaign access",
+    "since": "Member since",
+    "signin": "Sign-in",
+    "admin": "Admin",
+    "you": "you",
+    "revoke": "revoke access",
+    "add_campaign": "+ campaign",
+    "block": "block",
+    "unblock": "unblock",
+    "yes": "yes",
+    "no": "no"
+  },
+  "prompts": {
+    "doc": {
+      "hub": "Model instructions",
+      "person": "Character",
+      "frame": "Frame",
+      "action": "Action",
+      "inpaint": "Area edit",
+      "templates": "Templates",
+      "dispatch": "Dispatches",
+      "comments": "Comments"
+    },
+    "sec": {
+      "views": "Frame subtypes",
+      "registers": "Registers",
+      "anchors": "Anchors",
+      "ages": "Age",
+      "dispatch_journalists": "Journalists",
+      "dispatch_lenses": "Dispatch angles",
+      "comment_manners": "Comment manners",
+      "comment_lengths": "Comment length",
+      "comment_writing": "Comment writing"
+    },
+    "new": {
+      "register": "new register",
+      "anchor": "new anchor",
+      "journalist": "new journalist",
+      "lens": "new angle",
+      "manner": "new manner",
+      "length": "new length",
+      "writing": "new writing"
+    },
+    "reg": {
+      "hint": "button hint",
+      "look": "frame look (EN): palette, light, manner — head of the line",
+      "corner": "when the model picks the angle itself (EN): what kind of places these are",
+      "vocab": "place and things",
+      "vocab_person": "person",
+      "vocab_ship": "hull"
+    },
+    "view_insert": "frame subtype law",
+    "add": "add",
+    "reset": "reset to code",
+    "remove": "remove",
+    "signature": "signature",
+    "differs": "differs from code"
+  },
+  "xfer": {
+    "export": "export",
+    "zip_hint": "campaign archive with images — to move it or keep a backup",
+    "json_hint": "data only, no images",
+    "import": "import from archive",
+    "import_hint": "a zip or json exported here or on another server — it becomes a new campaign",
+    "imported": "Campaign “{{name}}” imported.",
+    "failed": "failed: {{error}}",
+    "mb": "{{done}} of {{total}} MB",
+    "stage": {
+      "start": "starting",
+      "upload": "sending the archive",
+      "read": "reading the archive",
+      "rows": "records",
+      "files": "images and files",
+      "canon": "book canon to the server language",
+      "done": "done"
+    }
+  }
+}

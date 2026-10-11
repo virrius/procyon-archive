@@ -1,0 +1,25 @@
+{
+  "archive": "Archive",
+  "search": "search the campaign…",
+  "hit": {
+    "message": "message",
+    "news": "news",
+    "note": "note",
+    "block_entity": "entry",
+    "block_clock": "clock",
+    "block_rule": "rules"
+  },
+  "viewas": {
+    "gm": "GM view",
+    "title": "View as",
+    "public": "view: players (shared)",
+    "as": "as: {{name}}",
+    "public_bar": "▣ Table view: only what is open to the whole crew. Editing is off.",
+    "player_bar": "⚠ Player's-eye view: you see and can do exactly what they can. Edits are made in their name.",
+    "back": "back to GM view"
+  },
+  "loading_campaign": "loading campaign…",
+  "sections": "Campaign sections",
+  "sections_hint": "campaign sections",
+  "gm": "GM"
+}

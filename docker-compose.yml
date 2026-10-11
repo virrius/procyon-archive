@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: procyon
+      POSTGRES_PASSWORD: procyon
+      POSTGRES_DB: procyon
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U procyon"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "45432:5432"
+
+  api:
+    build: ./backend
+    environment:
+      PA_DATABASE_URL: postgresql+psycopg://procyon:procyon@db:5432/procyon
+      PA_JWT_SECRET: ${PA_JWT_SECRET:-}
+      PA_UPLOAD_DIR: /data/uploads
+      PA_WORKER_TOKEN: ${PA_WORKER_TOKEN:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./data/uploads:/data/uploads
+      - ./assets:/data/assets:ro
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./frontend
+    depends_on:
+      - api
+    volumes:
+      - ./assets:/usr/share/nginx/html/media:ro
+    ports:
+      - "5180:80"
+
+volumes:
+  db_data:

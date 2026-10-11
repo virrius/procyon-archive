@@ -1,0 +1,22 @@
+{
+  "edit_denied": "Only the GM or the entry's owner can edit it.",
+  "owner_gm_only": "Only the GM assigns an entry's owner.",
+  "hidden_gm_only": "Only the GM decides what is hidden from the table.",
+  "status_factions_only": "status is tracked only for factions",
+  "bad_status": "unknown status level {stance}",
+  "archive_denied": "Only the GM or the entry's owner can archive it.",
+  "purge_gm_only": "Only the GM can delete permanently.",
+  "bad_visibility": "unknown visibility {scope}",
+  "player_no_gm_vis": "A player can't set the visibility to “GM only”.",
+  "self_link": "An entry can't be linked to itself.",
+  "link_exists": "This link already exists.",
+  "link_edit_denied": "Only the GM or someone who can see one of the entries can edit the link.",
+  "link_delete_denied": "Only the GM or someone who can see one of the entries can delete the link.",
+  "player_scopes": "Players can choose: “only me”, “selected”, “everyone”.",
+  "not_found": "not found",
+  "block_not_yours": "Only the note's author or the GM can edit it.",
+  "gm_note_delete": "The GM created this note — only the GM can delete it.",
+  "note_delete_denied": "Only the note's author or the GM can delete it.",
+  "unknown_kind": "unknown record kind {kind}",
+  "note_not_yours": "Only the GM may edit or delete someone else's note."
+}

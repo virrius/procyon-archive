@@ -1,0 +1,97 @@
+{
+  "clock": "clock",
+  "headline": "Headline",
+  "lead": "Gist",
+  "lead_placeholder": "What happened, where, and who was involved",
+  "about": "Who and what it's about",
+  "attach": {
+    "remove": "remove “{{name}}”",
+    "more": "more…",
+    "placeholder": "faction, person, place, or clock",
+    "nothing": "Nothing found",
+    "all_linked": "Everything is already linked"
+  },
+  "comment": {
+    "handle": "handle",
+    "handle_label": "Handle",
+    "who": "who they are and where from",
+    "who_label": "Who they are and where from",
+    "remove": "Remove comment",
+    "text": "comment",
+    "text_label": "Comment",
+    "add": "+ comment"
+  },
+  "chatter": {
+    "title": "What the net is saying",
+    "writing": "Writing…",
+    "write": "Write comments",
+    "none": "No comments yet. Locals of the sector will write them based on the story.",
+    "unsigned": "unsigned"
+  },
+  "draft": {
+    "air_failed": "The story didn't air. Try again.",
+    "drop_failed": "The draft wasn't removed. Try again.",
+    "comments_failed": "The comments weren't written. Try again.",
+    "no_byline": "No byline",
+    "lens": "angle: {{lens}}",
+    "manual": "own text",
+    "lead_hint": "what happened — for someone who hasn't heard anything",
+    "body": "Story text",
+    "remove": "Remove",
+    "wait": "One moment…",
+    "air": "Put on the air"
+  },
+  "job": {
+    "journalist": "The journalist",
+    "writing": "{{who}} is writing — it usually takes a minute or so. You can close the window: the drafts will wait in News.",
+    "failed": "order failed",
+    "failed_text": "The dispatches weren't written.",
+    "retry": "Retry",
+    "untitled": "Untitled",
+    "aired": "“{{headline}}” is on the air",
+    "open_feed": "open the feed"
+  },
+  "gen": {
+    "title": "Story",
+    "who": "Who writes",
+    "what": "What happened",
+    "what_hint": "the journalist sticks to these words and framing",
+    "what_placeholder": "Leave empty and the journalist will pick the event from the goals of what's linked.",
+    "write_more": "Write three more",
+    "write_three": "Write three dispatches",
+    "write_self": "Write it myself",
+    "need": "Link at least one entry or describe what happened.",
+    "order_failed": "The order wasn't accepted. Try again.",
+    "idle_title": "Three dispatches will appear here",
+    "idle_text": "Pick a journalist, link entries, or describe what happened. While the journalist is writing, you can close the window: the drafts will wait in News."
+  },
+  "feed": {
+    "title": "News",
+    "bare_title": "Remove the generated text and comments, keep only the gist",
+    "bare": "Kill the journalist",
+    "add": "+ Story",
+    "quiet_gm": "All quiet on the air so far. Write the first story with the plus above or from a quest board.",
+    "quiet": "All quiet on the air so far.",
+    "drafts": "Drafts",
+    "drafts_hint": "only you can see them until they air",
+    "on_air": "on air",
+    "byline_air": "On Air",
+    "edit": "edit",
+    "take_off": "Take off the air",
+    "lead_off": "players can't see the gist",
+    "drop_confirm": "Take the story “{{headline}}” off the air?",
+    "untitled": "untitled"
+  },
+  "edit": {
+    "title": "Edit story",
+    "dirty": "Your story edits will be lost — they aren't saved.",
+    "byline": "Byline",
+    "date": "Air date",
+    "date_placeholder": "year.week.day",
+    "date_title": "year.week.day, as in the header",
+    "date_bad": "Write the date as in the header: year.week.day",
+    "text": "Text",
+    "saving": "Saving…",
+    "save": "Save"
+  }
+}

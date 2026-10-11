@@ -1,0 +1,22 @@
+{
+  "board_missing": "доска не найдена",
+  "card_missing": "карточка не найдена",
+  "entry_card_needs_entry": "карточке записи нужна сама запись",
+  "clock_card_needs_clock": "карточке счётчика нужен сам счётчик",
+  "entry_missing": "запись не найдена",
+  "clock_missing": "счётчик не найден",
+  "thread_nowhere": "нить некуда вести",
+  "card_other_board": "карточка с другой доски",
+  "thread_missing": "нить не найдена",
+  "agent": {
+    "entry_missing": "запись «{ref}» не найдена",
+    "entry_option": "«{name}» ({id})",
+    "entry_ambiguous": "под «{ref}» подходит несколько записей: {names}",
+    "clock_missing": "счётчик «{ref}» не найден",
+    "clock_ambiguous": "счётчиков с именем «{ref}» несколько — назови айди",
+    "grid_note": "col/row — клетки сетки; col растёт вправо, row вниз; cols — ширина карточки в клетках",
+    "card_missing": "карточки «{key}» на доске нет",
+    "card_needs_target": "карточке записи или счётчика нужна сама запись",
+    "thread_no_card": "нить «{src}» → «{dst}»: такой карточки нет"
+  }
+}

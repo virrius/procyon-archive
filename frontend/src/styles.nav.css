@@ -1,0 +1,133 @@
+/* Левое меню консоли: тёмный рельс, янтарная риска на активном.
+   Разделы — капслок, подвкладки — обычный кегль на тонкой линии-рейке.
+   Селекторы намеренно прибиты к .sidenav: styles.css грузится позже
+   и иначе перебивал бы `a:hover` при равной специфичности. */
+
+.sidenav {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 230px;
+  width: 230px;
+  min-height: 0;
+  background: #100f0d;
+  border-right: 1px solid var(--line);
+}
+
+/* кнопка-гамбургер: только узкий экран */
+.sidenav .nav-burger { display: none; }
+
+.sidenav .sidenav-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 10px 0 16px;
+}
+
+.sidenav .nav-group + .nav-group { margin-top: 1px; }
+
+.sidenav .nav-head {
+  display: block;
+  padding: 8px 14px;
+  border-left: 2px solid transparent;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+}
+.sidenav .nav-head:hover {
+  background: var(--surface);
+  color: var(--txt);
+  text-decoration: none;
+}
+.sidenav .nav-head.on {
+  background: var(--surface2);
+  border-left-color: var(--amber);
+  color: var(--txt);
+}
+
+.sidenav .nav-sub {
+  display: flex;
+  flex-direction: column;
+  margin: 2px 0 6px 16px;
+  padding: 2px 0;
+  border-left: 1px solid var(--line);
+}
+.sidenav .nav-sub a {
+  display: block;
+  margin-left: -1px;
+  padding: 5px 12px;
+  border-left: 2px solid transparent;
+  font-size: 12.5px;
+  color: var(--dim);
+  text-decoration: none;
+}
+.sidenav .nav-sub a:hover {
+  background: var(--surface);
+  color: var(--txt);
+  text-decoration: none;
+}
+.sidenav .nav-sub a.active {
+  border-left-color: var(--amber);
+  color: var(--amber);
+  text-decoration: none;
+}
+
+.sidenav .sidenav-foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+}
+.sidenav .sidenav-lab {
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim2);
+}
+.sidenav .sidenav-camp .mono {
+  color: var(--txt);
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+.sidenav .sidenav-foot .row { gap: 6px; flex-wrap: wrap; }
+.sidenav .sidenav-foot button { flex: 1 1 auto; }
+
+/* --- узкий экран: меню выезжает сбоку поверх страницы --------------------- */
+@media (max-width: 900px) {
+  .nav-scrim {
+    position: fixed; inset: 0; z-index: 75;
+    background: #0a0908cc;
+  }
+
+  .sidenav {
+    position: fixed; top: 0; left: 0; z-index: 80;
+    height: 100%;
+    width: min(258px, 82vw);
+    flex: 0 0 auto;
+    border-right: 1px solid var(--line2);
+    transform: translateX(-100%);
+    transition: transform .18s ease-out;
+  }
+  .sidenav.open { transform: none; }
+  .sidenav .sidenav-scroll { padding-top: 8px; }
+}
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .sidenav { transition: none; }
+}
+
+/* черновики новостей ждут ГМа */
+.sidenav .nav-badge {
+  margin-left: 8px; padding: 0 5px; font-family: var(--util); font-size: 10.5px;
+  letter-spacing: 0; color: #17140f; background: var(--amber);
+}
+.sidenav .nav-badge.wait {
+  color: var(--amber); background: transparent; border: 1px solid var(--amber-dim);
+  text-transform: none;
+}
+

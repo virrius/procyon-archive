@@ -1,0 +1,10 @@
+{
+  "entry_missing": "entry not found",
+  "not_your_marker": "someone else's marker",
+  "gm_only": "GM only",
+  "map_missing": "map not found",
+  "stroke_points": "a stroke must have 2 to 4000 points",
+  "not_found": "not found",
+  "not_your_stroke": "not your stroke",
+  "gm_manages_maps": "the GM manages maps"
+}

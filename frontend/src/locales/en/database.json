@@ -1,0 +1,33 @@
+{
+  "title": {
+    "npc": "NPCs",
+    "factions": "Factions",
+    "locations": "Locations",
+    "clocks": "Clocks"
+  },
+  "clocks": {
+    "add": "+ clock",
+    "empty": "No clocks.",
+    "no_kind": "no type",
+    "open_tip": "Full clock: description, history, editing",
+    "abandon_tip": "Abandon clock",
+    "abandon_confirm": "Abandon clock “{{name}}”?",
+    "tick_title": "Change: {{name}}",
+    "outcome": "when filled: {{text}}",
+    "tick_note": "with a note",
+    "complete": "complete",
+    "edit": "edit",
+    "reopen": "reopen",
+    "abandon": "abandon",
+    "delete_confirm": "Delete clock “{{name}}” along with its tick history? This can't be undone.",
+    "history": "history"
+  },
+  "tick": {
+    "delta": "Delta",
+    "comment": "Comment (why)",
+    "apply": "apply"
+  },
+  "history": {
+    "empty": "No changes."
+  }
+}

@@ -1,0 +1,145 @@
+/* Карта: одно изображение, зум/пан, кругляши-отметки, рисунок маркером. */
+
+.mp-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 8px 10px; background: var(--surface); border: 1px solid var(--line);
+}
+.mp-bar .lb {
+  font-family: var(--util); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--dim2);
+}
+.mp-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
+
+/* кружки палитры — .sw в styles.css, общие с счётчиками */
+
+.mp-view {
+  position: relative; width: 100%; margin: 0 auto; overflow: hidden;
+  background: #0b0a09; border: 1px solid var(--line2);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.mp-view.t-pan { cursor: grab; }
+.mp-view.t-mark { cursor: crosshair; }
+.mp-view.t-draw { cursor: crosshair; }
+.mp-view.t-erase { cursor: cell; }
+
+/* без will-change: слой с will-change растрируется один раз и мылит фон при зуме */
+.mp-layer { position: absolute; inset: 0; transform-origin: 0 0; }
+.mp-layer > img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: fill; display: block; pointer-events: none;
+}
+.mp-ink { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+.mp-blank {
+  position: absolute; inset: 0; display: grid; place-items: center; gap: 10px;
+  align-content: center; text-align: center; color: var(--dim2);
+  font-family: var(--util); font-size: 12px; padding: 20px;
+  background: repeating-linear-gradient(45deg, #100f0d 0 14px, #131210 14px 28px);
+}
+
+/* метки лежат поверх масштабируемого слоя, а не внутри него: слой растрируется
+   при зуме и текст с иконками мылит — здесь они рисуются в экранном масштабе */
+.mp-pins { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.mp-pin { position: absolute; width: 0; height: 0; }
+.mp-dot {
+  position: absolute; left: -13px; top: -13px; width: 26px; height: 26px;
+  overflow: visible; cursor: pointer;
+}
+.mp-icon {
+  display: grid; place-items: center; padding: 4px; line-height: 0;
+  background: #17150f; border: 1px solid var(--line); cursor: pointer;
+}
+.mp-icon.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+.mp-lab {
+  position: absolute; left: 13px; top: -9px; white-space: nowrap; pointer-events: none;
+  font-family: var(--util); font-size: 11.5px; color: var(--txt);
+  text-shadow: 0 1px 3px #000, 0 0 6px #000;
+}
+.mp-cnt {
+  position: absolute; left: 8px; top: -20px; pointer-events: none;
+  background: var(--amber); color: #17140f; font-family: var(--util);
+  font-size: 9px; line-height: 1.5; padding: 0 3px;
+}
+
+.mp-zoom {
+  font-family: var(--util); font-size: 11px; color: var(--dim);
+  min-width: 44px; text-align: center;
+}
+.mp-hint { font-family: var(--util); font-size: 11.5px; color: var(--dim2); }
+
+/* --- два столбца: холст слева, заметки справа ---------------------------- */
+
+.mp-split {
+  display: grid; gap: 12px; align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+.mp-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.mp-side {
+  display: flex; flex-direction: column; min-width: 0;
+  min-height: 380px; max-height: 80vh;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.mp-side-hd {
+  flex: none; display: flex; align-items: center; gap: 8px; min-height: 38px;
+  padding: 6px 10px; background: var(--surface2); border-bottom: 1px solid var(--line);
+}
+.mp-side-t {
+  font-family: var(--util); font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim2);
+}
+.mp-side-title {
+  font-size: 14px; font-weight: 600; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mp-side-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  padding: 10px; scrollbar-width: thin; scrollbar-color: var(--line2) transparent;
+}
+.mp-side-body::-webkit-scrollbar { width: 9px; }
+.mp-side-body::-webkit-scrollbar-thumb { background: var(--line2); }
+.mp-side .panel { padding: 10px 11px; }
+.mp-side textarea { min-height: 62px; }
+
+.mp-mlist { display: flex; flex-direction: column; }
+.mp-mrow {
+  display: flex; align-items: center; gap: 8px; padding: 7px 6px; font-size: 13px;
+  border-bottom: 1px solid var(--line); cursor: pointer;
+}
+.mp-mrow:hover { background: var(--surface2); }
+.mp-mdot { flex: none; display: inline-block; overflow: visible; }
+.mp-mname { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-mby { flex: none; max-width: 88px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-mcnt {
+  flex: none; font-family: var(--util); font-size: 9.5px; line-height: 1.7;
+  padding: 0 5px; background: var(--amber); color: #17140f;
+}
+
+/* карта живёт во всю ширину окна — общий предел колонки её не касается */
+.content:has(.mp-split) { max-width: none; padding: 12px 14px 18px; }
+.mp-split { grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 420px); }
+
+/* после базового правила: при равной специфичности побеждает то, что ниже */
+@media (max-width: 1000px) {
+  .mp-split { grid-template-columns: minmax(0, 1fr); }
+  .mp-side { max-height: none; }
+  .mp-side-body { overflow: visible; }
+}
+
+/* --- карточка отметки в модалке ------------------------------------------- */
+
+.mp-loc {
+  display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+  padding: 10px; border: 1px solid var(--line); background: #16140f;
+}
+.mp-loc:hover { border-color: var(--amber); }
+.mp-loc-img {
+  flex: none; width: 148px; height: 148px; object-fit: cover;
+  border: 1px solid var(--line);
+}
+.mp-loc-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mp-loc-name { font-size: 16px; }
+.mp-loc-sum { color: var(--dim); white-space: pre-wrap; }
+.mp-loc-go { font-family: var(--util); font-size: 11px; color: var(--amber); }
+.mp-save { font-family: var(--util); font-size: 11.5px; color: var(--dim2); }
+.mp-save.bad { color: var(--danger, #d06a5a); }

@@ -1,0 +1,224 @@
+{
+  "loading": "loading boards…",
+  "empty": "No boards yet. Create the first one — it will hold the quest's context: who's connected to whom, what's known, where the threads lead.",
+  "bar": {
+    "board": "board",
+    "new": "+ board",
+    "rename": "rename",
+    "delete": "delete board"
+  },
+  "rename_title": "Board name",
+  "name": "Name",
+  "delete_confirm": "Delete the board “{{name}}”?",
+  "delete_confirm_cards": "Its cards ({{n}}) and the threads between them will be lost. The entries, clocks, and files themselves will stay in the campaign.",
+  "new": {
+    "title": "New board",
+    "dirty": "What you've filled in will be lost — the board hasn't been created.",
+    "about": "What the quest is about",
+    "create": "create"
+  },
+  "err": {
+    "create": "board not created",
+    "rename": "not renamed",
+    "delete": "board not deleted",
+    "paste": "image not pasted",
+    "position": "position not saved",
+    "thread": "thread not created",
+    "card": "card not created",
+    "edit": "edit not saved",
+    "drop": "couldn't remove",
+    "tick": "clock didn't move",
+    "thread_drop": "thread not removed",
+    "label": "label not saved",
+    "cards_load": "Board cards failed to load: {{err}}"
+  },
+  "ask": {
+    "title": "Confirmation",
+    "yes": "yes",
+    "no": "no",
+    "cancel": "cancel"
+  },
+  "drop": {
+    "one": "Remove “{{name}}” from the board? The entry itself will stay in the campaign.",
+    "card": "card",
+    "many_one": "Remove {{count}} card from the board? The entries, clocks, and files themselves will stay in the campaign.",
+    "many_other": "Remove {{count}} cards from the board? The entries, clocks, and files themselves will stay in the campaign.",
+    "yes": "remove",
+    "thread": "Remove the thread between the cards?"
+  },
+  "dismiss": "click to dismiss",
+  "tab": {
+    "canvas": "canvas",
+    "roster": "roster"
+  },
+  "on_board_one": "{{count}} card on the board",
+  "on_board_other": "{{count}} cards on the board",
+  "thread": {
+    "label": "label",
+    "solid": "solid",
+    "dashed": "dashed",
+    "drop": "remove thread",
+    "label_title": "Thread label",
+    "label_field": "What connects them"
+  },
+  "zoom": {
+    "out": "zoom out",
+    "in": "zoom in",
+    "fit_tip": "fit the whole board in the window",
+    "fit": "fit"
+  },
+  "blank": "The board is empty. Right-click the canvas to create an entry right here, take an existing one from the database, or place a note, a clue, or a clock.",
+  "hint": {
+    "paste_images": "placing images on the board…",
+    "paste_image": "placing the image on the board…",
+    "linking": "click a second card to run a thread; Esc to cancel",
+    "idle": "right-click — menu; drag the canvas — pan, wheel — zoom, Shift+wheel — scroll; Shift+drag — select a group (moves and removes as one), Del — remove; drag a card by its header; Ctrl+V — image from clipboard"
+  },
+  "entry_title": "Entry",
+  "pick_title": "Existing card onto the board",
+  "image_title": "Image onto the board",
+  "place": "place",
+  "noun": {
+    "entry": "entry",
+    "clock": "clock",
+    "frame": "frame",
+    "sketch": "sketch",
+    "extra": "extra",
+    "text": "text",
+    "note": "note",
+    "card": "card",
+    "text_field": "text field",
+    "image": "image"
+  },
+  "roster": {
+    "npc": "NPCs",
+    "character": "crew",
+    "faction": "factions",
+    "location": "locations",
+    "item": "items",
+    "ship": "ships",
+    "extras": "extras",
+    "gone": "entries deleted",
+    "clocks": "clocks",
+    "notes": "notes and sketches",
+    "empty": "No one on the board yet. Cards go on the canvas — here they're sorted like a card index.",
+    "lines_one": "{{count}} line",
+    "lines_other": "{{count}} lines",
+    "labels": ", labels: {{list}}",
+    "no_name": "unnamed",
+    "alias": "“{{alias}}”"
+  },
+  "clock_gone": "clock deleted from the campaign",
+  "entry_gone": "entry deleted from the campaign",
+  "edit_clock": "edit clock",
+  "open_entry": "open the entry card",
+  "tier": "Tier",
+  "drop_from_board": "remove from board",
+  "menu": {
+    "thread_from": "run a thread from here",
+    "news_sel": "news about the selection ({{n}})",
+    "news_this": "news about this",
+    "mark_sel": "selection",
+    "mark_all": "text",
+    "font": "size",
+    "drop_n": "remove from board ({{n}})",
+    "take": "take an existing card",
+    "create_new": "create new",
+    "clock": "clock",
+    "place": "place",
+    "text_field": "text field",
+    "image": "image",
+    "sketch": "drawing pad",
+    "extra": "extra (one-scene NPC)"
+  },
+  "kind": {
+    "npc": "NPC",
+    "item": "item",
+    "faction": "faction",
+    "location": "location"
+  },
+  "marks": {
+    "bold": "B",
+    "bold_tip": "bold · Ctrl+B",
+    "italic": "I",
+    "italic_tip": "italic · Ctrl+I",
+    "underline": "U",
+    "underline_tip": "underline · Ctrl+U"
+  },
+  "card": {
+    "tier": "Tier {{tier}}",
+    "entry_deleted": "entry deleted",
+    "text_ph": "caption, remark, anything…",
+    "name_ph": "name…",
+    "who_ph": "who they are, what they do…",
+    "clock_ph": "what this clock threatens…",
+    "width": "card width",
+    "size": "pad size",
+    "height": "pad height"
+  },
+  "ink": {
+    "pen": "pen",
+    "text": "label",
+    "erase": "eraser",
+    "thin": "thin",
+    "medium": "medium",
+    "thick": "thick",
+    "graphite": "graphite",
+    "label_ph": "label…",
+    "undo": "undo",
+    "undo_tip": "undo last",
+    "clear": "clear",
+    "clear_tip": "erase all"
+  },
+  "roll": {
+    "title": "Extra onto the board",
+    "pool": "Pool",
+    "country": "Country",
+    "any_country": "any",
+    "gender": "Gender",
+    "shape": "Form",
+    "err": "the generator is silent",
+    "pick": "Pick one or roll again",
+    "busy": "rolling…",
+    "more": "more",
+    "name": "Name",
+    "who": "Who they are",
+    "who_ph": "dock shift worker, the bar owner's cousin…"
+  },
+  "pool": {
+    "setting": "setting",
+    "world": "world"
+  },
+  "gender": {
+    "any": "any",
+    "m": "male",
+    "f": "female"
+  },
+  "shape": {
+    "mix": "mixed",
+    "mono": "single name",
+    "full": "with surname",
+    "alias": "with alias",
+    "aliasfull": "full",
+    "xeno": "xeno"
+  },
+  "img": {
+    "err": "file not uploaded",
+    "label": "Image",
+    "busy": "uploading…",
+    "other": "choose another file",
+    "choose": "choose file",
+    "done": "uploaded"
+  },
+  "note": {
+    "drop": "remove note",
+    "ph": "note…",
+    "add_tip": "attach a note",
+    "add": "+ note"
+  },
+  "pick": {
+    "label": "What to place on the board",
+    "ph": "name, alias, description, or clock…",
+    "hint": "Threads drawn on the board don't go into the entry itself."
+  }
+}

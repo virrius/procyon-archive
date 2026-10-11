@@ -1,0 +1,64 @@
+{
+  "loading": "loading…",
+  "save": "save",
+  "cancel": "cancel",
+  "delete": "delete",
+  "close": "close",
+  "vis": {
+    "crew": "everyone",
+    "selected": "selected",
+    "owner": "owner",
+    "gm": "GM only"
+  },
+  "palette": {
+    "amber": "amber",
+    "rust": "rust",
+    "steel": "steel",
+    "plum": "plum",
+    "olive": "olive",
+    "white": "white"
+  },
+  "modal": {
+    "unsaved_title": "Close without saving?",
+    "unsaved_text": "What you've entered will be lost — the card isn't saved.",
+    "back": "go back",
+    "close_unsaved": "close without saving"
+  },
+  "pick_max": "no more than {{max}}",
+  "color": "Color",
+  "who_sees": "Who can see",
+  "who_edits": "Who can edit",
+  "notes": {
+    "delete_confirm": "Delete this note?",
+    "empty": "No notes.",
+    "untitled": "note",
+    "resolved": "resolved",
+    "open": "open",
+    "resolve": "resolve",
+    "reopen": "reopen",
+    "new": "New note",
+    "title": "Title",
+    "text": "Text",
+    "add": "add",
+    "reply": "reply in the thread…"
+  },
+  "unsaved": "unsaved changes",
+  "saving": "saving…",
+  "saved": "saved",
+  "fold": {
+    "more": "show more",
+    "less": "show less"
+  },
+  "size_kb": "{{n}} KB",
+  "size_mb": "{{n}} MB",
+  "paste": {
+    "title_single": "Paste the image from the clipboard?",
+    "title_multi": "Paste the images from the clipboard?",
+    "alt": "clipboard image {{n}}",
+    "question_single": "The clipboard image will be uploaded to the campaign.",
+    "question_multi": "The clipboard images will be uploaded to the campaign.",
+    "yes": "yes, paste"
+  },
+  "no": "no",
+  "error": "error"
+}

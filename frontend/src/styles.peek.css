@@ -1,0 +1,26 @@
+/* Быстрый просмотр карточки (components/EntityPeek.tsx): окно поверх экрана, только чтение.
+   Снимок слева, суть справа, ранг прибором по правому канту, ниже — записи. */
+
+.peek { display: flex; flex-direction: column; gap: 16px; }
+
+.peek-head {
+  display: grid; gap: 16px; align-items: start;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+}
+
+/* кант — у самого кадра: обойма остаётся свободной под рустовую метку закрытого от стола */
+.peek-shot > img, .peek-shot > .peek-stub { width: 100%; border: 1px solid var(--line); }
+.peek-shot > img { display: block; height: auto; background: #100f0d; }
+.peek-shot > .peek-stub { aspect-ratio: 3 / 4; }
+
+.peek-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.peek-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.peek-body > a { align-self: flex-start; }
+
+@media (max-width: 760px) {
+  .peek-head { grid-template-columns: 120px minmax(0, 1fr); gap: 12px; }
+  .peek-head > .rank-gauge { grid-column: 2; justify-self: start; }
+}
+
+.peek-go { display: inline-flex; vertical-align: middle; margin-left: 8px; color: var(--dim2); }
+.peek-go:hover { color: var(--amber); }

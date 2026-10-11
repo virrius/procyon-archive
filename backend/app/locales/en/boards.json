@@ -1,0 +1,22 @@
+{
+  "board_missing": "board not found",
+  "card_missing": "card not found",
+  "entry_card_needs_entry": "an entry card needs the entry itself",
+  "clock_card_needs_clock": "a clock card needs the clock itself",
+  "entry_missing": "entry not found",
+  "clock_missing": "clock not found",
+  "thread_nowhere": "the thread has nowhere to go",
+  "card_other_board": "the card is from another board",
+  "thread_missing": "thread not found",
+  "agent": {
+    "entry_missing": "entry “{ref}” not found",
+    "entry_option": "“{name}” ({id})",
+    "entry_ambiguous": "several entries match “{ref}”: {names}",
+    "clock_missing": "clock “{ref}” not found",
+    "clock_ambiguous": "several clocks are named “{ref}” — use the ID",
+    "grid_note": "col/row are grid cells; col grows to the right, row grows down; cols is the card width in cells",
+    "card_missing": "no card “{key}” on the board",
+    "card_needs_target": "an entry or clock card needs the entry itself",
+    "thread_no_card": "thread “{src}” → “{dst}”: no such card"
+  }
+}

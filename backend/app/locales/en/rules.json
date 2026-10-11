@@ -1,0 +1,7 @@
+{
+  "set_not_rendered": "the book pages aren't rendered",
+  "no_such_page": "the book has no such page",
+  "image_clip_source": "an image clipping needs a file or a book page",
+  "not_found": "no such clipping",
+  "attachment_missing": "attachment not found"
+}

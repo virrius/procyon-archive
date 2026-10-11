@@ -1,0 +1,17 @@
+{
+  "edit_denied": "Only the GM or the assigned player can edit this clock.",
+  "owner_gm_only": "Only the GM decides who can edit a clock.",
+  "closed_reopen_first": "The clock is closed — reopen it first.",
+  "already_full": "The clock is already filled.",
+  "already_closed": "The clock is already closed.",
+  "not_full": "The clock isn't filled yet.",
+  "already_open": "The clock is already open.",
+  "abandoned_gm": "Only the GM can bring back an abandoned clock.",
+  "history": {
+    "reopened": "reopened",
+    "completed": "completed"
+  },
+  "gm_only": "Only the GM can hide a clock from the table.",
+  "not_found": "clock not found",
+  "closed_frozen": "The clock is closed: only visibility and rights can change."
+}

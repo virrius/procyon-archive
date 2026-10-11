@@ -1,0 +1,530 @@
+/* Теги и связи сущности — приборная планка и список сцепок.
+   Сплошные поверхности, 1px канты, без сеток, прозрачностей и свечения. */
+
+/* --- ввод тегов ----------------------------------------------------------- */
+
+.tagbox {
+  display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+  background: #100f0d; border: 1px solid var(--line2); padding: 5px 6px;
+}
+.tagbox:focus-within { border-color: var(--amber); }
+.tagbox.off { border-color: var(--line); }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--util); font-size: 11.5px; line-height: 1.5;
+  color: var(--txt); background: var(--surface2); border: 1px solid var(--line2);
+  padding: 1px 3px 1px 7px; max-width: 100%;
+}
+.tag.off { padding-right: 7px; color: var(--dim); }
+.tag .p { flex: 0 0 auto; color: var(--dim2); white-space: nowrap; }
+.tag .t { color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag.off .t { color: var(--dim); }
+a.t:hover { color: var(--amber); }
+.tag > button {
+  font-family: var(--util); font-size: 12px; font-weight: 400; letter-spacing: 0;
+  text-transform: none; line-height: 1;
+  padding: 0 3px; color: var(--dim2); background: none; border: none;
+}
+.tag > button:hover { color: var(--rust); background: none; border: none; }
+
+.tag-entry {
+  position: relative; display: flex; align-items: stretch; gap: 4px;
+  flex: 1 1 200px; min-width: 165px;
+}
+.tag-entry > input {
+  flex: 1 1 90px; min-width: 70px;
+  background: #100f0d; border: none; padding: 2px 3px;
+  font-family: var(--util); font-size: 12px;
+}
+.tag-entry > input:focus { border: none; }
+.tag-entry > input:focus-visible { outline: none; }
+
+.tag-ns {
+  flex: 0 0 auto; max-width: 116px;
+  font-family: var(--util); font-size: 11.5px; line-height: 1.5;
+  color: var(--dim); background: var(--surface2);
+  border: 1px solid var(--line2); padding: 1px 4px;
+}
+.tag-ns:hover { color: var(--txt); border-color: var(--dim2); }
+.tag-ns:focus { color: var(--txt); border-color: var(--amber); }
+
+/* подсказка живёт в портале на body: fixed — иначе её режут прокрутка колонки и карточки */
+.tag-pop {
+  position: fixed; min-width: 200px;
+  max-width: 320px; max-height: 236px; overflow-y: auto; z-index: 320;
+  background: var(--surface); border: 1px solid var(--line2);
+}
+.tag-grp {
+  font-family: var(--util); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim2);
+  background: var(--surface2); padding: 4px 9px;
+  border-bottom: 1px solid var(--line);
+}
+.tag-opt {
+  display: flex; gap: 6px; align-items: baseline; width: 100%;
+  font-family: var(--util); font-size: 12px; font-weight: 400;
+  letter-spacing: 0; text-transform: none; text-align: left;
+  padding: 5px 9px; color: var(--txt);
+  background: var(--surface); border: none; border-bottom: 1px solid var(--line);
+}
+.tag-opt:last-child { border-bottom: none; }
+.tag-opt:hover { background: var(--surface2); border-color: var(--line); }
+.tag-opt.on { background: var(--surface3); color: var(--txt); }
+.tag-opt .p { flex: 0 0 auto; color: var(--dim2); }
+.tag-opt .t { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag-opt .n { flex: 0 0 auto; margin-left: 4px; color: var(--dim2); font-size: 11px; }
+
+.tag-note { font-family: var(--util); font-size: 11px; color: var(--dim2); margin-top: 4px; }
+
+/* --- досье: портрет слева, справа — имя, суть и факты ------------------------
+   По умолчанию карточка читается; поля ввода появляются только в правке */
+
+.dos-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 30px; }
+.dos-busy { font-family: var(--util); font-size: 11px; color: var(--dim2); }
+
+.dos {
+  display: grid; gap: 30px; align-items: start;
+  grid-template-columns: minmax(240px, 400px) minmax(0, 1fr);
+  background: var(--surface); border: 1px solid var(--line);
+  padding: 22px 24px 24px;
+}
+/* правка — та же вёрстка, рамка досье становится янтарной */
+.dos.editing { border-color: var(--amber-dim); }
+
+/* портрет стоит на месте, пока читают длинное досье */
+.dos-shot { position: sticky; top: 12px; min-width: 0; }
+/* поле снимка — по самому снимку: кадр во всю ширину колонки, высота по кадру */
+.ent-photo { position: relative; width: 100%; background: #100f0d; border: 1px solid var(--line); }
+.ent-photo > .avatar { max-width: 100%; border: none; }
+
+.dos-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+.dos-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+  padding-bottom: 18px; border-bottom: 1px solid var(--line);
+}
+.dos-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.dos-kicker {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 8px; font-size: 12.5px; color: var(--dim2);
+}
+.dos-kind { color: var(--dim2); }
+
+.dos-name {
+  margin: 0; font-family: var(--ui); font-size: 38px; font-weight: 600;
+  line-height: 1.1; letter-spacing: 0; text-transform: none; color: var(--txt);
+  overflow-wrap: break-word;
+}
+.dos-alias {
+  margin-top: 4px; font-family: var(--ui); font-style: normal; font-weight: 400;
+  font-size: 19px; line-height: 1.2; color: var(--dim);
+}
+.dos-nameedit { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; width: 100%; }
+.ent-namebox { flex: 1 1 100%; min-width: 0; }
+/* имя правится тем же кеглем, что и читается: строка не скачет */
+input.dos-name-in {
+  font-family: var(--ui); font-size: 38px; font-weight: 600; line-height: 1.1;
+  padding: 0 6px; height: auto; background: var(--surface2);
+}
+@media (max-width: 900px) { input.dos-name-in { font-size: 32px; } }
+@media (max-width: 700px) { input.dos-name-in { font-size: 26px; } }
+.ent-aliasbox { flex: 0 1 240px; min-width: 140px; }
+.ent-namebox input, .ent-aliasbox input { width: 100%; margin: 0; }
+
+/* роль — класс персонажа: одна янтарная строка под именем */
+.dos-role {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  margin-top: 12px;
+}
+.dos-role b { font-size: 15px; font-weight: 600; letter-spacing: .05em; color: var(--amber); }
+.dos-role .drop { width: auto; }
+.dos-role .drop-btn {
+  padding: 2px 8px; background: var(--surface2); border-color: var(--amber-dim); color: var(--amber);
+  font-size: 15px; font-weight: 600; letter-spacing: .05em; text-transform: none;
+}
+.drop-pop.ent-class-pick { min-width: 170px; }
+
+
+/* --- печать статуса: оттиск на кадре, а не строка под ним --------------------- */
+
+/* обойма не повёрнута: список вариантов и глаз стоят ровно, кренится только сам штамп */
+/* оттиск в левом нижнем углу кадра — середина остаётся чистой */
+.ent-stamp-wrap {
+  position: absolute; left: 9px; bottom: 9px; z-index: 3;
+  display: flex; align-items: flex-start; gap: 5px; max-width: calc(100% - 18px);
+}
+
+.ent-stamp {
+  --st: var(--dim2);
+  --ink: #100f0d;
+  position: relative; display: inline-block; min-width: 0;
+  padding: 3px 10px 4px; background: var(--ink);
+  border: 2px solid var(--st); outline: 1px solid var(--st); outline-offset: 2px;
+  transform: rotate(-4deg);
+}
+.ent-stamp .t {
+  display: block; font-size: 13px; font-weight: 700; line-height: 1.25;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--st);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ent-stamp.t-ok   { --st: var(--olive); }
+.ent-stamp.t-warn { --st: var(--amber); }
+/* мёртв и уничтожен — красная печать, самый громкий оттиск карточки */
+.ent-stamp.t-dead { --st: #d4462c; --ink: #1b0c08; }
+/* заблокирован и захвачен — чёрная метка: графит на угольной подложке */
+.ent-stamp.t-black { --st: #4f4842; --ink: #0b0a09; }
+.ent-stamp.t-black .t { color: #9a9086; }
+/* выбыл из дела: оттиск выцвел — цвета у него больше нет */
+.ent-stamp.t-end  { --st: #7d6f66; }
+.ent-stamp.t-none { --st: var(--dim2); }
+.ent-stamp.t-fresh { --st: #a9d37f; }
+.ent-stamp.t-work  { --st: #e3c93a; }
+.ent-stamp.t-win   { --st: #3f9a45; }
+.ent-stamp.t-grey  { --st: #8a8a8a; }
+/* штампа ещё нет — пустое место под оттиск */
+.ent-stamp.blank { --st: var(--dim2); border-style: dashed; outline-style: dashed; }
+
+/* правка: список лежит поверх штампа целиком — клик по оттиску открывает варианты */
+/* поле выбора само по себе места не занимает — оттиск не должен жаться под него */
+.ent-stamp-wrap.edit .ent-stamp-pick { position: static; flex: 0 0 0; width: 0; }
+.ent-stamp-wrap.edit .ent-stamp-pick .drop-btn {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  padding: 0; border: none; opacity: 0; cursor: pointer;
+}
+.drop-pop.ent-stamp-pick { min-width: 156px; }
+.ent-stamp-wrap.edit:hover .ent-stamp { --st: var(--amber); }
+.ent-stamp-wrap.edit:hover .ent-stamp .t { color: var(--amber); }
+.ent-stamp-wrap:focus-within .ent-stamp { outline-color: var(--amber); }
+
+/* суть — вводный абзац досье, антиквой и крупнее основного текста */
+.dos-summary {
+  max-width: 62ch; white-space: pre-wrap;
+  font-family: var(--ui); font-size: 17px; font-weight: 400; line-height: 1.5;
+  color: #ddd5c7;
+}
+.dos-summary-eye { display: inline-flex; vertical-align: middle; margin-left: 8px; }
+.dos-summary-edit { max-width: 72ch; }
+.dos-summary-edit textarea { margin-bottom: 0; }
+
+/* группы фактов: заголовок — курсив антиквой и тонкий кант до края */
+.dos-sec { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.dos-sec-t {
+  display: flex; align-items: center; gap: 12px; margin: 0;
+  font-family: var(--display); font-style: italic; font-size: 19px; font-weight: 600;
+  letter-spacing: 0; text-transform: none; color: var(--dim);
+}
+.dos-sec-t::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.dos-facts {
+  display: grid; gap: 16px 28px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+.dos-facts.aff { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.dos-fact { min-width: 0; }
+.dos-fact.wide { grid-column: 1 / -1; }
+.dos .fld-lbl {
+  font-size: 12px; letter-spacing: .02em; text-transform: none; color: var(--dim2);
+  margin-bottom: 4px;
+}
+.dos .fld-lbl.off { color: #e79a83; }
+.dos-val { font-size: 15.5px; line-height: 1.4; color: #cdc5b6; overflow-wrap: break-word; }
+.dos-fact .field { margin-bottom: 0; }
+
+/* длинный свободный текст (прошлое, внешность) — абзацем, а не полем */
+.dos-prose p {
+  margin: 0; max-width: 68ch; white-space: pre-wrap;
+  font-size: 14.5px; line-height: 1.62; color: var(--txt);
+}
+.dos-prose > .fld-lbl {
+  font-family: var(--display); font-style: italic; font-size: 19px; font-weight: 600;
+  letter-spacing: 0; color: var(--dim);
+}
+.dos-prose textarea { max-width: 72ch; margin-bottom: 0; }
+
+/* загрузка вложения — кнопка, а не системное поле выбора файла */
+.dos-file {
+  position: relative; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
+  padding: 3px 8px; color: var(--dim); background: transparent; border: 1px solid var(--line);
+}
+.dos-file:hover { background: var(--surface2); color: var(--txt); }
+.dos-file:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
+.dos-file > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* ранг — латунная табличка с римской цифрой */
+.rank-gauge {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 auto;
+  min-width: 92px; padding: 8px 14px 6px;
+  background: #100f0d; border: 1px solid var(--line2);
+}
+.rank-gauge.shut { border-color: #5c3327; }
+.rank-gauge .rg-lbl {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; letter-spacing: .02em; color: var(--dim2);
+}
+.rg-read { position: relative; display: block; }
+.rg-read .rg-mark {
+  display: block; font-family: var(--display); font-weight: 700;
+  font-size: 44px; line-height: 1.05; letter-spacing: .04em; color: var(--amber);
+}
+.rank-gauge.shut .rg-read .rg-mark { color: #e79a83; }
+.rg-read .rg-mark.none { color: var(--dim2); }
+/* правка ранга: настоящий список лежит поверх цифры — клик по табличке открывает его */
+.rg-read.edit { cursor: pointer; }
+.rg-read.edit:hover .rg-mark { color: #f0bd6a; }
+.rg-read .rg-pick { position: static; }
+.rg-read .rg-pick .drop-btn {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; padding: 0; border: none;
+}
+.drop-pop.rg-pick { min-width: 92px; }
+.rg-read:focus-within { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+/* значение есть, но стол его не знает */
+.unknown { font-family: var(--util); font-size: 13px; color: var(--dim2); cursor: help; }
+
+/* закрыто от стола — тот же язык, что у записи ГМа: рустовый кант и тёплая подложка.
+   Отрицательные поля выносят рамку за габарит, чтобы поля в сетке не съезжали. */
+.shut {
+  border-left: 3px solid var(--rust); background: #1f1512;
+  margin: -5px -8px -5px -9px; padding: 5px 8px 5px 6px;
+}
+
+/* --- обвязка: связи, счётчики, вложения одной полосой ------------------------ */
+
+/* связи, под ними счётчики, затем вложения — каждая полоса во всю ширину */
+.ent-aside, .ent-aside-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* внутри карточки обвязка — подсекция, а не своя панель: кант сверху вместо рамки */
+.ent-sub {
+  display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+.ent-sub > h3 { margin: 0; }
+
+@media (max-width: 900px) {
+  .dos { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 16px; }
+  .dos-shot { position: static; max-width: 340px; }
+  .dos-name { font-size: 32px; }
+}
+
+@media (max-width: 700px) {
+  .dos { padding: 12px; gap: 16px; }
+  .dos-shot { max-width: 260px; }
+  .dos-head { gap: 12px; padding-bottom: 14px; }
+  .dos-name { font-size: 26px; }
+  .dos-alias { font-size: 16px; }
+  .dos-summary { font-size: 15.5px; max-width: none; }
+  .dos-facts { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px 18px; }
+  .dos-facts.aff { grid-template-columns: minmax(0, 1fr); }
+  .rank-gauge { min-width: 64px; padding: 5px 10px 4px; }
+  .rg-read .rg-mark { font-size: 30px; }
+  .ent-namebox, .ent-aliasbox { flex: 1 1 150px; }
+  /* закрытое поле не выносит рустовый кант за габарит панели */
+  .dos .shut { margin-left: 0; margin-right: 0; padding-left: 6px; }
+}
+
+/* --- инлайн-контролы в заголовке карточки ----------------------------------- */
+
+select.ent-inline-sel {
+  width: auto; min-height: 22px; margin: 0; padding: 1px 5px;
+  font-family: var(--util); font-size: 11px; letter-spacing: .04em;
+  color: var(--dim); background: var(--surface2); border: 1px solid var(--line2);
+}
+select.ent-inline-sel:hover { color: var(--txt); border-color: var(--dim2); }
+
+/* --- вложения: миниатюры плиткой ------------------------------------------- */
+
+.att-grid {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+}
+.att { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.att-box { display: block; }
+
+/* сама миниатюра — квадрат: пятнадцать снимков читаются одной сеткой */
+.att-shot {
+  display: block; width: 100%; aspect-ratio: 1 / 1; padding: 0; overflow: hidden;
+  background: #100f0d; border: 1px solid var(--line); cursor: zoom-in;
+}
+.att-shot:hover { border-color: var(--dim2); }
+button.att-shot { cursor: pointer; }
+.att-shot.att-current { border-color: var(--amber); }
+.att-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* не картинка — плитка с расширением файла, клик открывает файл как раньше */
+a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-decoration: none; }
+.att-file .att-ext {
+  font-family: var(--util); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim2);
+}
+
+.att-cap {
+  font-family: var(--util); font-size: 10.5px; line-height: 1.3; color: var(--dim2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* закрытое вложение помечено тем же рустовым кантом, что и закрытое поле */
+.att-shut .att-shot { border-color: var(--rust); }
+.att-shut .att-cap { color: #e79a83; }
+
+/* --- связи ---------------------------------------------------------------- */
+
+.lnk-list { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+/* счётчики сущности — плитка: строк меньше, каждая компактнее */
+.lnk-list.clocks-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+/* циферблат — своей колонкой, имя и счёт с тиками — справа; метки уходят под имя */
+.clocks-list .lnk > .lnk-main > * { grid-column: 2; }
+.clocks-list .lnk-head { flex-wrap: wrap; }
+
+.lnk {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--surface); border: 1px solid var(--line); padding: 7px 8px;
+}
+.lnk:hover { border-color: var(--line2); }
+
+.lnk-thumb {
+  display: block; width: 46px; aspect-ratio: 4 / 3; object-fit: cover; flex: 0 0 auto;
+  background: #100f0d; border: 1px solid var(--line);
+}
+.lnk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lnk-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lnk-kind {
+  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim2);
+}
+/* справа: видимость всегда, правка и удаление — по наведению */
+.lnk-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.lnk-head { flex-wrap: nowrap; align-items: flex-start; }
+.lnk-side { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; margin-left: auto; }
+.lnk-side { position: relative; }
+/* правка и удаление всплывают поверх имени, вёрстка под ними не двигается */
+.lnk-side .lnk-acts {
+  display: none; position: absolute; top: 0; right: calc(100% + 4px); z-index: 3;
+  padding-left: 6px; background: var(--surface); box-shadow: -10px 0 10px var(--surface);
+}
+.lnk:hover .lnk-side .lnk-acts, .lnk:focus-within .lnk-side .lnk-acts { display: flex; }
+@media (hover: none) { .lnk-side .lnk-acts { display: flex; } }
+.lnk-name { font-size: 13.5px; font-weight: 600; color: var(--txt); line-height: 1.3; }
+.lnk-name:hover { color: var(--amber); text-decoration: none; }
+.lnk-lbl { font-family: var(--util); font-size: 11.5px; color: var(--amber); }
+.lnk-sub { font-family: var(--util); font-size: 11px; color: var(--dim2); line-height: 1.35; }
+/* как подпись прочтётся на карточке: подлежащее и дополнение по направлению связи */
+.lnk-hint { font-family: var(--util); font-size: 11px; color: var(--dim2); margin-top: 4px; }
+.lnk-hint b { color: var(--amber); font-weight: 600; }
+/* описание в списке связей — подпись, а не абзац: две строки и обрез */
+.lnk-main .lnk-sub, .lnk-main .lnk-lbl {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.lnk-acts { display: flex; gap: 5px; flex: 0 0 auto; }
+
+.lnk-hits {
+  display: flex; flex-direction: column;
+  max-height: 260px; overflow-y: auto;
+  border: 1px solid var(--line);
+}
+.lnk-hit {
+  display: flex; gap: 9px; align-items: center; width: 100%; text-align: left;
+  font-family: var(--ui); font-size: 13px; font-weight: 400;
+  letter-spacing: 0; text-transform: none;
+  padding: 6px 8px; color: var(--txt);
+  background: var(--surface); border: none; border-bottom: 1px solid var(--line);
+}
+.lnk-hit:last-child { border-bottom: none; }
+.lnk-hit:hover { background: var(--surface2); border-color: var(--line); }
+.lnk-hit .lnk-thumb { width: 28px; }
+
+.lnk-pick {
+  display: flex; gap: 9px; align-items: center;
+  background: var(--surface2); border: 1px solid var(--line2); padding: 7px 8px;
+}
+.lnk-pick .lnk-thumb { width: 30px; }
+
+.lnk-err { font-family: var(--util); font-size: 11.5px; color: #e08a70; }
+
+@media (max-width: 700px) {
+  .lnk-acts { flex-direction: column; }
+}
+
+
+/* правка на месте: значение подсвечивается под курсором, клик открывает поле */
+.ed-able { cursor: text; border-radius: 2px; transition: background .08s linear; }
+.ed-able:hover { background: var(--surface2); box-shadow: 0 0 0 4px var(--surface2); }
+.dos-add { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.dos-add .btn-ico { color: var(--dim2); border-style: dashed; }
+.dos-add .btn-ico:hover { color: var(--amber); }
+
+/* «добавить» стоит в сетке вложений на месте следующего снимка */
+.att-add {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; aspect-ratio: 1 / 1; padding: 0; margin: 0;
+  font-family: var(--util); font-size: 10.5px; font-weight: 400; letter-spacing: .06em; text-transform: lowercase;
+  color: var(--dim2); background: transparent; border: 1px dashed var(--line2); cursor: pointer;
+}
+.att-add:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--surface2); }
+.att-add:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
+.att-add > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* загрузка портрета — явной кнопкой под снимком */
+.dos-shot-acts { display: flex; gap: 6px; margin-top: 8px; }
+.dos-upload {
+  position: relative; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 10px; margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--dim); background: var(--surface); border: 1px solid var(--line2); cursor: pointer;
+}
+.dos-upload:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--surface2); }
+.dos-upload:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
+.dos-upload > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* ранг не задан: место под него видно только правящему, бледно */
+.dos-rank.blank { opacity: .4; }
+.dos-rank.blank:hover { opacity: 1; }
+
+/* длинное слово без пробелов переносится, а не вылезает за окно */
+.dos-main, .dos-summary, .dos-val, .dos-prose p, .dos-name { overflow-wrap: anywhere; min-width: 0; }
+.dos-clamp {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
+}
+.dos-more {
+  display: block; margin-top: 4px; padding: 0; background: none; border: none; cursor: pointer;
+  font-family: var(--ui); font-size: 12px; letter-spacing: .04em; text-transform: none; color: var(--dim2);
+}
+.dos-more:hover { color: var(--amber); background: none; }
+.dos-summary-edit textarea { max-height: 60vh; resize: vertical; }
+
+/* при наведении подписи связи раскрываются целиком */
+.lnk:hover .lnk-main .lnk-sub, .lnk:hover .lnk-main .lnk-lbl { -webkit-line-clamp: unset; line-clamp: unset; }
+/* плитка связи: снимок и шапка в первой строке, подписи — во всю ширину под ними */
+.lnk { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 3px; align-items: start; }
+.lnk > .lnk-main { display: contents; }
+.lnk > .lnk-main > .lnk-lbl, .lnk > .lnk-main > .lnk-sub { grid-column: 1 / -1; }
+.lnk.gm-only .lnk-side .lnk-acts { background: #1f1512; box-shadow: -10px 0 10px #1f1512; }
+/* кнопки связи одного роста с плашкой видимости, верх по одной линии */
+.lnk-side, .lnk-side .lnk-acts { align-items: stretch; gap: 4px; }
+.lnk-side .vis-chip, .lnk-side .ibtn { height: 26px; min-height: 26px; box-sizing: border-box; }
+.lnk-side .ibtn { width: 26px; padding: 0; display: grid; place-items: center; }
+
+/* архив и удаление: на широком экране кнопками в строке, на телефоне — в меню «⋯» */
+.dos-acts-row { display: contents; }
+.dos-acts { display: none; }
+@media (max-width: 700px) {
+  .dos-acts-row { display: none; }
+  .dos-acts { display: block; position: relative; }
+  .dos-acts > summary {
+    display: inline-flex; align-items: center; justify-content: center; list-style: none;
+    min-width: 34px; padding: 4px 8px; font-size: 16px; line-height: 1; cursor: pointer;
+    color: var(--dim); border: 1px solid var(--line2);
+  }
+  .dos-acts > summary::-webkit-details-marker { display: none; }
+  .dos-acts:not([open]) .dos-acts-list { display: none; }
+  .dos-acts[open] .dos-acts-list {
+    position: absolute; right: 0; top: calc(100% + 4px); z-index: 30;
+    display: flex; flex-direction: column; gap: 4px; padding: 6px; min-width: 150px;
+    background: var(--surface); border: 1px solid var(--line2); box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  }
+  .dos-acts-list > button { width: 100%; justify-content: flex-start; }
+  /* снимок не съедает экран: имя видно сразу */
+  .dos-shot { max-width: none; }
+  .ent-photo { display: flex; justify-content: center; }
+  .ent-photo > .avatar { width: auto; max-height: 45vh; }
+}

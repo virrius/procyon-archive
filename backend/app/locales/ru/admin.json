@@ -1,0 +1,19 @@
+{
+  "bad_lang": "неизвестный язык",
+  "bad_draw_kind": "неизвестный способ рисования",
+  "no_address": "адрес не задан",
+  "hub_status": "ответ {status}: {text}",
+  "unreachable": "не достучались: {exc}",
+  "unknown_sections": "неизвестные секции: {names}",
+  "self_block": "себя не заблокировать и не разжаловать",
+  "user_missing": "пользователя нет",
+  "owner_stays_gm": "владелец кампании остаётся ГМом",
+  "campaign_missing": "кампании нет",
+  "draw_kind": {
+    "worker": "воркер на этом компьютере",
+    "api": "сервис по API"
+  },
+  "transfer_missing": "выгрузка не найдена — возможно, сервер перезапускался",
+  "transfer_not_ready": "архив ещё не готов",
+  "bad_templates": "шаблоны новостей: {errors}"
+}

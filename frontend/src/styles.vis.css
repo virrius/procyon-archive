@@ -1,0 +1,198 @@
+/* Иконочные кнопки и меню видимости — один вид во всех панелях.
+   Сплошные поверхности, канты 1px, без свечения и прозрачностей. */
+
+/* --- квадратная кнопка-иконка --------------------------------------------- */
+
+.ibtn {
+  display: inline-grid; place-items: center; flex: 0 0 auto;
+  width: 26px; height: 26px; padding: 0; margin: 0; line-height: 0;
+  color: var(--dim); background: var(--surface2);
+  border: 1px solid var(--line); cursor: pointer;
+}
+.ibtn:hover { color: var(--txt); background: var(--surface3); border-color: var(--dim2); }
+.ibtn svg { display: block; }
+.ibtn input[type="file"] { display: none; }
+
+button.ibtn.danger { color: #c07a63; background: var(--surface2); border-color: #5c3327; }
+button.ibtn.danger:hover { color: #e79a83; background: #2a1a15; border-color: #7c4433; }
+
+.ibtn:disabled,
+.ibtn:disabled:hover,
+button.ibtn.danger:disabled,
+button.ibtn.danger:disabled:hover,
+.ibtn.off, .ibtn.off:hover {
+  color: var(--dim2); background: var(--surface); border-color: var(--line); cursor: default;
+}
+.ibtn:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+.ibtn-wait { font-family: var(--util); font-size: 12px; line-height: 1; color: var(--amber); }
+
+/* кнопка «иконка + слово» */
+button.btn-ico { display: inline-flex; align-items: center; gap: 6px; }
+button.btn-ico svg { display: block; }
+
+/* --- чип видимости --------------------------------------------------------- */
+
+.vis-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+
+.vis-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--util); font-size: 11px; font-weight: 400;
+  line-height: 1.4; letter-spacing: .04em; text-transform: none; white-space: nowrap;
+  min-height: 22px; margin: 0; padding: 1px 6px;
+  color: var(--dim); background: var(--surface2); border: 1px solid var(--line2);
+}
+.vis-chip.compact { padding: 2px 5px; gap: 3px; }
+.vis-chip.static { cursor: default; }
+button.vis-chip:hover { background: var(--surface3); }
+button.vis-chip:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.vis-chip svg { display: block; flex: 0 0 auto; }
+.vis-chip .vis-caret { color: var(--dim2); }
+.vis-chip.open .vis-caret { transform: rotate(180deg); }
+
+.vis-chip.vis-crew     { color: var(--dim);   border-color: var(--line2); }
+button.vis-chip.vis-crew:hover { color: var(--txt); border-color: var(--dim2); }
+.vis-chip.vis-selected { color: var(--amber); border-color: var(--amber-dim); }
+.vis-chip.vis-owner    { color: var(--plum);  border-color: #4d3e57; }
+.vis-chip.vis-gm       { color: #e08a70; border-color: #5c3327; background: #251712; }
+button.vis-chip.vis-gm:hover { color: #f0a88f; background: #301a14; }
+
+/* чип «кто правит карточку» — тот же корпус, своя шкала */
+.own-chip.own-gm  { color: var(--dim);   border-color: var(--line2); }
+button.own-chip.own-gm:hover { color: var(--txt); border-color: var(--dim2); }
+.own-chip.own-all { color: var(--amber); border-color: var(--amber-dim); }
+.own-chip.own-one { color: var(--plum);  border-color: #4d3e57; }
+
+/* --- выпадающее меню ------------------------------------------------------- */
+
+/* меню живёт в портале на body: fixed — иначе его режут прокрутка колонки и карточки */
+.vis-pop {
+  position: fixed; z-index: 320;
+  min-width: 236px; max-width: 310px; max-height: calc(100vh - 16px); overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line2);
+}
+
+.vis-opts { display: flex; flex-direction: column; }
+
+button.vis-opt {
+  display: flex; gap: 8px; align-items: flex-start; width: 100%; text-align: left;
+  font-family: var(--ui); font-size: 13px; font-weight: 400;
+  letter-spacing: 0; text-transform: none;
+  padding: 6px 9px; color: var(--txt);
+  background: var(--surface); border: none; border-bottom: 1px solid var(--line);
+}
+button.vis-opt:last-child { border-bottom: none; }
+button.vis-opt:hover { background: var(--surface2); border-color: var(--line); }
+button.vis-opt.on { background: var(--surface3); }
+.vis-opt > svg { margin-top: 3px; color: var(--dim2); }
+.vis-opt.on > svg { color: var(--amber); }
+.vis-opt .vis-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.vis-opt .vis-h { line-height: 1.3; }
+.vis-opt .vis-d { font-family: var(--util); font-size: 10.5px; color: var(--dim2); line-height: 1.35; }
+.vis-opt .vis-mark { margin: 3px 0 0 auto; color: var(--amber); flex: 0 0 auto; }
+
+.vis-people {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 188px; overflow-y: auto;
+  padding: 7px 9px 8px; background: var(--surface2); border-top: 1px solid var(--line2);
+}
+.vis-people .vis-cap {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim2);
+}
+.vis-people .vis-none { font-family: var(--util); font-size: 11px; color: var(--dim2); }
+
+label.vis-who {
+  display: flex; gap: 7px; align-items: center; margin: 0; cursor: pointer;
+  font-size: 12.5px; letter-spacing: 0; text-transform: none; color: var(--txt);
+}
+label.vis-who input[type="checkbox"] { width: auto; margin: 0; flex: 0 0 auto; }
+
+@media (max-width: 700px) {
+  .vis-pop { min-width: 208px; max-width: 76vw; }
+}
+
+/* --- глаз поля: видно столу или лежит у ГМа -------------------------------- */
+
+button.fvis {
+  display: inline-grid; place-items: center; flex: 0 0 auto;
+  width: 18px; height: 18px; padding: 0; margin: 0; line-height: 0;
+  color: var(--dim2); background: none; border: 1px solid transparent;
+}
+button.fvis:hover { color: var(--amber); background: var(--surface2); border-color: var(--line2); }
+button.fvis.off { color: #e08a70; }
+button.fvis.off:hover { color: #f0a88f; background: #251712; border-color: #5c3327; }
+button.fvis svg { display: block; }
+button.fvis:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+/* подпись поля с глазом: вид как у label, но не label — иначе клик по слову
+   щёлкал бы глазом. Глаз стоит сразу за словом */
+.fld-lbl {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim2);
+}
+.fld-lbl.off { color: #e79a83; }
+
+/* --- действия и метки поверх картинки -------------------------------------- */
+
+/* метки состояния — левый верхний угол, видны всегда; действия — одна планка
+   в правом верхнем углу, всплывают по наведению */
+.imgbox { position: relative; }
+.img-hover { opacity: 0; transition: opacity .08s linear; }
+.imgbox:hover .img-hover,
+.imgbox:focus-within .img-hover { opacity: 1; }
+/* на тач-экране наведения нет — действия видны всегда */
+@media (hover: none) {
+  .img-hover { opacity: 1; }
+}
+
+.imgbar {
+  position: absolute; top: 0; right: 0; z-index: 4;
+  display: flex; align-items: flex-start;
+}
+/* действия всплывают по наведению, глаз видимости справа виден всегда */
+.imgbar-acts, .imgbar > button.fvis {
+  display: flex; background: var(--surface2);
+  border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.imgbar-acts:empty { display: none; }
+.imgbar-acts > .ibtn,
+.imgbar > button.fvis {
+  width: 24px; height: 24px; margin: 0;
+  color: var(--dim); background: var(--surface2);
+  border: none; border-left: 1px solid var(--line);
+}
+.imgbar-acts > .ibtn:first-child { border-left: none; }
+.imgbar > button.fvis {
+  align-items: center; justify-content: center;
+  border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.imgbar-acts > .ibtn:hover,
+.imgbar > button.fvis:hover { color: var(--amber); background: var(--surface3); border-color: var(--line); }
+.imgbar-acts > .ibtn.on { color: var(--amber); }
+.imgbar-acts > button.ibtn.danger { color: #c07a63; background: var(--surface2); border-color: var(--line); }
+.imgbar-acts > button.ibtn.danger:hover { color: #e79a83; background: #2a1a15; border-color: var(--line); }
+.imgbar > button.fvis.off { color: #e08a70; }
+.imgbar > button.fvis.off:hover { color: #f0a88f; background: #251712; border-color: var(--line); }
+.imgbar.sm .ibtn,
+.imgbar.sm > button.fvis { width: 20px; height: 20px; }
+
+.imgflags {
+  position: absolute; top: 0; left: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.imgflag {
+  font-family: var(--util); font-size: 9.5px; line-height: 1.5; white-space: nowrap;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 1px 6px; border: 1px solid; border-top: none; border-left: none;
+}
+.imgflag.gm   { color: #e08a70; background: #251712; border-color: #5c3327; }
+.imgflag.gm.ico {
+  display: grid; place-items: center; width: 26px; height: 26px; padding: 0;
+  color: #f0a58a; background: #2a1510; border-color: var(--rust);
+}
+/* закрытый снимок — рустовый пунктир по краю кадра */
+.imgshut {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  outline: 2px dashed var(--rust); outline-offset: -5px;
+}
+.imgflag.work { color: var(--amber); background: #100f0d; border-color: var(--amber-dim); }

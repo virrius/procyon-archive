@@ -1,0 +1,61 @@
+{
+  "role": {
+    "gm": "GM",
+    "player": "player",
+    "observer": "observer"
+  },
+  "role_pick": {
+    "player": "player",
+    "observer": "observer (read-only)",
+    "gm": "co-GM"
+  },
+  "no_viewas": "GM space is unavailable in “player's eyes” mode",
+  "gm_only": "GM only",
+  "accounts": {
+    "title": "Crew accounts",
+    "grant": "+ grant access",
+    "no_signup": "There is no sign-up: you create the login and password here and give them to the player in person.",
+    "login": "Login",
+    "name": "Name",
+    "role": "Role",
+    "status": "Status",
+    "blocked": "blocked",
+    "active": "active",
+    "change_password": "change password",
+    "block": "block",
+    "unblock": "unblock",
+    "revoke": "revoke",
+    "empty": "No accounts.",
+    "revoke_confirm": "Revoke {{name}}'s access? The account will be disabled.",
+    "password_updated": "Password updated. Give it to the player in person."
+  },
+  "new_account": {
+    "title": "New account",
+    "dirty_ask": "What you've entered will be lost — the account isn't created.",
+    "login": "Login (Latin letters)",
+    "display_name": "Name in the campaign",
+    "create": "create"
+  },
+  "password_min": "Password (at least 4 characters)",
+  "created": {
+    "title": "Give these details to the player",
+    "login": "login",
+    "password": "password",
+    "address": "address",
+    "note": "The password won't be shown again — if it's lost, set a new one."
+  },
+  "new_password": "New password: {{name}}",
+  "set_password": "set",
+  "campaigns": {
+    "title": "Campaigns",
+    "open": "open",
+    "rename": "rename",
+    "empty": "No campaigns.",
+    "empty_admin": "Create the first one in Admin space.",
+    "empty_player": "Ask your GM for access.",
+    "change_password": "change my password",
+    "logout": "sign out",
+    "rename_title": "Campaign name",
+    "name": "Name"
+  }
+}

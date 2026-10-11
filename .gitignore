@@ -1,0 +1,30 @@
+# секреты и токены
+local_secrets/
+.env
+
+# данные рантайма (uploads, БД наполняется штатно)
+data/
+
+# зависимости и кэши
+node_modules/
+__pycache__/
+*.pyc
+.ruff_cache/
+.playwright-mcp/
+frontend/dist/
+
+# логи воркера
+worker/*.log
+worker/*.err
+worker/*.err.log
+
+# разовые тестовые кадры
+gen_test16/
+
+# кэш инкрементальной сборки TS
+frontend/tsconfig.tsbuildinfo
+
+# эталоны стиля (картинки, в репозиторий не нужны)
+style_refs/
+
+*.pdf

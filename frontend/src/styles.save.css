@@ -1,0 +1,28 @@
+/* Панель сохранения. Сплошные поверхности, никакого свечения. */
+
+.sv { display: flex; align-items: center; gap: 8px; }
+.sv.compact { gap: 6px; }
+
+.sv-state {
+  font-family: var(--util); font-size: 11px; letter-spacing: .04em;
+  color: var(--dim2); min-height: 13px;
+}
+.sv-state.warn { color: var(--amber); }
+.sv-state.bad { color: #e08a70; }
+
+.sv-save {
+  font-family: var(--util); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 5px 14px;
+  background: var(--amber); color: #16130d;
+  border: 1px solid var(--amber); cursor: pointer;
+}
+.sv-save:hover:not(:disabled) { background: #f0b64f; border-color: #f0b64f; }
+.sv-save:disabled {
+  background: var(--surface2); color: var(--dim2);
+  border-color: var(--line2); cursor: default;
+}
+
+.sv-dot {
+  display: inline-block; width: 6px; height: 6px; margin-left: 6px;
+  background: var(--amber); vertical-align: middle;
+}

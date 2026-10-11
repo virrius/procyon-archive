@@ -1,0 +1,8 @@
+{
+  "unsupported_type": "unsupported file type: {type}",
+  "too_large": "file too large (25 MB max)",
+  "not_found": "not found",
+  "missing": "file missing on disk",
+  "gm_only": "Only the GM changes an attachment's visibility or caption.",
+  "not_yours": "Not your file."
+}

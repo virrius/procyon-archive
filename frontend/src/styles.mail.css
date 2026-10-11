@@ -1,0 +1,25 @@
+/* Входящие (pages/Crew.tsx): таблица писем; на телефоне строка письма — блок */
+
+.mail-tbl .ml-act { width: 1px; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .mail-tbl, .mail-tbl tbody { display: block; }
+  .mail-tbl thead { display: none; }
+  .mail-tbl tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+    padding: 9px 10px; border-bottom: 1px solid var(--line);
+  }
+  .mail-tbl tbody tr:hover { background: var(--surface2); }
+  .mail-tbl td, .mail-tbl tbody tr:hover td { display: block; padding: 0; border: none; background: none; }
+
+  /* отправитель и «новое» — первой строкой, тема — своей, служебные метки — под ней */
+  .mail-tbl .ml-from { order: 1; flex: 1 1 0; min-width: 0; }
+  .mail-tbl .ml-from .row > span:last-child {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mail-tbl .ml-mark { order: 2; }
+  .mail-tbl .ml-mark:empty { display: none; }
+  .mail-tbl .ml-act { order: 3; width: auto; }
+  .mail-tbl .ml-subj { order: 4; flex: 1 0 100%; overflow-wrap: anywhere; }
+  .mail-tbl .ml-meta { order: 5; }
+}

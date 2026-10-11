@@ -1,0 +1,19 @@
+{
+  "bad_lang": "unknown language",
+  "bad_draw_kind": "unknown drawing method",
+  "no_address": "no address set",
+  "hub_status": "response {status}: {text}",
+  "unreachable": "couldn't reach it: {exc}",
+  "unknown_sections": "unknown sections: {names}",
+  "self_block": "you can't block or demote yourself",
+  "user_missing": "no such user",
+  "owner_stays_gm": "the campaign owner stays the GM",
+  "campaign_missing": "no such campaign",
+  "draw_kind": {
+    "worker": "a worker on this machine",
+    "api": "a service over API"
+  },
+  "transfer_missing": "transfer not found — the server may have restarted",
+  "transfer_not_ready": "the archive isn't ready yet",
+  "bad_templates": "news templates: {errors}"
+}

@@ -1,0 +1,20 @@
+/* образы кампании в GM space: кадр слева, одежда справа */
+.looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 14px; }
+.look-card { display: grid; grid-template-columns: 170px 1fr; background: var(--surface); border: 1px solid var(--line); }
+.look-shot { background: var(--surface2); display: flex; align-items: center; justify-content: center; min-height: 230px; }
+.look-shot img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; display: block; }
+.look-shot span { font-size: 12px; color: var(--dim2); }
+.look-body { display: flex; flex-direction: column; gap: 6px; padding: 12px 13px; min-width: 0; }
+.look-body label { margin: 4px 0 0; }
+.look-body textarea { resize: vertical; font-size: 13px; line-height: 1.45; }
+input.look-title { font-weight: 600; font-size: 15px; background: transparent; border-color: transparent; padding: 4px 6px; margin: -4px -6px 0; }
+input.look-title:hover { border-color: var(--line); }
+input.look-title:focus { border-color: var(--amber-dim); }
+.look-acts { display: flex; gap: 6px; align-items: center; margin-top: auto; padding-top: 6px; }
+.look-acts .sp { flex: 1; }
+
+@media (max-width: 600px) {
+  .looks { grid-template-columns: 1fr; }
+  .look-card { grid-template-columns: 1fr; }
+  .look-shot { min-height: 0; max-height: 320px; }
+}

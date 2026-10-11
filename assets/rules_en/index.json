@@ -1,0 +1,169 @@
+{
+  "sections": [
+    {
+      "id": "cheat",
+      "title": "Quick Reference: Payoff, Heat, Entanglements, Downtime",
+      "note": "The four parts of downtime in order, then the key page of each: Cred and Heat a job brings, entanglement tables by Wanted level, the list of downtime activities.",
+      "pages": [
+        {
+          "file": "b175.webp",
+          "label": "175"
+        },
+        {
+          "file": "b176.webp",
+          "label": "176"
+        },
+        {
+          "file": "b178.webp",
+          "label": "178"
+        },
+        {
+          "file": "b180.webp",
+          "label": "180"
+        },
+        {
+          "file": "b184.webp",
+          "label": "184"
+        }
+      ]
+    },
+    {
+      "id": "engagement",
+      "title": "Planning & Engagement",
+      "note": "Choosing a plan and its detail, the engagement roll, linked plans.",
+      "pages": [
+        {
+          "file": "b148.webp",
+          "label": "148"
+        },
+        {
+          "file": "b149.webp",
+          "label": "149"
+        },
+        {
+          "file": "b150.webp",
+          "label": "150"
+        },
+        {
+          "file": "b151.webp",
+          "label": "151"
+        },
+        {
+          "file": "b152.webp",
+          "label": "152"
+        },
+        {
+          "file": "b153.webp",
+          "label": "153"
+        },
+        {
+          "file": "b154.webp",
+          "label": "154"
+        }
+      ]
+    },
+    {
+      "id": "payoff",
+      "title": "Payoff & Upkeep",
+      "note": "Income from the job, ship upkeep, and what happens if you skip it.",
+      "pages": [
+        {
+          "file": "b176.webp",
+          "label": "176"
+        },
+        {
+          "file": "b177.webp",
+          "label": "177"
+        }
+      ]
+    },
+    {
+      "id": "heat",
+      "title": "Heat",
+      "note": "Heat the crew takes after a job, and Wanted level.",
+      "pages": [
+        {
+          "file": "b178.webp",
+          "label": "178"
+        },
+        {
+          "file": "b179.webp",
+          "label": "179"
+        }
+      ]
+    },
+    {
+      "id": "entanglements",
+      "title": "Entanglements",
+      "note": "Entanglement tables by Wanted level and a rundown of each entanglement.",
+      "pages": [
+        {
+          "file": "b180.webp",
+          "label": "180"
+        },
+        {
+          "file": "b181.webp",
+          "label": "181"
+        },
+        {
+          "file": "b182.webp",
+          "label": "182"
+        },
+        {
+          "file": "b183.webp",
+          "label": "183"
+        }
+      ]
+    },
+    {
+      "id": "crafting",
+      "title": "Crafting",
+      "note": "The rules themselves: designing a schematic, assembly and the crafting roll, item quality, modifying an item, a crafting example. Downtime Activities on p. 185 only points here.",
+      "pages": [
+        {
+          "file": "b282.webp",
+          "label": "282"
+        },
+        {
+          "file": "b283.webp",
+          "label": "283"
+        },
+        {
+          "file": "b284.webp",
+          "label": "284"
+        },
+        {
+          "file": "b285.webp",
+          "label": "285"
+        }
+      ]
+    },
+    {
+      "id": "downtime",
+      "title": "Downtime Activities",
+      "note": "Acquire asset, craft, indulge vice, lay low, long-term project, recover, repair, train.",
+      "pages": [
+        {
+          "file": "b184.webp",
+          "label": "184"
+        },
+        {
+          "file": "b185.webp",
+          "label": "185"
+        },
+        {
+          "file": "b186.webp",
+          "label": "186"
+        },
+        {
+          "file": "b187.webp",
+          "label": "187"
+        },
+        {
+          "file": "b188.webp",
+          "label": "188"
+        }
+      ]
+    }
+  ]
+}

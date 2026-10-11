@@ -1,0 +1,175 @@
+{
+  "title": "Campaign log",
+  "refresh": "refresh",
+  "all": "all",
+  "anyone": "anyone",
+  "author": "Author",
+  "search": "search by title",
+  "reset": "reset",
+  "error": "error",
+  "empty": "Nothing logged yet.",
+  "more": "show more",
+  "system": "system",
+  "in_entity": "in “{{name}}”",
+  "collapse": "collapse",
+  "what_changed": "what changed",
+  "yes": "yes",
+  "no": "no",
+  "group": {
+    "cards": "entries",
+    "files": "files",
+    "clocks": "clocks",
+    "mail": "messages and news",
+    "map": "map",
+    "misc": "other"
+  },
+  "source": {
+    "entity": "entries",
+    "block": "notes",
+    "link": "links",
+    "file": "files",
+    "clock": "clocks",
+    "message": "messages",
+    "news": "news",
+    "map": "map",
+    "marker": "markers",
+    "note": "comments",
+    "board": "boards",
+    "rules": "rules clippings",
+    "account": "accounts"
+  },
+  "phrase": {
+    "entity": {
+      "create": "created an entry",
+      "update": "edited an entry",
+      "standing": "changed faction status",
+      "archive": "archived an entry"
+    },
+    "block": {
+      "create": "wrote a note",
+      "update": "edited a note",
+      "delete": "deleted a note"
+    },
+    "note": {
+      "create": "left a comment",
+      "update": "edited a comment",
+      "delete": "deleted a comment"
+    },
+    "clock": {
+      "create": "started a clock",
+      "update": "edited a clock",
+      "tick": "ticked a clock",
+      "complete": "closed a clock",
+      "reopen": "reopened a clock",
+      "delete": "abandoned a clock",
+      "purge": "deleted a clock"
+    },
+    "message": {
+      "create": "wrote a message",
+      "update": "edited a message",
+      "deliver": "sent a message",
+      "delete": "deleted a message"
+    },
+    "news": {
+      "create": "published a story",
+      "update": "edited a story",
+      "delete": "pulled a story"
+    },
+    "marker": {
+      "create": "placed a marker",
+      "update": "edited a marker",
+      "delete": "removed a marker",
+      "clear": "cleared markers"
+    },
+    "map": {
+      "create": "added a map",
+      "update": "edited a map",
+      "route": "plotted a route",
+      "route_delete": "removed a route"
+    },
+    "link": {
+      "create": "linked",
+      "update": "edited a link",
+      "delete": "unlinked"
+    },
+    "file": {
+      "upload": "uploaded a file",
+      "update": "edited a file",
+      "delete": "deleted a file"
+    },
+    "board": {
+      "create": "created a board",
+      "update": "edited a board",
+      "delete": "deleted a board"
+    },
+    "rules": {
+      "section_add": "added a rules section",
+      "section_delete": "removed a rules section",
+      "section_restore": "restored a rules section",
+      "item_add": "added a clipping",
+      "item_delete": "deleted a clipping"
+    },
+    "account": {
+      "login": "signed in",
+      "password_change": "changed their password",
+      "player_created": "granted access",
+      "password_reset": "reset a password",
+      "account_blocked": "blocked",
+      "account_active": "unblocked",
+      "access_revoked": "revoked access"
+    }
+  },
+  "fallback": {
+    "create": "created",
+    "update": "edited",
+    "delete": "deleted",
+    "archive": "archived"
+  },
+  "field": {
+    "name": "name",
+    "alias": "alias",
+    "summary": "description",
+    "status": "status",
+    "image_url": "image",
+    "fields": "entry fields",
+    "visibility": "who can see",
+    "visible_to": "visible to",
+    "knowledge_status": "knowledge status",
+    "hidden_fields": "hidden from the table",
+    "owner_member_id": "entry owner",
+    "faction_ids": "factions",
+    "location_ids": "locations",
+    "archived": "archive",
+    "title": "title",
+    "content": "text",
+    "body": "text",
+    "subject": "subject",
+    "filled": "filled",
+    "segments": "segments",
+    "color": "color",
+    "kind": "type",
+    "description": "description",
+    "outcome": "outcome",
+    "label": "label",
+    "layer": "layer",
+    "marker_type": "marker type",
+    "stance": "status",
+    "deeds": "jobs",
+    "level": "map level",
+    "sender_display": "sender",
+    "is_lead": "lead",
+    "expires_at": "deadline",
+    "links": "who the note is about"
+  },
+  "sheet": {
+    "heat": "wanted levels by system",
+    "upkeep_missed": "skipped upkeeps",
+    "custom": "ship setup"
+  },
+  "vis": {
+    "crew": "everyone",
+    "selected": "selected",
+    "owner": "owner",
+    "gm": "GM only"
+  }
+}

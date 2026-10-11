@@ -1,0 +1,23 @@
+{
+  "not_found": "not found",
+  "validation": {
+    "missing": "required",
+    "le": "must be ≤ {limit}",
+    "ge": "must be ≥ {limit}",
+    "lt": "must be < {limit}",
+    "gt": "must be > {limit}",
+    "text_long": "at most {limit} characters",
+    "text_short": "at least {limit} characters",
+    "list_long": "at most {limit} items",
+    "list_short": "at least {limit} items",
+    "choice": "must be one of {expected}",
+    "integer": "must be a whole number",
+    "number": "must be a number",
+    "bool": "must be true or false",
+    "text": "must be a string",
+    "list": "must be a list",
+    "object": "must be an object",
+    "json": "not valid JSON",
+    "invalid": "invalid value"
+  }
+}

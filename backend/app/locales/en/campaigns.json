@@ -1,0 +1,12 @@
+{
+  "admin_creates": "only an administrator can create campaigns",
+  "name_empty": "the name can't be empty",
+  "login_password": "a login and a password of at least 4 characters are required",
+  "bad_role": "invalid role",
+  "login_taken": "this login is already taken",
+  "member_missing": "member not found",
+  "password_short": "the password is too short",
+  "owner_disable": "the campaign owner can't be disabled",
+  "owner_revoke": "the campaign owner's access can't be revoked",
+  "account_locked": "this is an administrator, the campaign owner or a member of other campaigns: you can only remove them from this campaign"
+}

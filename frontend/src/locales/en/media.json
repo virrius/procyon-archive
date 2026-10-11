@@ -1,0 +1,78 @@
+{
+  "frames_title": "Campaign frames",
+  "collection": "Collection",
+  "collection_frame": "collection frame",
+  "frames_loading": "loading frames…",
+  "empty_can_add": "No frames yet — describe a frame above, drag files here or paste a picture with Ctrl+V.",
+  "empty": "The collection is empty so far.",
+  "uploading": "uploading…",
+  "drop_here": "drop it — we'll take it",
+  "add_hint": "drag a file, paste with Ctrl+V or choose",
+  "paste_question": "The frame will go to the campaign collection.",
+  "frame_alt": "campaign frame",
+  "frame_inpaint": "redraw an area of the frame",
+  "frame_delete": "delete frame",
+  "frame_delete_confirm": "Delete the frame? The file goes with it.",
+  "day_year": "{{day}}, {{year}}",
+  "caption_edit": "click to edit the caption",
+  "caption_add": "add a caption…",
+  "caption_placeholder": "what place is this — in one line",
+  "saving": "saving…",
+  "err": {
+    "save_failed": "couldn't save",
+    "delete_failed": "couldn't delete",
+    "only_images": "A frame can only be an image.",
+    "upload_failed": "couldn't upload the file"
+  },
+  "crop": {
+    "alt": "frame",
+    "hint": "outline an area — the preview will follow it",
+    "title": "Preview crop — {{title}}",
+    "loading": "loading the picture…",
+    "size": "crop {{size}} px",
+    "center": "center",
+    "save": "save crop",
+    "whole": "whole picture",
+    "note": "Only the preview is cropped: the original stays intact and opens on click.",
+    "err_attachment": "attachment unavailable",
+    "err_image": "the picture didn't open",
+    "err_save": "couldn't save the crop"
+  },
+  "img": {
+    "hidden": "picture hidden from the table",
+    "generating": "generating",
+    "drawing": "drawing"
+  },
+  "pick": {
+    "title": "Portrait from saved media",
+    "entry_attachments": "entry attachments ({{n}})",
+    "whole_campaign": "whole campaign ({{n}})",
+    "file": "file",
+    "make_portrait": "make “{{name}}” the portrait",
+    "err_save": "portrait not saved",
+    "unavailable": "Media unavailable.",
+    "empty": "No saved pictures — upload a file or generate one.",
+    "group": {
+      "frames": "frames",
+      "other_entries": "other entries",
+      "uploads": "uploads"
+    }
+  },
+  "lightbox": {
+    "prev": "previous",
+    "next": "next"
+  },
+  "doc": {
+    "chars": "{{n}} chars",
+    "reset": "reset to code",
+    "inserts": "Inserts",
+    "toc": "Contents"
+  },
+  "looks": {
+    "empty": "No looks yet. In a character's studio, under a good frame — “save look”.",
+    "forget_confirm": "Forget the look “{{title}}”?",
+    "no_frame": "no frame",
+    "outfit": "outfit",
+    "forget": "forget"
+  }
+}

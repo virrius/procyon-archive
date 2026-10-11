@@ -1,0 +1,339 @@
+/* Галерея сущностей — картотека архива.
+   Сплошные поверхности, канты 1px, без сеток, прозрачностей и свечения. */
+
+.eg-bar { display: flex; flex-direction: column; gap: 6px; }
+.eg-bar .eg-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.eg-bar input[type="text"] { max-width: 240px; }
+.eg-bar select { max-width: 210px; }
+
+.eg-title { white-space: nowrap; margin-right: 8px; }
+.eg-lbl {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--dim2); white-space: nowrap;
+}
+.eg-count { font-family: var(--util); font-size: 11px; color: var(--dim2); white-space: nowrap; }
+
+.eg-tog {
+  font-family: var(--util); font-size: 11px; font-weight: 400;
+  text-transform: uppercase; letter-spacing: .05em;
+  padding: 2px 8px; background: var(--surface2); color: var(--dim);
+  border: 1px solid var(--line2);
+  display: inline-flex; align-items: baseline; gap: 5px;
+}
+.eg-tog:hover { background: var(--surface3); color: var(--txt); border-color: var(--dim2); }
+.eg-tog .n { font-size: 10px; color: var(--dim2); }
+.eg-tog.on { background: var(--amber); color: #17140f; border-color: var(--amber); }
+.eg-tog.on .n { color: #5a4518; }
+.eg-tog.on:hover { background: #eab458; border-color: #eab458; color: #17140f; }
+/* пустой архив: чип на месте, но бледный */
+.eg-tog:disabled, .eg-tog:disabled:hover {
+  background: var(--surface); color: var(--dim2); border-color: var(--line); cursor: default;
+}
+
+.eg-groups { display: flex; flex-direction: column; gap: 18px; }
+.eg-group { display: flex; flex-direction: column; gap: 10px; }
+.eg-group-hd {
+  display: flex; align-items: baseline; gap: 10px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--line);
+}
+.eg-group-hd .t {
+  font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dim);
+}
+.eg-group-hd .n { font-family: var(--util); font-size: 11px; color: var(--dim2); }
+
+/* группы игроков: без рамок — отделяет только широкий зазор; группа шириной в свои карточки */
+.eg-groups.boxed { --eg-col: 268px; --eg-pad: 0px; flex-flow: row wrap; gap: 22px 48px; }
+.eg-groups.boxed .eg-group {
+  flex: 0 1 calc(var(--eg-n, 1) * (var(--eg-col) + 12px));
+  max-width: 100%;
+}
+.eg-groups.boxed .eg-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--eg-col), 100%), 1fr));
+}
+.eg-groups.boxed .eg-group.idle .eg-group-hd .t { color: var(--dim2); }
+.eg-group-add { padding: var(--eg-pad, 12px); }
+
+.eg-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  /* плитки одного размера: ряд ровняется по самой высокой */
+  grid-auto-rows: 1fr;
+}
+
+.eg-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column;
+}
+.eg-card:hover { border-color: var(--line2); }
+/* выделение с клавиатуры — ровная рамка самой плитки, а не контур ссылки внутри */
+.eg-card:focus-within { border-color: var(--amber); }
+.eg-card > a { display: block; color: inherit; }
+.eg-card > a:focus-visible { outline: none; }
+.eg-card > a:hover { text-decoration: none; }
+
+.eg-shot-box { position: relative; display: block; }
+/* снимок показываем целиком: вписать иначе — через кадрирование */
+.eg-photo {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
+  background: #100f0d; border-bottom: 1px solid var(--line);
+}
+/* пломбы на снимке: статус слева внизу, ранг справа — с отступом от канта */
+.eg-badge {
+  position: absolute; bottom: 8px; z-index: 2;
+  font-family: var(--util); line-height: 1.3;
+  text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+}
+/* статус — печать на кадре: та же двойная обводка, что на карточке, только мельче */
+.eg-status {
+  --st: var(--dim2);
+  --ink: #100f0d;
+  left: 10px; max-width: 60%; overflow: hidden; text-overflow: ellipsis;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .14em;
+  padding: 1px 6px 2px; color: var(--st);
+  background: var(--ink); border: 1.5px solid var(--st);
+  outline: 1px solid var(--st); outline-offset: 1.5px;
+  transform: rotate(-3deg);
+}
+.eg-status.t-ok   { --st: var(--olive); }
+.eg-status.t-warn { --st: var(--amber); }
+.eg-status.t-dead { --st: #d4462c; --ink: #1b0c08; }
+.eg-status.t-black { --st: #4f4842; --ink: #0b0a09; color: #9a9086; }
+.eg-status.t-end  { --st: #7d6f66; }
+.eg-status.t-fresh { --st: #a9d37f; }
+.eg-status.t-work  { --st: #e3c93a; }
+.eg-status.t-win   { --st: #3f9a45; }
+.eg-status.t-grey  { --st: #8a8a8a; }
+/* ранг — золотая пломба: одна цифра, без подписи */
+.eg-rank {
+  right: 9px; font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px; letter-spacing: .06em; text-transform: none;
+  padding: 0 8px 1px; color: #17140f; background: var(--amber);
+}
+.eg-body { padding: 8px 9px 9px; display: flex; flex-direction: column; gap: 5px; }
+.eg-name {
+  font-size: 13.5px; font-weight: 600; line-height: 1.3; color: var(--txt);
+  display: flex; align-items: baseline; justify-content: center; gap: 6px; text-align: center;
+}
+/* длинное имя переносится, но не растит карточку без края: две строки и многоточие */
+.eg-name > span:first-child {
+  min-width: 0; overflow: hidden; overflow-wrap: break-word;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+.eg-sub {
+  font-size: 12px; color: var(--dim); line-height: 1.35;
+  display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+}
+/* карточка без полей: описание длиннее, но высота у всех плиток одна */
+.eg-sub.full { -webkit-line-clamp: 5; line-clamp: 5; min-height: calc(1.35em * 5); }
+/* закрыто от стола — тот же язык, что на полной карточке: рустовый кант и тёплая подложка */
+.eg-sub.shut {
+  border-left: 3px solid var(--rust); background: #1f1512;
+  margin-left: -9px; padding: 2px 0 2px 6px;
+}
+.eg-badge.eg-status.hid { outline-style: dashed; outline-color: var(--rust); }
+.eg-badge.eg-rank.hid { box-shadow: 0 0 0 2px var(--rust); }
+.eg-chips .eg-tag.shut {
+  color: #e0a992; background: #1f1512; border-color: #5c3327;
+}
+.eg-chips .eg-tag.shut > i { color: #c08872; }
+
+.eg-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.eg-chips .eg-tag { color: var(--txt); border-color: var(--line); text-transform: none; letter-spacing: 0; }
+/* ключ приглушён, значение читается — «Фракция: Гильдия инженеров» */
+.eg-chips .eg-tag > i { font-style: normal; color: var(--dim2); }
+/* длинный перечень значений переносится внутри чипа, а не вылезает из карточки */
+.eg-chips .eg-tag {
+  max-width: 100%; white-space: normal; overflow-wrap: break-word; line-height: 1.4;
+  align-items: baseline;
+}
+.eg-chips .eg-tag > i { white-space: nowrap; }
+.eg-hint { color: var(--dim2); font-style: italic; padding: 8px 0; line-height: 1.5; }
+.eg-err { color: #e08a70; font-size: 12.5px; padding: 4px 0 8px; }
+
+.eg-save-btn {
+  display: block; width: 100%; margin-top: 4px;
+  font-size: 13px; letter-spacing: .1em; padding: 10px 13px;
+}
+
+@media (max-width: 700px) {
+  /* на телефоне плитка — строкой: снимок слева, досье справа, каждая своей высоты */
+  .eg-grid, .eg-groups.boxed .eg-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; gap: 10px; }
+  .eg-groups.boxed { gap: 18px; }
+  .eg-groups.boxed .eg-group { flex-basis: 100%; }
+  .eg-bar input[type="text"], .eg-bar select { max-width: none; }
+}
+
+
+/* ── плитка галереи: снимок главный, ниже — досье в четыре строки ─────────────
+   имя антиквой, прозвище курсивом, роль одной янтарной строкой, суть, факты
+   описью «ключ — значение». Служебное (владелец, видимость) — по наведению */
+
+.tile {
+  --ratio: 4 / 3;
+  position: relative; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.tile.tile-person { --ratio: 1 / 1; }
+.tile:hover { border-color: var(--line2); }
+.tile:focus-within { border-color: var(--amber-dim); }
+.tile-link { display: flex; flex-direction: column; flex: 1; color: inherit; min-width: 0; }
+.tile-link:hover { text-decoration: none; color: inherit; }
+.tile-link:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+
+.tile-shot {
+  position: relative; aspect-ratio: var(--ratio); overflow: hidden;
+  background: #100f0d; border-bottom: 1px solid var(--line);
+}
+.tile-shot > img, .tile-shot > .tile-stub {
+  display: block; width: 100%; height: 100%;
+}
+/* снимок целиком, без обрезки: вписать в кадр — дело кадрирования превью (crop_box) */
+.tile-shot > img { position: relative; object-fit: contain; }
+/* поля вокруг вписанного снимка — тот же снимок, размытый и притушенный */
+.tile-shot > img.tile-bg {
+  position: absolute; inset: 0; object-fit: cover;
+  filter: blur(14px) brightness(.4) saturate(.8); transform: scale(1.15);
+}
+/* выбыл из игры — кадр выцветает, подпись статуса остаётся цветной */
+.tile-gone .tile-shot > img { filter: grayscale(1) brightness(.72); }
+
+/* ранг лежит на самом кадре: римская цифра с чертой сверху и снизу, как на монете;
+   читаемость держит тень угла */
+.tile-rank {
+  position: absolute; top: 0; right: 0; z-index: 2;
+  padding: 9px 12px 18px 26px;
+  background: radial-gradient(ellipse at top right, rgba(10, 9, 8, .78), rgba(10, 9, 8, 0) 72%);
+  pointer-events: none;
+}
+.tile-rank .tr-num {
+  display: block; padding: 2px 2px 1px calc(2px + .05em);
+  font-family: var(--display); font-size: 22px; font-weight: 700; line-height: 1;
+  letter-spacing: .05em; color: var(--amber); text-shadow: 0 1px 4px rgba(0, 0, 0, .9);
+  border-top: 2px solid currentColor; border-bottom: 2px solid currentColor;
+}
+.tile-rank.hid .tr-num { color: #e79a83; }
+
+/* статус — печать на кадре: двойная обводка, лёгкий наклон */
+.tile-status {
+  --st: var(--dim2); --ink: #100f0d;
+  position: absolute; left: 10px; bottom: 9px; z-index: 2; max-width: 60%;
+  font-family: var(--util); font-size: 9.5px; font-weight: 700; line-height: 1.3;
+  text-transform: uppercase; letter-spacing: .14em;
+  padding: 1px 6px 2px; color: var(--st);
+  background: var(--ink); border: 1.5px solid var(--st);
+  outline: 1px solid var(--st); outline-offset: 1.5px;
+  transform: rotate(-3deg);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tile-status.t-ok { --st: var(--olive); }
+.tile-status.t-warn { --st: var(--amber); }
+.tile-status.t-dead { --st: #d4462c; --ink: #1b0c08; }
+.tile-status.t-black { --st: #4f4842; --ink: #0b0a09; color: #9a9086; }
+.tile-status.t-end { --st: #7d6f66; }
+.tile-status.t-fresh { --st: #a9d37f; }
+.tile-status.t-work { --st: #e3c93a; }
+.tile-status.t-win { --st: #3f9a45; }
+.tile-status.t-grey { --st: #8a8a8a; }
+
+.tile-body {
+  flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 11px 12px 12px;
+}
+.tile-id { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.tile-name {
+  margin: 0; padding: 0; border: 0;
+  font-family: var(--ui); font-size: 17px; font-weight: 600; line-height: 1.2; text-align: center;
+  letter-spacing: .01em; text-transform: none; color: var(--txt);
+  overflow: hidden; overflow-wrap: break-word;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3;
+}
+.tile:hover .tile-name { color: #f3ecdf; }
+.tile-alias {
+  font-family: var(--ui); font-style: normal; font-weight: 400;
+  display: block; font-size: .82em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tile-role {
+  font-size: 12px; font-weight: 600; letter-spacing: .06em; line-height: 1.3;
+  color: var(--amber);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tile-role.hid { color: #e0a992; }
+/* тип дела (работёнка, слух) — разрядкой между двумя чертами над названием */
+.tile-type.hid { color: #e0a992; }
+.tile-type {
+  padding: 3px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  text-align: center; font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+  color: var(--dim);
+}
+.tile-sum {
+  white-space: pre-line;
+  margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--dim);
+  min-height: calc(1.45em * 3);
+  overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3;
+}
+.tile-sum.long { -webkit-line-clamp: 6; line-clamp: 6; min-height: calc(1.45em * 6); }
+.tile-sum.hid, .tile-note.hid { color: #c99a87; }
+
+/* свободный текст типа (оплата) — строка у сути, а не тег */
+.tile-note { font-size: 12.5px; line-height: 1.4; color: var(--txt); }
+.tile-note .k { color: var(--dim2); margin-right: 6px; }
+
+/* опись: подпись слева, значение справа, одна строка на факт */
+.tile-facts {
+  margin: auto 0 0; padding-top: 8px; border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 10px;
+}
+.tile-facts > div {
+  display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; align-items: baseline;
+  font-size: 12.5px; line-height: 1.3;
+}
+.tile-facts dt {
+  color: var(--dim2); font-size: 11.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tile-facts dd { margin: 0; color: #cdc5b6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile-facts > .hid dt { color: #b9705a; }
+.tile-facts > .hid dd { color: #e0a992; }
+.tile-more {
+  grid-column: 2; justify-self: start; margin: 2px 0 0; padding: 0;
+  font-family: var(--ui); font-size: 11.5px; font-weight: 400; letter-spacing: 0; text-transform: none;
+  color: var(--dim2); background: none; border: none; cursor: pointer;
+}
+.tile-more:hover { color: var(--amber); background: none; }
+
+/* карточка закрыта от стола: рустовый кант по верху */
+.tile.tile-gm { border-color: #3d2a23; background: #1c1411; }
+.tile.tile-gm:hover { border-color: #5c3327; }
+/* закрытое дело — бледным хвостом в конце галереи */
+.tile.tile-faded { opacity: .5; }
+.tile.tile-faded:hover, .tile.tile-faded:focus-within { opacity: 1; }
+
+/* владелец и видимость — в правом нижнем углу плитки, на своей полосе: суть и опись под них не заезжают */
+.tile-svc {
+  position: absolute; bottom: 10px; right: 12px; z-index: 2;
+  display: flex; gap: 4px;
+}
+.tile-svc > * { background: rgba(14, 13, 11, .82); }
+.tile:has(> .tile-svc) .tile-body { padding-bottom: 40px; }
+
+@media (max-width: 700px) {
+  .tile-link { flex-direction: row; }
+  .tile-shot { flex: 0 0 38%; align-self: stretch; aspect-ratio: auto; min-height: 120px;
+    border-bottom: none; border-right: 1px solid var(--line); }
+  .tile-svc { bottom: 8px; right: 8px; }
+  .tile:has(> .tile-svc) .tile-body { padding-bottom: 36px; }
+  .tile-status { left: 6px; max-width: calc(100% - 12px); font-size: 8.5px; letter-spacing: .1em; }
+  .tile-body { padding: 9px 9px 10px; gap: 5px; }
+  .tile-name { font-size: 16px; }
+  .tile-sum { font-size: 12px; }
+  .tile-facts { grid-template-columns: minmax(0, 1fr); }
+  .tile-facts > div { display: block; }
+  .tile-more { grid-column: 1; }
+}
+.tile-body, .tile-sum, .tile-name, .tile-facts dd { overflow-wrap: anywhere; }

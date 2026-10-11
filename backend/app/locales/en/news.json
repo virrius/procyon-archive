@@ -1,0 +1,10 @@
+{
+  "no_journalist": "no such journalist",
+  "need_input": "add the GM's words or at least one link",
+  "job_closed": "the order is already closed",
+  "no_draft": "no such draft",
+  "already_aired": "already on air",
+  "empty_news": "the story is empty",
+  "nothing_to_retry": "nothing to retry",
+  "not_found": "story not found"
+}
