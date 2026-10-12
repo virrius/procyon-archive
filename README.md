@@ -2,7 +2,18 @@
 
 **[Overview and screenshots](https://virrius.github.io/procyon-archive-promo/)**
 
-![Character sheet](https://virrius.github.io/procyon-archive-promo/shots/char_full.webp)
+![Procyon Archive with the sector map open](docs/screenshot.webp)
+
+## Run
+
+Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/): Windows, macOS or Linux, 8 GB RAM.
+
+1. Download `procyon-archive.zip` from [Releases](https://github.com/virrius/procyon-archive/releases/latest) and unzip it.
+2. Open a terminal in the unzipped folder and run `docker compose up -d`.
+3. Open http://localhost:7726, sign in as `admin` / `admin`, set your password.
+
+Players on your network open `http://<your computer's IP>:7726`.
+Stopping, updating, pictures and news: [INSTALL.md](INSTALL.md).
 
 ## Structure
 
