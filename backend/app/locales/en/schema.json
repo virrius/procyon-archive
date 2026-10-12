@@ -36,7 +36,7 @@
     "vice": "Vice",
     "trauma": "Trauma",
     "gm_appearance": "Look",
-    "background": "Background",
+    "background": "Backstory",
     "rank": "Tier",
     "category": "Category",
     "stance": "Status",
@@ -45,7 +45,7 @@
     "blurb": "Crew tagline",
     "size": "Ship size",
     "crew_rank": "Crew quality",
-    "look": "Color / look",
+    "look": "Look",
     "reputation": "Crew reputation",
     "sys_hull": "Hull",
     "sys_engines": "Engines",
@@ -61,7 +61,8 @@
     "loc_type": "Type",
     "job_type": "Type",
     "payout": "Payoff",
-    "employer": "Employer"
+    "employer": "Employer",
+    "past": "Background"
   },
   "labels": {
     "active": "Active",

@@ -13,7 +13,9 @@ log = logging.getLogger("dbpatch")
 # записи, которые уже прошли на всех известных базах, отсюда убираются.
 
 # (table, column, type + null/default clause)
-_COLUMNS: list[tuple[str, str, str]] = []
+_COLUMNS: list[tuple[str, str, str]] = [
+    ("campaigns", "sheet_setup", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
+]
 
 _DROP_TABLES: list[str] = [
     # «заметки»-обсуждения: интерфейс снят 09.10.2026, на обоих экземплярах таблица пуста

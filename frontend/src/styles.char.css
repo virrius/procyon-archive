@@ -1,0 +1,568 @@
+/* Бланк персонажа — тот же язык, что у бланка корабля (styles.ship.css),
+   плюс то, чего на корабле нет: повреждения, лечение, навыки, нагрузка, выбор бланка. */
+
+.cs [data-sec] { scroll-margin-top: calc(var(--navbar-h, 0px) + 110px); }
+
+/* --- вкладки: бланк, настройка, досье --- */
+.cs-tabs { display: inline-flex; border: 1px solid var(--line2); }
+.cs-tabs button {
+  background: var(--surface2); border: 0; border-right: 1px solid var(--line2); color: var(--dim);
+  font-size: 13px; padding: 4px 13px; font-weight: 400; text-transform: none; letter-spacing: 0;
+}
+.cs-tabs button:last-child { border-right: 0; }
+.cs-tabs button:hover { color: var(--txt); background: var(--surface3); }
+.cs-tabs button.on { color: var(--amber); background: var(--surface3); }
+.cs-done { display: flex; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* --- GM space → «Бланки» --- */
+.gs-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.gs-sep { width: 1px; align-self: stretch; background: var(--line2); margin: 2px 6px; }
+.gs-part {
+  background: var(--surface2); border: 1px solid var(--line2); color: var(--dim);
+  font-size: 11.5px; padding: 3px 10px; font-weight: 400;
+}
+.gs-part:hover { color: var(--txt); border-color: var(--dim2); }
+.gs-part.on { color: var(--amber); border-color: var(--amber-dim); background: var(--surface3); }
+.gs-part.own::after { content: " ●"; color: var(--amber); font-size: 9px; }
+@media (max-width: 700px) { .gs-sep { display: none; } }
+
+/* --- шапка: имя антиквой, бланк, происхождение строкой; справа внешность --- */
+.cs-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  gap: 10px 20px; align-items: start;
+  background: var(--surface); border: 1px solid var(--line); padding: 12px 14px;
+}
+.cs-thumb {
+  display: none; aspect-ratio: 4 / 5; background: #100f0d; border: 1px solid var(--line);
+  overflow: hidden; position: relative;
+}
+.cs-thumb .cs-shot-img { width: 100%; height: 100%; object-fit: cover; }
+.cs-thumb .cs-shot-none { height: 100%; aspect-ratio: auto; }
+@media (min-width: 761px) {
+  .cs.tab-setup .cs-head, .cs.tab-sheet .cs-head { grid-template-columns: 92px minmax(0, 1fr) minmax(0, 340px); }
+  .cs.tab-setup .cs-thumb, .cs.tab-sheet .cs-thumb { display: block; }
+}
+
+.cs input.cs-alias-in { font-size: 16px; color: var(--dim); font-family: var(--display); font-style: italic; }
+.cs-name { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cs-name h2, .cs input.ss-name-in {
+  margin: 0; font-family: var(--display); font-size: 34px; font-weight: 600; letter-spacing: 0;
+  text-transform: none; line-height: 1.05; overflow-wrap: break-word;
+}
+.cs-alias { font-family: var(--display); font-style: italic; font-size: 18px; color: var(--dim); }
+input.cs-alias-in { width: 100%; }
+.cs-pb {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 2px;
+  font-size: 13px; color: var(--dim);
+}
+.cs-pb b { font-family: var(--display); font-style: italic; font-size: 20px; font-weight: 600; color: var(--amber); }
+.cs-pb .stamp { margin-left: 4px; }
+.cs-repick { padding: 1px 7px; font-size: 11px; }
+.cs-idline { font-size: 13.5px; color: var(--dim); line-height: 1.5; margin-top: 2px; }
+.cs-idline b { color: var(--txt); font-weight: 600; }
+.cs-idline > span + span::before { content: " · "; color: var(--dim2); }
+.cs-status { display: flex; margin-top: 4px; }
+.cs-status .drop { width: auto; }
+.cs-stat { --st: var(--dim2); font-size: 12px; }
+span.cs-stat { color: var(--st); border: 1px solid var(--st); padding: 1px 8px; }
+.cs-stat.t-ok, .cs-stamp.t-ok { --st: var(--olive); }
+.cs-stat.t-warn, .cs-stamp.t-warn { --st: var(--amber); }
+.cs-stat.t-dead, .cs-stamp.t-dead { --st: #d4462c; }
+.cs-stat.t-end, .cs-stamp.t-end { --st: #7d6f66; }
+.cs-stat .drop-btn { color: var(--st); border-color: var(--st); padding: 1px 8px; font-size: 12px; }
+.cs-look { min-width: 0; }
+
+.cs-shot { position: relative; background: #100f0d; overflow: hidden; }
+.cs-shot-img { display: block; width: 100%; height: auto; }
+.cs-shot-none { width: 100%; aspect-ratio: 4 / 5; }
+
+/* --- «Бланк»: слева колонка состояния, справа навыки, способности, снаряжение, опыт --- */
+.cs-play { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 14px; align-items: start; }
+.cs-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.cs-rail { background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
+.cs-rb { padding: 10px 12px 12px; border-bottom: 1px solid var(--line); min-width: 0; }
+.cs-rb:last-child { border-bottom: 0; }
+.cs-rl { display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px; }
+.cs-rl + .cs-rl, .ss-track + .cs-rl { margin-top: 10px; }
+.cs-hl, .cs-rt { font-size: 13px; color: var(--dim); font-weight: 400; }
+.cs-hl {
+  background: none; border: 0; padding: 0; text-transform: none; letter-spacing: 0;
+  border-bottom: 1px dotted var(--dim2); cursor: help;
+}
+.cs-hl:hover, .cs-hl.on { color: var(--txt); border-bottom-color: var(--amber); background: none; }
+.cs-rn { margin-left: auto; font-family: var(--util); font-size: 13px; font-weight: 600; color: var(--txt); }
+.cs-rn.hot { color: #e08a70; }
+.cs-rv { font-size: 12.5px; color: var(--dim); }
+.cs-rv b { font-family: var(--util); font-weight: 600; color: var(--txt); }
+.cs-tip {
+  display: flex; flex-direction: column; gap: 4px; margin: -2px 0 9px;
+  font-size: 12.5px; line-height: 1.45; color: var(--dim);
+  border-left: 2px solid var(--amber-dim); padding: 2px 0 2px 9px;
+}
+.cs-tip b { color: var(--txt); }
+
+.cs-stress .ss-pips, .cs-trauma .ss-pips { display: flex; flex-wrap: nowrap; gap: 4px; }
+.cs-stress .ss-pip, .cs-trauma .ss-pip { width: 16px; height: 22px; }
+/* травмы: деления слева, названия колонкой справа — под деления не переносятся */
+.cs-trauma { display: flex; align-items: center; gap: 12px; }
+.cs-trauma .ss-pips { flex: none; }
+.cs-trs { display: flex; flex-wrap: wrap; gap: 0 10px; min-width: 0; }
+.cs-tr { color: #e08a70; font-weight: 600; font-size: 13.5px; }
+.cs-call {
+  margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border: 1px solid #5c3327; background: #251712; color: #e08a70; font-size: 12px; padding: 5px 8px;
+}
+.cs-call button { margin-left: auto; font-weight: 400; }
+/* стресс на пределе: выбор травмы прямо под шкалой */
+.cs-tmenu { margin-top: 8px; border: 1px solid #5c3327; background: #1f1511; }
+.cs-tmenu-hd { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12px; color: #e08a70; border-bottom: 1px solid #5c3327; }
+.cs-tmenu-hd button { margin-left: auto; }
+.cs .cs-topt {
+  display: block; width: 100%; padding: 7px 8px; text-align: left; background: none; border: 0; border-top: 1px solid #3a2620;
+  font: 400 12px/1.4 var(--ui); color: var(--dim); text-transform: none; letter-spacing: 0;
+}
+.cs .cs-topt:first-of-type { border-top: 0; }
+.cs .cs-topt:hover, .cs .cs-topt:focus-visible { background: #2c1b15; color: var(--txt); }
+.cs-topt b { display: block; font-size: 13px; font-weight: 600; color: #e08a70; }
+.ghost.rust { color: #e08a70; border-color: #5c3327; }
+.ghost.amber { color: var(--amber); border-color: var(--amber-dim); }
+
+/* раны: строка на степень, на 1-й и 2-й по два места, на 3-й одно; штраф справа */
+.cs-harm { display: flex; flex-direction: column; gap: 7px; }
+.cs-hrow { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.cs-hlv { font-family: var(--util); font-size: 12px; color: var(--dim2); padding-top: 3px; }
+.cs-hslots { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cs-hslot {
+  display: block; width: 100%; min-height: 23px; padding: 2px 1px; font-size: 13.5px; color: var(--txt);
+  background: transparent; border: 0; border-bottom: 1px dashed var(--line2); border-radius: 0;
+}
+input.cs-hslot:hover { border-bottom-color: var(--dim2); }
+input.cs-hslot:focus { border-color: transparent; border-bottom: 1px solid var(--amber); background: rgba(0, 0, 0, .22); outline: none; }
+.cs-heff { max-width: 92px; padding-top: 4px; text-align: right; font-size: 11.5px; line-height: 1.15; color: var(--dim2); }
+.cs-heff.hot { color: #e08a70; }
+
+.cs-heal { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.cs-clock { width: 40px; height: 40px; flex: none; }
+.cs-clock path { fill: #100f0d; stroke: var(--line2); stroke-width: 1; }
+.cs-clock path.on { fill: var(--amber); }
+.cs-clock.edit path { cursor: pointer; }
+.cs-clock.edit path:hover { stroke: var(--amber); }
+
+/* защита и нагрузка — один вид: ряд отдельных плиток, отмеченная подсвечена янтарём */
+.cs-armor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+.cs .cs-arm, .cs :is(.cs-rail, .cs-gload) .cs-seg button {
+  display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; min-width: 0;
+  background: var(--surface2); border: 1px solid var(--line); color: var(--dim);
+  font-size: 12.5px; padding: 4px 6px; font-weight: 400; text-transform: none; letter-spacing: 0;
+}
+.cs .cs-arm:not(:disabled):not(.on):hover, .cs :is(.cs-rail, .cs-gload) .cs-seg button:not(.on):hover {
+  background: var(--surface3); border-color: var(--line2); color: var(--txt);
+}
+.cs .cs-arm.on, .cs :is(.cs-rail, .cs-gload) .cs-seg button.on { background: #231d12; border-color: var(--amber-dim); color: var(--amber); }
+.cs-arm i {
+  display: block; width: 8px; height: 15px; border: 1px solid var(--line2);
+  background: #100f0d; transform: skewX(-14deg);
+}
+.cs-arm.on i { background: var(--amber); border-color: var(--amber); }
+.cs-arm:disabled { cursor: default; }
+
+.cs-seg { display: inline-flex; border: 1px solid var(--line2); }
+.cs-seg button {
+  background: var(--surface2); border: 0; border-right: 1px solid var(--line2);
+  padding: 3px 9px; font-size: 12px; color: var(--dim); font-weight: 400; text-transform: none; letter-spacing: 0;
+}
+.cs-seg button:last-child { border-right: 0; }
+.cs-seg button.on { background: var(--surface3); color: var(--amber); }
+:is(.cs-rail, .cs-gload) .cs-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; border: 0; }
+:is(.cs-rail, .cs-gload) .cs-seg b { font: 600 12.5px var(--util); }
+.cs-loadbar { display: flex; gap: 3px; margin-top: 8px; }
+.cs-gload { padding-bottom: 12px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+.cs-loadbar i { flex: 1; height: 7px; background: #100f0d; border: 1px solid var(--line2); }
+.cs-loadbar i.on { background: var(--amber-dim); border-color: var(--amber-dim); }
+.cs-loadbar i.over { border-color: var(--rust); }
+.cs-loadbar i.on.over { background: var(--rust); }
+
+.ss-track.bare > .ss-cap, .ss-track.bare .ss-track-n { display: none; }
+.cs-stash { display: flex; flex-direction: column; gap: 4px; }
+.cs-srow { display: flex; align-items: center; gap: 10px; }
+.cs-sg { display: flex; gap: 3px; }
+.cs-sg .ss-sq { width: 14px; height: 14px; }
+.cs-slv { margin-left: auto; font-size: 12px; color: #5b5346; }
+.cs-srow.on .cs-slv { color: var(--amber); }
+
+/* --- навыки: показатель рядом с названием, опыт делениями в заголовке --- */
+.ss-lane.c3 .ss-lane-b { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ss-pip.gap { margin-left: 5px; }
+/* навыки — треугольники, как на бумажном бланке; первая колонка отчёркнута чертой во всю группу */
+.cs .cs-act .ss-pips { position: relative; align-self: stretch; align-items: center; flex-wrap: nowrap; gap: 10px; }
+/* черта чуть ближе к острию: у острия пусто, на глаз так она посередине */
+.cs .cs-act .ss-pips::before { content: ""; position: absolute; top: -4px; bottom: -5px; left: 16px; width: 1px; background: var(--line2); }
+.cs .cs-act .ss-pip { position: relative; width: 12px; height: 14px; background: none; border: 0; transform: none; }
+.cs .cs-act .ss-pip.gap { margin-left: 0; }
+.cs .cs-act .ss-pip::before {
+  content: ""; position: absolute; inset: 0; background: var(--line2); clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+.cs .cs-act .ss-pip.on::before { background: var(--amber); }
+.cs .cs-act button.ss-pip:hover { background: none; }
+.cs .cs-act button.ss-pip:hover::before { background: var(--amber-dim); }
+.cs .cs-act button.ss-pip.on:hover::before { background: #eab458; }
+.cs .cs-act button.ss-pip:focus-visible { outline: 1px solid var(--amber); outline-offset: 1px; }
+.cs-acts { display: flex; flex-direction: column; }
+.cs-act {
+  display: flex; align-items: center; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--line);
+}
+.cs-act:last-child { border-bottom: 0; }
+.cs-act-n { flex: 1; min-width: 0; font-size: 13.5px; color: var(--txt); }
+.cs-act.adv { background: #231d12; }
+.cs-act.adv .cs-act-n { color: var(--amber); }
+/* в развитии навык на максимуме не предлагается */
+.cs-act.adv.max { background: none; }
+.cs-act.adv.max .cs-act-n { color: var(--dim2); }
+.cs-act.adv.max button:disabled { opacity: .4; }
+.cs-adv { font-size: 12px; color: var(--amber); margin: 2px 0 6px; }
+
+/* --- способности: уникальная и взятые карточками, невзятые строкой --- */
+.cs-cards { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; }
+.cs-card { padding: 10px 12px 11px; display: flex; flex-direction: column; gap: 4px; }
+.cs-card.u { border-left: 2px solid var(--amber); }
+.cs-card-n { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 600; color: var(--txt); }
+.cs-card-t { font-size: 13px; line-height: 1.5; color: var(--dim); }
+.cs-card-tr { display: flex; align-items: last baseline; gap: 16px; }
+.cs-card-tr .cs-card-t { flex: 1; min-width: 0; }
+.cs .cs-more {
+  flex: none; background: none; border: 0; padding: 0; white-space: nowrap;
+  font: 400 12px var(--ui); color: var(--dim2); text-transform: none; letter-spacing: 0;
+}
+.cs .cs-more:hover, .cs .cs-more[aria-expanded="true"] { background: none; color: var(--amber); }
+.cs-rest { position: relative; grid-column: 1 / -1; font-size: 13px; line-height: 1.6; color: var(--dim2); }
+.cs .cs-rest-b {
+  background: none; border: 0; border-bottom: 1px dotted var(--line2); padding: 0;
+  font: inherit; color: var(--dim); text-transform: none; letter-spacing: 0; cursor: help;
+}
+.cs .cs-rest-b:hover, .cs .cs-rest-b.open { background: none; color: var(--txt); border-bottom-color: var(--amber); }
+/* карточка невзятой способности — под строкой, во всю её ширину, но не шире читаемого */
+.cs-pop {
+  display: none; position: absolute; z-index: 20; left: 0; top: 100%; margin-top: 6px; width: min(560px, 100%);
+  padding: 10px 12px; background: var(--surface2); border: 1px solid var(--line2); box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+  font: 13px/1.5 var(--ui); color: var(--dim); text-align: left; white-space: normal; cursor: default;
+}
+.cs-pop b { display: block; margin-bottom: 3px; font-weight: 600; color: var(--txt); }
+.cs-pop .more { display: block; margin-top: 6px; color: var(--dim2); }
+.cs-rest-b.open .cs-pop, .cs-rest-b:focus-visible .cs-pop { display: block; }
+@media (hover: hover) { .cs-rest-b:hover .cs-pop { display: block; } }
+
+/* опыт бланка — в заголовке «Способностей» за названием */
+.cs-xph { display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; }
+.cs-xph .ss-track-n { margin-left: 0; }
+.cs .cs-xpq {
+  display: grid; place-items: center; width: 18px; height: 18px; padding: 0;
+  background: none; border: 1px solid var(--line2); color: var(--dim2); font: 400 13px/1 var(--util);
+}
+.cs .cs-xpq:hover, .cs .cs-xpq[aria-expanded="true"] { background: none; color: var(--amber); border-color: var(--amber-dim); }
+.cs-xp { grid-column: 1 / -1; padding: 8px 12px; }
+.cs-xp .ss-xp { margin-top: 0; }
+.cs-unique { border-left: 2px solid var(--amber); padding-left: 8px; margin-bottom: 8px; }
+.cs-unique .ss-nm { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cs-uniq-cap { padding-top: 0; font-weight: 400; }
+.cs-xeno { margin-top: 2px; }
+.ss-pick.hot { background: #231d12; }
+.ss-pick.hot .ss-nm { color: var(--amber); }
+.ss-text.dim { border-left-color: var(--line); color: var(--dim2); }
+.cs-subhd { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.cs-subhd .ss-cap { padding-top: 0; }
+.cs-src {
+  flex: none; font-size: 11.5px; font-weight: 400;
+  color: var(--dim2); border: 1px solid var(--line2); padding: 0 6px;
+}
+select.cs-vet {
+  margin-top: 8px; max-width: 320px; padding: 6px 9px; cursor: pointer;
+  background: transparent; border: 1px dashed var(--line2); color: var(--dim2); font-size: 12.5px;
+}
+select.cs-vet:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--surface); }
+select.cs-vet option, select.cs-vet optgroup { font-size: 13px; color: var(--txt); }
+
+/* --- снаряжение: вещи бланка своей колонкой за линейкой, обычные — в две рядом --- */
+.ss-slots.over { color: #e08a70; }
+.cs-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.cs-items.cols { display: block; columns: 3; column-gap: 26px; }
+.cs-igrp { font-size: 12px; color: var(--dim2); padding: 0 0 3px; }
+.cs-gear-pb > .cs-igrp { color: var(--amber); }
+.cs-gear.both > .cs-gear-pb > .cs-items.cols { columns: 1; }
+.cs-gear.both { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.cs-gear.both > .cs-gear-pb { padding-right: 22px; border-right: 1px solid var(--line2); }
+.cs-gear.both > .cs-gear-c { padding-left: 22px; }
+.cs-gear.both > .cs-gear-c > .cs-items.cols { columns: 2; }
+.cs-item {
+  display: flex; align-items: flex-start; gap: 8px; padding: 4px 0;
+  border-bottom: 1px solid var(--line); min-width: 0; break-inside: avoid;
+}
+.cs-item.on .ss-nm { color: var(--txt); }
+.cs-item .ss-fold { flex: 1; }
+.cs-item .ss-fold summary::after { margin-left: 0; padding-left: 0; }
+.ss-nm.free { font-style: italic; }
+.ss-nm.fine { font-weight: 600; }
+.cs-lbox { display: inline-flex; gap: 2px; flex: none; margin-top: 5px; }
+.cs-lbox i { display: block; width: 9px; height: 9px; border: 1px solid var(--line2); }
+.cs-item.on .cs-lbox i { background: var(--amber); border-color: var(--amber); }
+.cs-vload {
+  flex: none; font-family: var(--util); font-size: 10.5px; color: var(--amber);
+  border: 1px solid var(--amber-dim); padding: 0 5px; background: transparent; margin-top: 2px;
+}
+
+/* --- «Настройка»: происхождение, прошлое, страсть — три карточки; травмы --- */
+.cs-idrow {
+  display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 4px 10px;
+  padding: 5px 0; border-bottom: 1px solid var(--line);
+}
+.cs-idrow:last-child { border-bottom: 0; }
+.cs-idrow > .ss-cap { display: flex; align-items: center; gap: 4px; }
+.cs-idv { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.cs-note { color: var(--dim); }
+.cs-idcard { display: flex; flex-direction: column; }
+.cs-idcard .ss-p-hd { gap: 6px; }
+.cs-idcard .ss-p-b { flex: 1; display: flex; flex-direction: column; gap: 9px; padding: 9px 10px 10px; }
+.cs-idhint {
+  font-size: 12px; line-height: 1.45; color: var(--dim);
+  border-left: 2px solid var(--amber-dim); padding-left: 8px;
+}
+.cs-trhint { margin-top: 10px; }
+.cs-idhint > div + div { margin-top: 3px; }
+.cs-idhint b { font-weight: 600; color: var(--txt); }
+textarea.cs-idnote {
+  margin-top: auto; background: transparent; border: 0; border-bottom: 1px dashed var(--line2); border-radius: 0;
+  padding: 4px 2px; font: 13px/1.45 var(--ui); color: var(--txt); resize: none; overflow: hidden; min-height: 0;
+}
+textarea.cs-idnote:hover { border-bottom-color: var(--dim2); }
+textarea.cs-idnote:focus { border-bottom: 1px solid var(--amber); outline: none; }
+
+.cs-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.cs-chip {
+  background: var(--surface2); border: 1px solid var(--line2); color: var(--dim);
+  font-size: 12px; padding: 2px 9px; font-weight: 400; text-transform: none; letter-spacing: 0;
+}
+button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
+.cs-chip.on { color: var(--amber); border-color: var(--amber-dim); background: var(--surface3); }
+.cs-chip.rust.on { color: #e08a70; border-color: #5c3327; background: #251712; }
+.cs-chip:disabled { opacity: .45; cursor: default; }
+.cs-traumas { margin-top: 2px; }
+
+/* --- выбор бланка и шаги создания --- */
+.cs-pbgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.cs-pbcard {
+  text-align: left; background: var(--surface); border: 1px solid var(--line); padding: 9px 10px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--txt);
+}
+.cs-pbcard:hover { border-color: var(--amber-dim); background: var(--surface2); }
+.cs-pbcard > b { font-family: var(--display); font-size: 21px; font-weight: 600; }
+.cs-pbsub { font-size: 12px; color: var(--dim2); }
+.cs-pbu { font-size: 12px; color: var(--dim); }
+.cs-pbu b { color: var(--amber); }
+
+.cs-steps {
+  display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center;
+  background: #231d12; border: 1px solid var(--amber-dim); padding: 7px 9px;
+}
+.cs-step { font-size: 12px; color: var(--dim); padding: 1px 6px; border: 1px solid var(--line2); background: var(--surface); }
+.cs-step.ok { color: var(--olive); border-color: #495736; }
+.cs-step.ok::before { content: "✓ "; }
+.cs-step.over { color: #e08a70; border-color: #5c3327; }
+
+/* длинные поля досье: правятся по щелчку */
+.cs-dos .ss-cap { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+.cs-dos.gm { border-left: 2px solid var(--rust); padding-left: 10px; }
+.cs-dos textarea { width: 100%; }
+.cs-prose { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: break-word; max-width: 80ch; }
+.cs-dos.lead .cs-prose { font-size: 15.5px; line-height: 1.5; color: var(--txt); }
+.cs-dos.lead textarea { font-size: 15px; }
+.cs-box { padding: 8px 10px; }
+
+/* --- памятка --- */
+.cs-ref { background: var(--surface); border: 1px solid var(--line); }
+.cs-ref > summary {
+  cursor: pointer; list-style: none; padding: 7px 11px;
+  font-family: var(--display); font-size: 19px; font-weight: 600;
+}
+.cs-ref > summary::-webkit-details-marker { display: none; }
+/* телефон: панель бланка уезжает с прокруткой, у края остаются «назад» и «наверх» */
+.ss-tools.flow { position: relative; top: 0; }
+.cs-float { position: fixed; z-index: 30; top: calc(var(--navbar-h, 0px) + 6px); left: 8px; display: flex; gap: 6px; }
+.cs-float button.ghost {
+  width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 16px;
+  background: #100f0d; border-color: var(--line2); box-shadow: 0 4px 14px rgba(0, 0, 0, .55);
+}
+.cs-ref-b { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 9px 11px 11px; border-top: 1px solid var(--line); }
+.cs-ref-b h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--amber); }
+.cs-ref-b ul { margin: 0; padding-left: 14px; font-size: 12.5px; color: var(--dim); }
+/* на широком экране памятка — в шапке «Бланка», где справа пусто; внешность встаёт под имя */
+.cs-memo { display: none; }
+.cs-memo > div { break-inside: avoid; margin-bottom: 9px; }
+.cs-memo h4 { margin: 0 0 3px; font-size: 12.5px; font-weight: 600; color: var(--amber); }
+.cs-memo ul { margin: 0; padding-left: 14px; font-size: 12px; line-height: 1.45; color: var(--dim); }
+/* пояснение строки памятки — карточкой под строкой */
+.cs-memo li, .cs-ref-b li { position: relative; }
+.cs-memo .cs-pop, .cs-ref-b .cs-pop { width: 340px; max-width: 80vw; white-space: pre-line; }
+/* справка по клику: пунктир и курсор-вопрос, карточка под строкой (навыки, памятка) */
+.cs .cs-help {
+  background: none; border: 0; padding: 0; text-align: left; vertical-align: top;
+  font: inherit; color: inherit; text-transform: none; letter-spacing: 0; cursor: help;
+  text-decoration: underline dotted var(--line2); text-underline-offset: 3px;
+}
+.cs .cs-help:hover, .cs .cs-help.open { background: none; color: var(--txt); text-decoration-color: var(--amber); }
+.cs-help.open .cs-pop, .cs-help:focus-visible .cs-pop { display: block; }
+.cs-acts-box { display: contents; }
+.cs-act { position: relative; }
+.cs-act .cs-pop { left: 0; right: 0; width: auto; }
+/* памятка в шапке «Бланка»: колонки прижаты вправо, не влезают — прокрутка вбок */
+@media (min-width: 761px) {
+  .cs.tab-sheet .cs-head:has(> .cs-memo) {
+    grid-template-columns: 92px fit-content(360px) minmax(0, 1fr);
+    grid-template-areas: "thumb name memo" "thumb look memo";
+    grid-template-rows: auto 1fr;
+  }
+  .cs.tab-sheet .cs-head > .cs-thumb { grid-area: thumb; }
+  .cs.tab-sheet .cs-head > .cs-name { grid-area: name; }
+  .cs.tab-sheet .cs-head > .cs-look { grid-area: look; }
+  .cs.tab-sheet .cs-memo {
+    grid-area: memo; display: flex; align-items: flex-start; gap: 16px; min-width: 0;
+    overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; scrollbar-color: var(--line2) transparent;
+  }
+  .cs-memo-col:first-child { margin-left: auto; }
+  .cs-memo-col { flex: 0 0 190px; min-width: 0; padding-left: 12px; border-left: 1px solid var(--line); }
+  .cs-memo-col > div { margin: 0; }
+  .cs-memo-col > div + div { margin-top: 10px; }
+}
+
+@media (min-width: 1280px) {
+  .cs.tab-sheet .cs-head:has(> .cs-memo) { grid-template-columns: 150px fit-content(440px) minmax(0, 1fr); }
+  /* шапка крупнее: место по высоте всё равно задаёт памятка */
+  .cs.tab-sheet .cs-head { padding: 16px 18px; gap: 10px 26px; }
+  .cs.tab-sheet .cs-name { gap: 5px; }
+  .cs.tab-sheet .cs-name h2, .cs.tab-sheet input.ss-name-in { font-size: 44px; }
+  .cs.tab-sheet .cs-alias { font-size: 22px; }
+  .cs.tab-sheet .cs-pb { font-size: 14.5px; margin-top: 6px; }
+  .cs.tab-sheet .cs-pb b { font-size: 25px; }
+  .cs.tab-sheet .cs-idline { font-size: 15px; margin-top: 4px; }
+  .cs.tab-sheet .cs-status { margin-top: 8px; }
+}
+
+@media (max-width: 1100px) {
+  .cs-play { grid-template-columns: 260px minmax(0, 1fr); }
+  .ss-lane.c3 .ss-lane-b { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cs-items.cols { columns: 2; }
+  .cs-gear.both { grid-template-columns: minmax(0, 1fr); }
+  .cs-gear.both > .cs-gear-pb {
+    padding: 0 0 10px; margin-bottom: 10px; border-right: 0; border-bottom: 1px solid var(--line2);
+  }
+  .cs-gear.both > .cs-gear-c { padding-left: 0; }
+  .cs-gear.both > .cs-gear-pb > .cs-items.cols { columns: 2; }
+  .cs-ref-b { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* --- телефон: одна колонка в порядке игры, крупные цели касания ------------- */
+
+@media (max-width: 760px) {
+  .cs { gap: 7px; }
+  .cs .ss-lane-b, .ss-lane.c3 .ss-lane-b { grid-template-columns: minmax(0, 1fr); }
+  .cs .ss-lane-hd { flex-wrap: wrap; row-gap: 4px; }
+  .cs-play { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .cs-main { gap: 8px; }
+
+  /* шапка: миниатюра портрета слева, внешность строкой ниже */
+  .cs-head { grid-template-columns: 76px minmax(0, 1fr); padding: 9px; gap: 8px 10px; }
+  .cs-thumb { display: block; }
+  .cs-look { grid-column: 1 / -1; }
+  .cs-name h2, .cs input.ss-name-in { font-size: 26px; }
+  .cs-alias { font-size: 16px; }
+  .cs-pb b { font-size: 18px; }
+  .cs-idline { font-size: 12.5px; }
+  .cs.tab-dossier .cs-head { grid-template-columns: minmax(0, 1fr); }
+  .cs.tab-dossier .cs-thumb { display: none; }
+  .cs-tabs button { padding: 5px 10px; font-size: 12.5px; }
+
+  .cs-idrow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .cs-chip { font-size: 13px; padding: 5px 10px; }
+
+  /* деления стресса 16 × 22, навыков 18 × 24, квадраты 20, галочки 18 */
+  .cs .ss-pip { width: 16px; height: 22px; }
+  .cs .cs-stress .ss-pip, .cs .cs-trauma .ss-pip { width: 18px; height: 24px; }
+  .cs .cs-act .ss-pip { width: 15px; height: 18px; }
+  .cs .cs-act .ss-pips { gap: 12px; }
+  .cs .cs-act .ss-pips::before { top: -6px; bottom: -7px; left: 20px; }
+  .cs .ss-sq { width: 20px; height: 20px; }
+  .cs .cs-sg .ss-sq { width: 18px; height: 18px; }
+  .cs-sg { gap: 4px; }
+  .cs-stash { gap: 6px; }
+  .cs .ss-tick { width: 18px; height: 18px; margin-top: 1px; }
+  .cs .ss-pips { gap: 5px; }
+  .cs .ss-pip.gap { margin-left: 8px; }
+  .cs button.ss-pip::after, .cs button.ss-sq::after, .cs button.ss-tick::after { inset: -2px; }
+  .cs-act { padding: 6px 0; }
+  .cs-act-n { font-size: 13.5px; }
+
+  .cs-hslot { min-height: 28px; font-size: 14px; }
+  .cs-clock { width: 48px; height: 48px; }
+  .cs .cs-arm, .cs :is(.cs-rail, .cs-gload) .cs-seg button { min-height: 36px; }
+  .cs-seg button { padding: 7px 6px; }
+  .cs-vload { padding: 2px 8px; font-size: 12px; }
+  .cs-lbox i { width: 11px; height: 11px; }
+  .cs-items.cols, .cs-gear.both > :is(.cs-gear-pb, .cs-gear-c) > .cs-items.cols { columns: 1; }
+  .cs-pbgrid { grid-template-columns: minmax(0, 1fr); }
+  .cs-ref-b { grid-template-columns: minmax(0, 1fr); }
+  select.cs-vet { max-width: none; width: 100%; }
+}
+
+/* --- «Команда»: состояние персонажа ГМу на плитке галереи --- */
+/* тумблер у заголовка: показывать ли состояние на плитках */
+button.crew-switch {
+  display: inline-flex; align-items: center; gap: 8px; align-self: center; padding: 2px 4px;
+  background: none; border: 0; color: var(--dim); font: 400 13px var(--ui); text-transform: none; letter-spacing: 0;
+}
+button.crew-switch:hover { background: none; color: var(--txt); }
+button.crew-switch:focus-visible { outline: 1px solid var(--amber); outline-offset: 2px; }
+.crew-switch-track {
+  position: relative; flex: none; width: 32px; height: 18px; border-radius: 9px;
+  background: var(--line); border: 1px solid var(--line2); transition: background .15s, border-color .15s;
+}
+.crew-switch-track::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--dim2); transition: transform .15s, background .15s;
+}
+button.crew-switch[aria-checked="true"] { color: var(--txt); }
+button.crew-switch[aria-checked="true"] .crew-switch-track { background: #2a1f10; border-color: var(--amber-dim); }
+button.crew-switch[aria-checked="true"] .crew-switch-track::after { transform: translateX(14px); background: var(--amber); }
+@media (prefers-reduced-motion: reduce) { .crew-switch-track, .crew-switch-track::after { transition: none; } }
+.tile-extra { position: relative; padding: 0 12px 12px; }
+.tile:has(> .tile-extra) .tile-body { padding-bottom: 10px; }
+.tile:has(> .tile-extra):has(> .tile-svc) > .tile-extra { padding-bottom: 44px; }
+.tile:has(> .tile-extra) .tile-sum.long { -webkit-line-clamp: 3; line-clamp: 3; min-height: 0; }
+.crew-state { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.crew-state .hot { color: #e08a70; }
+.crew-state .calm { color: var(--dim2); }
+.crew-meter { display: flex; flex-direction: column; gap: 4px; }
+.crew-ml { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--dim); }
+.crew-n { margin-left: auto; font: 600 13px var(--util); color: var(--txt); }
+.crew-segs { display: flex; gap: 3px; }
+.crew-segs i { flex: 1; height: 9px; background: #100f0d; border: 1px solid var(--line2); }
+.crew-segs i.on { background: var(--amber); border-color: var(--amber); }
+.crew-segs.hot i.on, .crew-segs i.over { background: #c8573c; border-color: #c8573c; }
+.crew-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; margin: 0; font-size: 13px; }
+.crew-facts dt { color: var(--dim); }
+.crew-facts dd { margin: 0; }
+.crew-tal { display: flex; flex-wrap: wrap; gap: 5px; font-size: 13px; }
+.crew-chip {
+  border: 1px solid var(--line2); background: none; padding: 2px 8px; text-align: left;
+  font: 400 12.5px var(--ui); letter-spacing: 0; text-transform: none; color: var(--txt); cursor: help;
+}
+.crew-chip.bare { cursor: default; }
+.crew-chip:not(.bare):hover, .crew-chip.open { background: var(--surface3); border-color: var(--amber-dim); }
+.crew-chip em { font-style: normal; color: var(--dim2); }
+/* карточка таланта — во всю ширину плитки, сразу под чипом */
+.crew-pop {
+  display: none; position: absolute; z-index: 20; left: 12px; right: 12px; margin-top: 6px;
+  padding: 10px 12px; background: var(--surface2); border: 1px solid var(--line2); box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+  font: 13px/1.45 var(--ui); color: var(--dim); white-space: normal; text-align: left; cursor: default;
+}
+.crew-pop b { display: block; margin-bottom: 3px; font-weight: 600; color: var(--txt); }
+.crew-chip.open .crew-pop, .crew-chip:focus-visible .crew-pop { display: block; }
+@media (hover: hover) { .crew-chip:hover .crew-pop { display: block; } }

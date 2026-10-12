@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MutableRefObject } from 'react'
+import { useEffect, useMemo, useState, type MutableRefObject, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, c, isPublicView, thumb, type Dict } from '../api'
@@ -51,6 +51,10 @@ export type EntityGalleryProps = {
   /** раскладка по группам от родителя: каждая группа — отдельный блок с заголовком;
    *  пустые группы родителя тоже рисуются */
   groupBy?: (list: Dict[]) => Group[]
+  /** блок под плиткой, вне ссылки: своё у вида (состояние персонажа ГМу) */
+  extra?: (e: Dict) => ReactNode
+  /** свои кнопки сразу за заголовком */
+  beside?: ReactNode
 }
 
 /** idle — группа бледная (никем не занята); add — в пустой группе своя кнопка добавления */
@@ -84,7 +88,7 @@ const freshFirst = (a: Dict, b: Dict) =>
   || ru(a.name || '', b.name || '')
 
 export function EntityGallery({
-  kind, title, linkTo, hideFacts, search, visRow, sectionBy, sort, closed,
+  kind, title, linkTo, hideFacts, search, visRow, sectionBy, sort, closed, extra, beside,
   reloadRef, groupBy,
 }: EntityGalleryProps) {
   const nav = useNavigate()
@@ -257,6 +261,7 @@ export function EntityGallery({
       <div className="eg-bar">
         <div className="eg-line">
           <h1 className="eg-title">{title}</h1>
+          {beside}
           {search && (
             <input type="text" placeholder={t('gallery.search_ph')} value={q}
               onChange={e => setQ(e.target.value)} />
@@ -335,7 +340,7 @@ export function EntityGallery({
                   href={linkTo ? linkTo(e) : `/entity/${e.id}`}
                   onOpen={linkTo ? undefined : () => setOpenEnt(e)}
                   readonly={readonly} onVis={(v, to) => setVis(e.id, v, to)}
-                  onOwner={v => setOwner(e.id, v)} />
+                  onOwner={v => setOwner(e.id, v)} extra={extra?.(e)} />
               ))}
             </div>}
           </div>
@@ -371,7 +376,7 @@ export default EntityGallery
 
 /* --- карточка --------------------------------------------------------------- */
 
-function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, href, onOpen, readonly, onVis, onOwner, hideFacts, faded }: {
+function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, href, onOpen, readonly, onVis, onOwner, hideFacts, faded, extra }: {
   e: Dict
   kind: string
   isGM: boolean
@@ -390,6 +395,7 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
   readonly: boolean
   onVis: (v: string, to: string[]) => void
   onOwner: (v: string | null) => void
+  extra?: ReactNode
 }) {
   const { t } = useTranslation('entity')
   const [open, setOpen] = useState(false)
@@ -512,6 +518,7 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
           )}
         </div>
       </Link>
+      {extra && <div className="tile-extra">{extra}</div>}
       {isGM && (
         <div className="tile-svc">
           {kind !== 'ship' && (

@@ -164,7 +164,25 @@
   "sheet": {
     "heat": "wanted levels by system",
     "upkeep_missed": "skipped upkeeps",
-    "custom": "ship setup"
+    "custom": "sheet setup",
+    "stress": "stress",
+    "harm": "harm",
+    "healing": "healing",
+    "armor": "armor",
+    "creds": "cred",
+    "stash": "stash",
+    "load": "load",
+    "items": "gear",
+    "actions": "actions",
+    "xp": "xp",
+    "talents": "abilities",
+    "xeno": "xeno",
+    "xeno_text": "xeno ability",
+    "contacts": "contacts",
+    "heritage_note": "heritage details",
+    "past_note": "background details",
+    "vice_note": "vice details",
+    "created": "character ready"
   },
   "vis": {
     "crew": "everyone",

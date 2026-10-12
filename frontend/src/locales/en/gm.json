@@ -57,5 +57,12 @@
     "logout": "sign out",
     "rename_title": "Campaign name",
     "name": "Name"
+  },
+  "sheets": {
+    "ship": "Ship",
+    "common": "Standard items",
+    "custom": "has a custom setup",
+    "which_ship": "Ship",
+    "no_ship": "No ship yet — add one in the campaign database."
   }
 }

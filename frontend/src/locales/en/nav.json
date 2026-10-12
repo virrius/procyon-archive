@@ -25,5 +25,6 @@
   "sections": "Campaign sections",
   "campaign": "campaign",
   "switch_campaign": "switch campaign",
-  "logout": "sign out"
+  "logout": "sign out",
+  "sheets": "Sheets"
 }

@@ -68,6 +68,8 @@ class Campaign(Base, PK, Stamps):
     img_prompt_kit: Mapped[str] = mapped_column(Text, default="")
     # игровое время — дней от 1261.1.1; год, неделя и день недели считаются из него
     world_day: Mapped[int] = mapped_column(Integer, default=0)
+    # настройка бланков экипажа поверх книги: {"common": [...], "playbooks": {ключ: {...}}}
+    sheet_setup: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
 class ServerSettings(Base):

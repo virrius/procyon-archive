@@ -12,11 +12,12 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    ports:
-      - "45432:5432"
 
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      additional_contexts:
+        assets: ./assets
     environment:
       PA_DATABASE_URL: postgresql+psycopg://procyon:procyon@db:5432/procyon
       PA_JWT_SECRET: ${PA_JWT_SECRET:-}
@@ -27,19 +28,16 @@ services:
         condition: service_healthy
     volumes:
       - ./data/uploads:/data/uploads
-      - ./assets:/data/assets:ro
-    ports:
-      - "8000:8000"
 
   web:
     build:
       context: ./frontend
+      additional_contexts:
+        assets: ./assets
     depends_on:
       - api
-    volumes:
-      - ./assets:/usr/share/nginx/html/media:ro
     ports:
-      - "5180:80"
+      - "7726:80"
 
 volumes:
   db_data:

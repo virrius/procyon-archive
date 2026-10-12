@@ -4,21 +4,31 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api, c, isPublicView, type Dict } from '../api'
 import { useApp, useAsync } from '../ctx'
 import { EntityGallery, type Group } from '../components/EntityGallery'
-import EntityPage from './EntityPage'
+import { CrewState } from '../components/charsheet/CrewState'
 import { Chip, Input, Modal, OwnerPicker, Select, VisibilityPicker } from '../ui'
 
 const KIND = 'character'
 
 const cardPath = (id: string) => `/crew/team/${id}`
+const STATE_KEY = 'pa_crew_state'
 
 
 /** Команда: персонажи экипажа. Живёт вкладкой в разделе «Экипаж». */
-export default function Team({ cid }: { cid?: string }) {
+export default function Team() {
   const { meta, campaign, isGM, L } = useApp()
   const { t } = useTranslation('crew')
   const nav = useNavigate()
   const readonly = isPublicView()  // витрина для стола — только чтение
   const [creating, setCreating] = useState<Dict | null>(null)
+  // ГМу: показывать ли состояние персонажей на плитках — помнится в браузере
+  const [showState, setShowState] = useState(() => {
+    try { return localStorage.getItem(STATE_KEY) !== '0' } catch { return true }
+  })
+  const flipState = () => {
+    const v = !showState
+    setShowState(v)
+    try { localStorage.setItem(STATE_KEY, v ? '1' : '0') } catch { /* без хранилища — до перезагрузки */ }
+  }
   const [rows, loading, reloadRows, error] = useAsync<Dict[]>(
     () => api.get(`${c()}/entities?kind=${KIND}`), [])
   /* галерея живёт своей жизнью: обновляем её ручкой, а не перемонтажом по key */
@@ -87,12 +97,13 @@ export default function Team({ cid }: { cid?: string }) {
   return (
     <div className="col">
       <EntityGallery kind={KIND} title={t('team.title')} reloadRef={galleryReload}
-        groupBy={byPlayer} linkTo={e => cardPath(e.id)} hideFacts />
-
-      {cid && (
-        <CharacterWindow id={cid} name={all.find(e => e.id === cid)?.name || ''}
-          onClose={() => nav('/crew/team')} onChanged={refresh} />
-      )}
+        groupBy={byPlayer} linkTo={e => cardPath(e.id)} hideFacts
+        beside={isGM && !readonly && (
+          <button type="button" role="switch" aria-checked={showState} className="crew-switch" onClick={flipState}>
+            <span className="crew-switch-track" aria-hidden="true" />{t('summary.toggle')}
+          </button>
+        )}
+        extra={isGM && !readonly && showState ? e => <CrewState e={e} /> : undefined} />
 
       {!!error && <div className="empty">{error}</div>}
 
@@ -170,23 +181,5 @@ function PlayerRow({ member, owned, free, onBind, onCreate, L }: {
       </>}
       <button className="tiny ghost" onClick={onCreate}>{t('team.add_create')}</button>
     </div>
-  )
-}
-
-/* --- окно персонажа: та же карточка, что у всех типов, только слоем поверх ---- */
-
-function CharacterWindow({ id, onClose, onChanged }: {
-  id: string
-  name?: string
-  onClose: () => void
-  onChanged: () => void
-}) {
-  const { t } = useTranslation('crew')
-  const close = () => { onChanged(); onClose() }
-
-  return (
-    <Modal wide title={t('team.character')} onClose={close}>
-      <EntityPage id={id} onClose={close} />
-    </Modal>
   )
 }

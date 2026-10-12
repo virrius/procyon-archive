@@ -595,7 +595,8 @@ def portrait(entity, blocks: list) -> str:
     rank = ROMAN.get(str((entity.fields or {}).get("rank") or ""), "")
     head = f"{entity.name} — {WHO.get(entity.kind, entity.kind)}" + (WORDS["rank"] + rank if rank else "")
     known = [entity.summary or ""]
-    looks = (entity.fields or {}).get("gm_appearance")
+    # у персонажа внешность пишет игрок, у остальных — ГМ
+    looks = (entity.fields or {}).get("look" if entity.kind == "character" else "gm_appearance")
     if looks:
         known.append(f"{WORDS['looks']}{looks}")
     known += [f"{b.title}:\n{b.content.strip()}" for b in blocks if (b.content or "").strip()]

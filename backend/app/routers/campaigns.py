@@ -13,7 +13,7 @@ from ..book_defs import book
 from ..book_lore import seed_campaign
 from ..db import get_db
 from ..deps import current_user, gm_only, viewer
-from ..i18n import instance_lang, tr
+from ..i18n import LANGS, instance_lang, tr
 from ..models import AuditLog, Campaign, CampaignMember, Entity, User
 from ..security import hash_password
 from ..visibility import Viewer
@@ -63,6 +63,8 @@ class MetaOut(BaseModel):
     ship_sizes: list[str]
     ship_types: dict[str, dict] = Field(description="Ship type key → {label, blurb, …} from the rulebook.")
     ship_modules: dict[str, list[dict]] = Field(description="Ship modules by slot (hull, …) from the rulebook.")
+    playbooks: dict[str, dict] = Field(description="Character playbook key → {label, aliases, blurb, unique, talents, items, xp_trigger, start, builds} from the rulebook. `fields.playbook` stores the label; `fields.talents` stores `playbook:talent` keys.")
+    char_sheet: dict = Field(description="Character sheet reference: standard items, heritages, backgrounds (`past`), vices, traumas with texts, xp, harm, load, stash, teamwork notes.")
 
 
 @router.get("/meta", tags=["system"], summary="Vocabulary: kinds, fields, statuses, scopes", response_model=MetaOut,
@@ -82,6 +84,9 @@ def get_meta():
         "ship_sizes": B.SHIP_SIZES,
         "ship_types": B.SHIP_TYPES,
         "ship_modules": B.SHIP_MODULES,
+        "playbooks": {key: {**pb, "aliases": [book(lang).PLAYBOOK_SHEETS[key]["label"] for lang in LANGS]}
+                      for key, pb in S.PLAYBOOK_SHEETS.items()},
+        "char_sheet": S.CHAR_SHEET,
     }
 
 
@@ -193,6 +198,7 @@ class CampaignOut(BaseModel):
     is_real_gm: bool
     acting_as: str | None = Field(description="`crew` or a member id when `X-View-As` is in effect, else null.")
     members: list[MemberOut]
+    sheet_setup: dict = Field(description="GM's crew sheet setup over the rulebook — see `PUT /sheet-setup`.")
 
 
 @router.get("/campaigns/{campaign_id}", summary="Campaign with its members", response_model=CampaignOut)
@@ -221,7 +227,48 @@ def get_campaign(v: Viewer = Depends(viewer), db: Session = Depends(get_db)):
             }
             for m in members
         ],
+        "sheet_setup": c.sheet_setup or {},
     }
+
+
+class SheetRow(BaseModel):
+    key: str = Field(min_length=1, max_length=80)
+    name: str = Field(max_length=160)
+    text: str = Field(default="", max_length=2000)
+    more: str = Field(default="", max_length=4000)
+    load: int | list[int] | None = Field(default=None, description="Items only: load or a choice of loads.")
+    armor: bool = Field(default=False, description="Abilities only: uses special armor.")
+    fine: bool = False
+
+
+class PlaybookSetup(BaseModel):
+    talents: list[SheetRow] | None = Field(default=None, description="Replaces the book's special abilities.")
+    items: list[SheetRow] | None = Field(default=None, description="Replaces the book's playbook items.")
+    stress_max: int | None = Field(default=None, ge=1, le=12)
+    xp_trigger: str | None = Field(default=None, max_length=400)
+
+
+class SheetSetup(BaseModel):
+    common: list[SheetRow] | None = Field(default=None, description="Replaces the standard items of every sheet.")
+    playbooks: dict[str, PlaybookSetup] = Field(default={}, description="Playbook key → its setup.")
+
+
+@router.put("/campaigns/{campaign_id}/sheet-setup", summary="Set the crew sheet setup (GM)",
+            response_model=dict, responses=error_responses(422))
+def put_sheet_setup(body: SheetSetup, v: Viewer = Depends(gm_only), db: Session = Depends(get_db)):
+    """Whole setup at once; a section left out falls back to the rulebook for every character.
+    422 — unknown playbook key."""
+    unknown = set(body.playbooks) - set(book().PLAYBOOK_SHEETS)
+    if unknown:
+        raise HTTPException(422, tr("campaigns.bad_playbook", keys=", ".join(sorted(unknown))))
+    setup = body.model_dump(exclude_none=True, exclude_defaults=True)
+    setup["playbooks"] = {k: p for k, p in setup.get("playbooks", {}).items() if p}
+    if not setup["playbooks"]:
+        setup.pop("playbooks")
+    c = db.get(Campaign, v.campaign_id)
+    c.sheet_setup = setup
+    db.commit()
+    return setup
 
 
 # --- game time ----------------------------------------------------------------------------

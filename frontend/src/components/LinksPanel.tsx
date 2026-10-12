@@ -41,8 +41,10 @@ function phrase(r: Dict, selfName?: string): string {
   return r.direction === 'in' ? `${peer} ${label} ${me}` : `${me} ${label} ${peer}`
 }
 
-export default function LinksPanel({ entityId, kind, name }: {
+export default function LinksPanel({ entityId, kind, name, skip }: {
   entityId: string; kind?: string; name?: string
+  /** связи с этими карточками уже показаны рядом (знакомые бланка) */
+  skip?: string[]
 }) {
   const { L, isGM } = useApp()
   const { t } = useTranslation('entity')
@@ -57,7 +59,7 @@ export default function LinksPanel({ entityId, kind, name }: {
   // ответ сервера — источник правды; локальный слепок нужен лишь на время запроса
   useEffect(() => { setVisNow(m => (Object.keys(m).length ? {} : m)) }, [rows])
 
-  const list = (rows || []).filter(r => r && r.peer)
+  const list = (rows || []).filter(r => r && r.peer && !skip?.includes(r.peer.id))
     .sort((a, b) => String(a.peer.name || '').localeCompare(String(b.peer.name || ''), 'ru'))
 
   const drop = async (r: Dict) => {

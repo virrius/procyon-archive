@@ -1,0 +1,507 @@
+{
+  "back": "Team",
+  "to_top": "Back to top",
+  "saving": "saving…",
+  "saved": "saved",
+  "err": {
+    "save": "not saved",
+    "upload": "file not uploaded"
+  },
+  "name_ph": "name",
+  "alias_ph": "alias",
+  "look": "Look",
+  "look_ph": "a few words on how they look",
+  "pb_none": "no playbook yet",
+  "pb_change": "Change",
+  "creds": "Cred",
+  "stash": "Stash",
+  "cancel": "Cancel",
+  "talents_empty": "No special abilities for this playbook.",
+  "contact_link": "friend",
+  "reference": "Reference",
+  "id": {
+    "heritage": "Heritage",
+    "past": "Background",
+    "vice": "Vice",
+    "ph_heritage": "details — e.g. “a family of ice miners”",
+    "ph_past": "details — who and where",
+    "ph_vice": "details — where and how the vice is indulged"
+  },
+  "lane": {
+    "state": "Condition",
+    "actions": "Actions",
+    "abilities": "Special Abilities",
+    "gear": "Items",
+    "contacts": "Friends",
+    "dossier": "Dossier",
+    "links": "Links and clocks",
+    "files": "Files"
+  },
+  "stress": {
+    "title": "Stress and trauma",
+    "stress": "Stress",
+    "trauma": "Trauma",
+    "full": "Stress is maxed out.",
+    "take": "Take a trauma",
+    "pick": "Pick a trauma — stress resets to zero.",
+    "retire": "Fourth trauma: the character retires.",
+    "fate": "By stash — {{fate}}"
+  },
+  "harm": {
+    "title": "Harm",
+    "healing": "Healing",
+    "clear": "Clear harm",
+    "level": {
+      "3": "severe",
+      "2": "moderate",
+      "1": "lesser"
+    },
+    "levels": {
+      "3": "severe",
+      "2": "moderate",
+      "1": "lesser"
+    }
+  },
+  "armor": {
+    "armor": "armor",
+    "heavy": "heavy",
+    "special": "special"
+  },
+  "xp": {
+    "attr": "xp {{n}}/{{max}}",
+    "advance": "advance",
+    "adv_attr": "Advance: add an action rating to one of the actions under this attribute (up to a max of 3).",
+    "playbook": "Playbook xp",
+    "why": "xp triggers",
+    "adv_playbook": "Advance: choose a new special ability — from your playbook or as a Veteran advance."
+  },
+  "unique": {
+    "cap": "starting ability",
+    "xeno": "Xeno",
+    "to_xeno": "Xeno: replace the ability",
+    "back": "Restore the playbook ability"
+  },
+  "vet": {
+    "title": "Veteran — abilities of other playbooks",
+    "add": "+ Veteran ability"
+  },
+  "gear": {
+    "load": {
+      "light": "light",
+      "normal": "normal",
+      "heavy": "heavy"
+    },
+    "load_choice": "load is a choice — tap to change",
+    "new_job": "New job",
+    "new_job_title": "choose your load for the next job: clear marked items, all armor is restored",
+    "new_job_confirm": "Clear all marked items and restore all armor?",
+    "pb": "{{pb}} items",
+    "pb_none": "Playbook items",
+    "common": "Standard items",
+    "none": "Nothing marked.",
+    "load_title": "Load"
+  },
+  "contacts": {
+    "add": "Add friend",
+    "empty": "No friends yet — pick them from the campaign NPCs.",
+    "pick": "Who to add as a friend"
+  },
+  "pick": {
+    "title": "Pick a playbook",
+    "start": "Starting actions: {{acts}}",
+    "change_confirm": "Change the playbook to “{{pb}}”? Action ratings and xp transfer, the starting ability is replaced with the new playbook’s starting ability, and special abilities already earned are kept as Veteran advances.",
+    "keep": "keep the current one"
+  },
+  "steps": {
+    "playbook": "Playbook",
+    "talent": "Special ability",
+    "heritage": "Heritage",
+    "past": "Background",
+    "points": "Actions {{n}}/4",
+    "friends": "Friend and rival",
+    "vice": "Vice",
+    "name": "Name, alias, look",
+    "done": "character is ready"
+  },
+  "builder": {
+    "note": "For every character of this playbook in the campaign. Editing a section replaces the book one, “to the book” restores it.",
+    "talents": "Special abilities",
+    "items": "Playbook items",
+    "common": "Standard items",
+    "stress": "Max stress",
+    "xp": "xp trigger",
+    "xp_ph": "what the character earns playbook xp for",
+    "load_title": "load",
+    "reset_all": "whole playbook to the book",
+    "note_common": "Standard items — shared by every sheet of the campaign.",
+    "reset_all_ask": "Restore every section of this playbook from the book?"
+  },
+  "tabs": {
+    "sheet": "Sheet",
+    "setup": "Setup",
+    "dossier": "Dossier"
+  },
+  "setup_done": "To the sheet",
+  "help": {
+    "stress": "Stress is a special reserve of fortitude and luck. When you resist a consequence, you suffer 6 stress minus the highest die result. Push yourself — take 2 stress for each: add +1d to your roll, add +1 level to your effect, or take action when you’re incapacitated. When you mark your last stress box, you suffer a level of trauma.",
+    "trauma": "When you mark your last stress box, you suffer trauma: circle one of your trauma conditions. You’re taken out of action and come back with 0 stress. Trauma conditions are permanent; you earn xp when you play one to cause trouble. When you mark your fourth trauma condition, you must retire your character to a different life.",
+    "harm": "Record lesser harm in the bottom row, moderate harm in the middle row, severe harm in the top row. You suffer the penalty at the end of the row if any harm recorded in that row applies to the situation at hand. If the row is already filled, the harm moves up to the next available row. If you run out of spaces on the top row, you suffer a catastrophic, permanent consequence.",
+    "load": "For each job, decide what your character’s load will be — it determines how many items you can carry. During the job, fill in any box on your items list to have that item available, up to the maximum load you have chosen."
+  },
+  "rest": "Not taken:",
+  "dos": {
+    "dept": "Hegemonic Department of Public Order",
+    "office": "Inquiry Directorate · Procyon Sector",
+    "registry": "Crew registry",
+    "form": "form I-7",
+    "case": "file {{id}}",
+    "rev": "rev. {{date}}",
+    "grif": "restricted",
+    "photo": "surveillance photo",
+    "aka": "alias “{{alias}}”",
+    "id": {
+      "heritage": "heritage",
+      "past": "former occupation",
+      "role": "crew role"
+    },
+    "stamp": {
+      "free": "At large",
+      "watch": "Under inquiry",
+      "wanted": "Wanted",
+      "intercept": "Intercept order",
+      "closed": "Case closed",
+      "retired": "Retired"
+    },
+    "sec": {
+      "resume": "Summary",
+      "description": "Description",
+      "psy": "Psychological profile",
+      "marks": "Special marks",
+      "wanted": "Warrants",
+      "training": "Training",
+      "ties": "Known associates",
+      "wealth": "Financial standing",
+      "annex": "Attachments",
+      "orgs": "Standing with organizations"
+    },
+    "text": {
+      "summary": "assessment",
+      "look": "physical description",
+      "background": "background report"
+    },
+    "psy": {
+      "traits": "antisocial traits",
+      "leverage": "leverage",
+      "none": "none identified",
+      "observed": "Surveillance notes: {{note}}."
+    },
+    "trait": {
+      "haunted": {
+        "name": "hallucinations",
+        "text": "lapses into visions and memories at the worst moments"
+      },
+      "obsessed": {
+        "name": "obsession",
+        "text": "fixation on a pursuit, a person, a goal or an idea"
+      },
+      "paranoid": {
+        "name": "paranoia",
+        "text": "sees threats everywhere, trusts no one"
+      },
+      "unstable": {
+        "name": "emotional instability",
+        "text": "bursts of rage or despair, impulsive acts"
+      },
+      "reckless": {
+        "name": "disregard for safety",
+        "text": "indifferent to own safety and interests"
+      },
+      "vicious": {
+        "name": "sadistic tendencies",
+        "text": "causes harm without cause or gain"
+      },
+      "cold": {
+        "name": "sociopathy",
+        "text": "emotions and attachments mean nothing"
+      },
+      "soft": {
+        "name": "softness",
+        "text": "sentimental, passive, lacks resolve"
+      }
+    },
+    "vice": {
+      "gambling": {
+        "name": "gambling",
+        "text": "cards, dice, wagers"
+      },
+      "stupor": {
+        "name": "stupor",
+        "text": "drink, drugs, fighting to unconsciousness"
+      },
+      "obligation": {
+        "name": "obligation",
+        "text": "devotion to family, a cause or an organization"
+      },
+      "pleasure": {
+        "name": "pleasure",
+        "text": "entertainment, fine food and drink, indulgence"
+      },
+      "weird": {
+        "name": "the weird",
+        "text": "the Way, Ur artifacts, strange experiments"
+      },
+      "faith": {
+        "name": "faith",
+        "text": "a cult, special rituals"
+      },
+      "luxury": {
+        "name": "luxury",
+        "text": "expensive things and showy entertainment"
+      }
+    },
+    "role": {
+      "muscle": "enforcer",
+      "mechanic": "ship's engineer",
+      "mystic": "Way adept",
+      "speaker": "fixer",
+      "pilot": "pilot",
+      "scoundrel": "gunslinger",
+      "stitch": "medic",
+      "none": "member"
+    },
+    "rec": {
+      "muscle": "do not engage at close quarters without assault team support.",
+      "mechanic": "on arrest, isolate from machinery and terminals.",
+      "mystic": "avoid direct contact; notify the Church of Stellar Flame.",
+      "speaker": "do not negotiate; do not trust statements.",
+      "pilot": "pursue with interceptors only.",
+      "scoundrel": "do not rely on superior numbers.",
+      "stitch": "detain first — patches up wounded accomplices."
+    },
+    "wanted": {
+      "0": "no warrant",
+      "1": "under system police inquiry",
+      "2": "wanted",
+      "3": "arrest warrant issued",
+      "4": "warship intercept ordered"
+    },
+    "heat_high": "illegal activity noted",
+    "all_systems": "all systems",
+    "wanted_none": "not listed",
+    "crew_case": "case filed against the crew of the {{ship}}",
+    "tie": {
+      "friend": "trusted contact",
+      "neutral": "acquaintance",
+      "rival": "hostile"
+    },
+    "ties_k": "associates",
+    "ties_none": "none established",
+    "life": "lifestyle",
+    "tier": {
+      "0": {
+        "name": "destitute",
+        "text": "no means, no prospects"
+      },
+      "1": {
+        "name": "poor",
+        "text": "a shack of one's own"
+      },
+      "2": {
+        "name": "modest means",
+        "text": "a small house or flat with some comforts"
+      },
+      "3": {
+        "name": "wealthy",
+        "text": "a fine home with luxuries"
+      }
+    },
+    "threat": {
+      "0": "low",
+      "1": "moderate",
+      "2": "high",
+      "3": "extreme"
+    },
+    "res": {
+      "who": "{{name}}{{alias}}, {{role}} aboard the {{ship}}.",
+      "who_noship": "{{name}}{{alias}}, crew {{role}}.",
+      "alias": " (“{{alias}}”)",
+      "origin": "Heritage: {{heritage}}.",
+      "origin_past": "Heritage: {{heritage}}; former occupation: {{past}}.",
+      "past": "Former occupation: {{past}}.",
+      "psy": "Psychological profile",
+      "psy_none": "No psychological deviations identified.",
+      "leverage": "Leverage",
+      "strong": "Strengths",
+      "untrained": "Training unconfirmed.",
+      "heat": "Linked to illegal activity",
+      "wanted": "Warrants",
+      "wanted_none": "No warrants on file.",
+      "threat": "Threat level",
+      "rec": "Recommendation",
+      "orgs": "Standing with organizations",
+      "served": "Jobs on record in the interest of",
+      "secret": {
+        "0": "Grounds: order No. {{n}}-S “On ██████ ████████”.",
+        "1": "Confirmed by source “███████”.",
+        "2": "Part of the file seized by order of ████████ ██████.",
+        "3": "Named in case No. {{n}}/██ in connection with ████████ on ██████.",
+        "4": "Agent reports indicate contact with ██████ ████████.",
+        "5": "Previously named in ████████ ██████ materials.",
+        "6": "Records for the period ████–████ are classified.",
+        "7": "Inquiry to ██████ ████ of ███.██ went unanswered.",
+        "8": "Per report No. {{n}}, a link to ██████████ is established.",
+        "9": "Access to ███████ materials only with the Director's clearance.",
+        "10": "Surveillance under line “██████” continues."
+      },
+      "etc": "etc.",
+      "noname": "Unidentified person"
+    },
+    "investigators": [
+      "I. Vale",
+      "R. Okasso",
+      "T. Merin",
+      "D. Rostan",
+      "E. Quill",
+      "K. Sato",
+      "L. Varro",
+      "M. Corvin",
+      "S. Tenn",
+      "Y. Halstrom",
+      "N. Averin",
+      "O. Brass"
+    ],
+    "ranks": [
+      "Investigator",
+      "Senior Investigator",
+      "Investigator 2nd class",
+      "Inspector"
+    ],
+    "annex": {
+      "assets": "Inventory of assets and property",
+      "contacts": "Log of recent contacts",
+      "watch": "Surveillance reports",
+      "money": "Statement of financial transactions",
+      "mail": "Intercepted correspondence",
+      "medical": "Medical assessment"
+    },
+    "annex_locked": "access restricted",
+    "annex_pp": "{{n}} pp.",
+    "redacted": "classified",
+    "stance": {
+      "-3": "armed confrontation",
+      "-2": "hostile relations",
+      "2": "business ties",
+      "3": "affiliation"
+    },
+    "served": "jobs done in their interest",
+    "deeds_one": "{{count}} job",
+    "deeds_other": "{{count}} jobs",
+    "orgs_k": "organizations",
+    "orgs_none": "no significant ties established",
+    "annex_secret": {
+      "0": "Order No. {{n}}-S “On ███████ ██████”",
+      "1": "Report of agent “██████”",
+      "2": "Special folder ██████████",
+      "3": "Cipher telegram No. {{n}} ████ ███",
+      "4": "Commission finding ███ on case ███████",
+      "5": "Interrogation record ██████ ████████",
+      "6": "Alert No. {{n}} (████████)",
+      "7": "Memo from ██████ department on ████████",
+      "8": "Correspondence with ████████ ██████",
+      "9": "Seizure report ██████ of ███.██",
+      "10": "List of persons ████████ ██████",
+      "11": "Transmission log on ███.█ band"
+    },
+    "annex_seized": {
+      "0": "seized",
+      "1": "top secret",
+      "2": "destroyed",
+      "3": "archived at ████"
+    },
+    "train": {
+      "0": "none on record",
+      "1": "basic",
+      "2": "competent",
+      "3": "professional"
+    },
+    "mark": {
+      "muscle": {
+        "unique": "Witnesses confirm feats of near-superhuman strength. Known to take on armed groups hand-to-hand without support.",
+        "wrecking_crew": "A name known along the docks. Fights at close quarters with exceptional ferocity; property damage per incident above average.",
+        "ready_for_anything": "Ambushes fail: every attempt has met a response prepared in advance.",
+        "scary": "Witnesses refuse to testify. Presence alone is intimidating; threats are, as a rule, carried out.",
+        "backup": "Works as backup in crew operations: covers, clears the way, steadies accomplices.",
+        "battleborn": "Extensive combat experience. Stays cool under fire and walks away from blows that should have been decisive.",
+        "bodyguard": "Shields accomplices with own body. Takes wounds with no visible effect.",
+        "predator": "Targets the weak and the vulnerable. Gathers intelligence on a target’s weaknesses before striking.",
+        "flesh_wound": "Wounds that should mean a hospital bed heal within days. Does not seek medical treatment."
+      },
+      "mechanic": {
+        "unique": "Repairs and cracks machinery on the move with whatever is at hand. Reads blueprints faster than staff engineers.",
+        "bailing_wire_and_mech_tape": "The crew’s ship runs on makeshift repairs. No spare parts bought through official channels.",
+        "analyst": "Traces hacked systems back to their owners and their core. Intrusions leave next to no trace in the logs.",
+        "mechanics_heart": "Wins over even hardened criminals. Under questioning, witnesses often speak up in defence.",
+        "construct_whisperer": "Treats machines and robots as if they were alive. Devices assembled carry non-standard modifications.",
+        "fixed": "Equipment failures don’t slow the crew down: breakdowns get fixed mid-operation.",
+        "junkyard_hunter": "Frequents scrapyards and chop shops. Parts salvaged there are as good as factory-made.",
+        "overclock": "Ship systems run above rated specifications. Modifications uncertified.",
+        "hacker": "Suspected in a series of breaches of secured networks. Electronic trails lead elsewhere."
+      },
+      "mystic": {
+        "unique": "Practises the forbidden teachings of the Way. Unnaturally calm in a crisis.",
+        "kinetics": "Recorded moving objects without physical contact and bursts of speed beyond human ability.",
+        "psy_dancing": "Witnesses change their statements after contact; memories of the encounter are vague or missing.",
+        "warded": "Mystic attacks and artifacts fail to take effect.",
+        "way_shield": "Witnesses describe blaster shots stopped in midair and sent back at the shooter.",
+        "center": "Withdraws regularly to meditate. Reports troubling visions afterwards.",
+        "psy_blade": "Wields a blade of pure energy that cuts through any metal or armor not protected by a shield.",
+        "sundering": "Mass mental casualties recorded in the vicinity: fainting, bleeding, memory loss.",
+        "visions": "Holds knowledge of places and people beyond any access. Source of the leak not established."
+      },
+      "speaker": {
+        "unique": "Passes for a law-abiding citizen. Deflects suspicion from the crew and acquires useful resources with ease.",
+        "favors_owed": "Has done favours for many people of influence; debts are repaid in information and resources.",
+        "player": "Attempts to deceive in conversation fail every time.",
+        "disarming": "Defuses conflicts with words. Opponents often leave negotiations as allies.",
+        "infiltrator": "Bypasses security systems of any grade without raising an alarm.",
+        "heart_to_heart": "The crew’s informal leader: accomplices come for advice and follow it.",
+        "old_friends": "Contacts in every port of the sector. The circle grows with each visit.",
+        "subterfuge": "Under suspicion repeatedly, never detained. Statements are convincing and impossible to verify.",
+        "purpose": "Acts with purpose despite superior opposition and wounds. Does not yield to pressure."
+      },
+      "pilot": {
+        "unique": "Exceptional piloting skills. Outruns interceptors at top speed.",
+        "keen_eye": "Never misses, ship’s guns included. Every witness remarks on the sharp eye.",
+        "punch_it": "Takes reckless risks in hopeless situations — and gets away clean.",
+        "hedonist": "Lives a life of excess; vices open doors to useful people and information.",
+        "commander": "Directs the crew like a military unit. In combat the group fights like a larger force.",
+        "leaf_on_the_wind": "Flies manoeuvres at the edge of the possible, at clear personal risk.",
+        "exceed_specs": "Burns out the ship’s own systems to get results. Damage is repaired later.",
+        "side_job": "Picks up odd jobs in port; sources of income undeclared.",
+        "traveler": "At home in alien cultures; maintains contacts among xenos."
+      },
+      "scoundrel": {
+        "unique": "The crew enjoys inexplicable luck. Coincidences in its favour are documented consistently.",
+        "never_tell_me_the_odds": "Takes on hopeless odds — and wins.",
+        "devils_own_luck": "Walks out of firefights without a scratch. Cannot be held: talks the way out or vanishes.",
+        "ask_questions_later": "Quickly works out in conversation who stands to gain.",
+        "when_the_chips_are_down": "In a crisis, slips the consequences again and again.",
+        "shoot_first": "Opens fire without warning, usually from cover or ambush. No one has been faster yet.",
+        "daredevil": "A taste for needless risk. Turns desperate situations to advantage.",
+        "i_know_a_guy": "An informant in every port; details of upcoming jobs are known in advance.",
+        "tenacious": "Disabling wounds do not stop the subject. Resists arrest to the very end."
+      },
+      "stitch": {
+        "unique": "Medical training confirmed. Applies that knowledge far beyond medicine.",
+        "physicker": "Forensic skills: reconstructs events from wounds and bodies. Wounded accomplices recover unusually fast.",
+        "welcome_anywhere": "Posing as a doctor, goes where others cannot. Aid to the wounded opens any door.",
+        "moral_compass": "Follows conscience even at personal cost. Motives are not tied to profit.",
+        "under_pressure": "Serious wounds among the crew cause no panic; works only calmer afterwards.",
+        "patch": "Treats injuries mid-operation; wounded accomplices keep going.",
+        "combat_medic": "Operates under fire. Composure on the battlefield confirmed by witnesses.",
+        "dr_strange": "Studies Precursor artifacts and mystic phenomena with no visible harm. The Church of Stellar Flame has been notified.",
+        "book_learning": "Speaks many languages; exceptionally well-read. Makes use of archives and libraries."
+      }
+    }
+  }
+}

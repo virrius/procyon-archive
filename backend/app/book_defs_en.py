@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from .book_sheets_en import CHAR_SHEET, PLAYBOOK_SHEETS  # noqa: F401 — character playbooks
+
 SHIP_SIZES: list[str] = ["personal", "freighter", "corvette", "frigate", "dreadnought"]
 
 

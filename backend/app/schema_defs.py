@@ -19,6 +19,7 @@ from .i18n import tr, twin_lang
 # модуль загружен на обоих языках (см. langpack): язык — из имени модуля
 LANG = twin_lang(__name__)
 PROCYON, SHIP_SIZES, SHIP_TYPES = book(LANG).PROCYON, book(LANG).SHIP_SIZES, book(LANG).SHIP_TYPES
+PLAYBOOK_SHEETS, CHAR_SHEET = book(LANG).PLAYBOOK_SHEETS, book(LANG).CHAR_SHEET
 
 T, TA, SEL, MULTI, REF = "text", "textarea", "select", "multi", "ref"
 # у REF в kinds — виды карточек, из которых выбирают; значение — id карточки
@@ -45,6 +46,7 @@ VICES = [
     "Азартные игры", "Беспамятство", "Долг", "Наслаждения", "Потустороннее",
     "Религия", "Роскошь",
 ]
+PASTS = [p["name"] for p in CHAR_SHEET["pasts"]]
 # слух и работа — одно и то же дело на разных стадиях зрелости
 JOB_TYPES = ["rumor", "job"]
 
@@ -71,13 +73,16 @@ KINDS: dict[str, dict] = {
         "fields": [
             f("playbook", SEL, options=PLAYBOOKS),
             f("heritage", SEL, options=HERITAGES),
+            f("past", SEL, options=PASTS),
             f("system", SEL, options=SYSTEMS),
             f("vice", MULTI, options=VICES, max=2),
             f("trauma", MULTI, options=TRAUMAS),
-            f("gm_appearance", TA),
+            f("look"),
             f("background", TA),
         ],
     },
+    # stress / harm / actions / xp / talents / items / contacts / custom лежат в том же fields,
+    # их рисует бланк персонажа (components/charsheet), а не общая форма
     "npc": {
         "statuses": ["active", "blocked", "dead", "unknown"],
         "fields": [

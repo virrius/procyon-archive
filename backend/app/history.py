@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from sqlalchemy.orm import Session
 
-from .models import CampaignMember, Event
+from .models import CampaignMember, Event, now
 from .visibility import Viewer
 
 SNAP_LEN = 4000  # снимок текста в журнале: полотна режем, лента не архив
 TITLE_LEN = 200
 DETAIL_LEN = 400
+# автосохранение бланка: правки одного автора подряд по одной карточке — одна строка ленты
+MERGE_WINDOW = timedelta(minutes=10)
 
 
 def _short(val: Any) -> Any:
@@ -71,8 +74,12 @@ def log(
     visibility: str = "",
     before: dict | None = None,
     after: dict | None = None,
+    merge: bool = False,
 ) -> None:
-    """Строка журнала. Коммитит вызывающий — событие идёт той же транзакцией."""
+    """Строка журнала. Коммитит вызывающий — событие идёт той же транзакцией.
+    `merge` — дописать в прошлую строку той же карточки, если она того же автора и свежая."""
+    if merge and target_id and _merged(db, v, source, action, target_id, title, before, after):
+        return
     db.add(
         Event(
             campaign_id=v.campaign_id,
@@ -90,3 +97,24 @@ def log(
             after=snapshot(after),
         )
     )
+
+
+def _merged(db: Session, v: Viewer, source: str, action: str, target_id: str,
+            title: str, before: dict | None, after: dict | None) -> bool:
+    last = (db.query(Event)
+            .filter(Event.campaign_id == v.campaign_id, Event.source == source,
+                    Event.target_id == target_id)
+            .order_by(Event.created_at.desc()).first())
+    if (not last or last.action != action or last.created_at < now() - MERGE_WINDOW
+            or last.actor_member_id != (v.member_id or None)
+            or last.by_gm != (v.is_real_gm and not v.acting_as)):
+        return False
+    merged_before = {**snapshot(before), **(last.before or {})}
+    merged_after = {**(last.after or {}), **snapshot(after)}
+    if merged_before == merged_after:
+        db.delete(last)
+        return True
+    last.before, last.after = merged_before, merged_after
+    last.target_title = (title or last.target_title)[:TITLE_LEN]
+    last.created_at = now()
+    return True

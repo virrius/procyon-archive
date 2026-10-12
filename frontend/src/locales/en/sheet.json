@@ -1,0 +1,33 @@
+{
+  "flag": {
+    "friend": "friend",
+    "neutral": "neutral",
+    "rival": "rival"
+  },
+  "flag_cycle": "neutral → friend → rival",
+  "contact_drop": "remove from the list",
+  "card_na": "card unavailable",
+  "npc_na": "NPC not accessible",
+  "npc_search": "search NPCs by name…",
+  "marked_of": "marked of available",
+  "of": "{{value}} of {{n}}",
+  "tick": "mark",
+  "untick": "unmark",
+  "cancel": "cancel",
+  "more": "more",
+  "builder": {
+    "own": "custom",
+    "default": "from the book",
+    "add_row": "add row",
+    "reset_title": "restore the book section",
+    "reset": "to the book",
+    "empty": "Empty — add a row.",
+    "name_ph": "name",
+    "cost_title": "cost in upgrades",
+    "text_ph": "description",
+    "del_row": "delete row",
+    "reset_ask": "Restore “{{name}}” from the book? Custom rows of this section will be lost.",
+    "cost": "cost"
+  },
+  "rest": "Not taken:"
+}

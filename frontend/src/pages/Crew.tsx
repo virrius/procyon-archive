@@ -9,6 +9,7 @@ import ShipSheet from '../components/ShipSheet'
 import EntityPicker, { Thumb } from '../components/EntityPicker'
 import RelationsBoard from '../components/RelationsBoard'
 import Team from './Characters'
+import CharacterSheet from '../components/charsheet/CharacterSheet'
 import * as EntityGalleryMod from '../components/EntityGallery'
 import { parseStamp, stamp } from '../components/WorldTime'
 import '../styles.mail.css'
@@ -42,7 +43,7 @@ export default function Crew() {
       {!['team', 'jobs', 'items'].includes(sub) && <h1>{t(entry[1])}</h1>}
 
       {sub === 'ship' && <ShipTab />}
-      {sub === 'team' && <Team cid={parts[2]} />}
+      {sub === 'team' && (parts[2] ? <CharacterSheet key={parts[2]} id={parts[2]} /> : <Team />)}
       {sub === 'relations' && <RelationsBoard />}
       {sub === 'mail' && <MailTab />}
       {sub === 'jobs' && (

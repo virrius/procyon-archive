@@ -1,57 +1,65 @@
-"""Локальный воркер генерации картинок: поллит Procyon Archive за задачами,
-рисует локальным ComfyUI (Z-Image-Turbo) столько вариантов, сколько просит
-задача (портрет — 4, кадр локации — 1), шлёт кандидатов обратно.
-
-Умеет два вида заявок: txt2img (с нуля) и inpaint (перерисовать область готовой
-картинки по маске — тоже 4 варианта).
-
-Запуск:
-    PA_SERVER_URL=https://<host> PA_WORKER_TOKEN=<токен> python gen_worker.py
-"""
+"""Воркер картинок Procyon Archive: берёт заявки с сервера, рисует в локальном ComfyUI
+(Z-Image-Turbo), отдаёт кандидатов. Заявки — txt2img и inpaint. Запуск — README.md."""
 
 from __future__ import annotations
 
+import argparse
 import io
 import os
 import random
+import subprocess
+import sys
 import threading
 import time
+from pathlib import Path
 
 import requests
 
-SERVER = os.environ["PA_SERVER_URL"].rstrip("/")
-TOKEN = os.environ["PA_WORKER_TOKEN"]
+HERE = Path(__file__).resolve().parent
+
+
+def load_env() -> None:
+    """KEY=VALUE из .env рядом с воркером или уровнем выше; окружение важнее."""
+    for f in (HERE / ".env", HERE.parent / ".env"):
+        if f.is_file():
+            for line in f.read_text(encoding="utf-8").splitlines():
+                key, sep, value = line.partition("=")
+                key = key.strip()
+                if sep and key and not key.startswith("#") and value.strip():
+                    os.environ.setdefault(key, value.strip())
+
+
+load_env()
+SERVER = os.environ.get("PA_SERVER_URL", "").rstrip("/")
+TOKEN = os.environ.get("PA_WORKER_TOKEN", "")
 COMFY = os.environ.get("COMFY_URL", "http://127.0.0.1:8188").rstrip("/")
+HEADERS = {"Authorization": f"Bearer {TOKEN}"}
+
 POLL_SECONDS = 4
 HEARTBEAT_SECONDS = 10
 CANDIDATES = 4
-# отдача пачки кандидатов вверх по домашнему каналу: минуты, а не секунды
+# пачка PNG по домашнему аплинку — минуты
 UPLOAD_TIMEOUT = 600
 UPLOAD_TRIES = 3
-# второй проход: перерисовать кусок целиком, чтобы свести предмет с кадром по
-# манере и свету. Выше 0.4 начинает менять сам предмет, ниже 0.25 не сводит
+# второй проход inpaint сводит предмет с кадром; выше 0.4 меняет сам предмет
 HARMONIZE_DENOISE = 0.35
 
-# Z-Image: DiT, энкодер и VAE лежат порознь. Значения сняты на стенде
 ZIMAGE_UNET = "z_image_turbo_int8_convrot.safetensors"
 ZIMAGE_CLIP = "qwen_3_4b_fp8_mixed.safetensors"
-ZIMAGE_VAE = "z_image_ae.safetensors"
+ZIMAGE_VAE = "ae.safetensors"
 ZIMAGE_STEPS = 8
 ZIMAGE_SHIFT = 3.0
 
-# что показывать в плашке воркера: имя весов, которыми он рисует на самом деле
-SHOWN_MODEL = f"{ZIMAGE_UNET} ({ZIMAGE_STEPS} шагов, cfg 1.0)"
+SHOWN_MODEL = f"{ZIMAGE_UNET} ({ZIMAGE_STEPS} steps, cfg 1.0)"
 SHOWN_INPAINT = f"{ZIMAGE_UNET} + differential diffusion"
 
-HEADERS = {"Authorization": f"Bearer {TOKEN}"}
-
-# что рисуем прямо сейчас — читает heartbeat-тред, пишет основной цикл
+# что рисуем сейчас: пишет основной цикл, читает heartbeat
 CURRENT = {"job_id": None, "progress": None}
+SAVE = "out"  # узел SaveImage, по нему результат ищется в history
 
 
 def heartbeat_loop() -> None:
-    """Отдельный тред: основной цикл на время рендера уходит в ComfyUI на минуты
-    и пинговать не может, а плашка в интерфейсе должна гореть именно тогда."""
+    """Отдельный тред: пока основной цикл ждёт ComfyUI, плашка в интерфейсе должна гореть."""
     while True:
         try:
             requests.get(f"{COMFY}/system_stats", timeout=2).raise_for_status()
@@ -65,20 +73,13 @@ def heartbeat_loop() -> None:
                       "inpaint_checkpoint": SHOWN_INPAINT,
                       "job_id": CURRENT["job_id"], "progress": CURRENT["progress"]},
             )
-        except Exception:  # noqa: BLE001 — сервер недоступен, плашка сама погаснет
+        except Exception:  # noqa: BLE001, S110 — сервер недоступен, плашка погаснет сама
             pass
         time.sleep(HEARTBEAT_SECONDS)
 
 
-SAVE = "out"  # ключ узла SaveImage — по нему забираем результат из history
-
-
 def zimage_base(prompt: str) -> dict:
-    """Загрузчики, кодирование промпта и сдвиг расписания — общие для обоих графов.
-
-    Негатива нет физически: при cfg 1.0 формула guidance вырождается в cond, и
-    безусловная ветвь не считается, поэтому её вход зануляется.
-    """
+    """Загрузчики, промпт и сдвиг расписания. При cfg 1.0 негатив не считается — он нулевой."""
     return {
         "1": {"class_type": "UNETLoader",
               "inputs": {"unet_name": ZIMAGE_UNET, "weight_dtype": "default"}},
@@ -92,75 +93,56 @@ def zimage_base(prompt: str) -> dict:
     }
 
 
+def sampler(seed: int, denoise: float, model: list, latent: list) -> dict:
+    return {"class_type": "KSampler", "inputs": {
+        "seed": seed, "steps": ZIMAGE_STEPS, "cfg": 1.0,
+        "sampler_name": "res_multistep", "scheduler": "simple", "denoise": denoise,
+        "model": model, "positive": ["2", 0], "negative": ["3", 0], "latent_image": latent,
+    }}
+
+
 def workflow(prompt: str, width: int, height: int, seed: int) -> dict:
-    """Кадр с нуля: 8 шагов, cfg 1.0, res_multistep по simple."""
     g = zimage_base(prompt)
     g.update({
         "4": {"class_type": "EmptySD3LatentImage",
               "inputs": {"width": width, "height": height, "batch_size": 1}},
-        "5": {"class_type": "KSampler", "inputs": {
-            "seed": seed, "steps": ZIMAGE_STEPS, "cfg": 1.0,
-            "sampler_name": "res_multistep", "scheduler": "simple", "denoise": 1.0,
-            "model": ["ms", 0], "positive": ["2", 0], "negative": ["3", 0],
-            "latent_image": ["4", 0],
-        }},
+        "5": sampler(seed, 1.0, ["ms", 0], ["4", 0]),
         "6": {"class_type": "VAEDecode", "inputs": {"samples": ["5", 0], "vae": ["11", 0]}},
-        SAVE: {"class_type": "SaveImage",
-               "inputs": {"filename_prefix": "job", "images": ["6", 0]}},
+        SAVE: {"class_type": "SaveImage", "inputs": {"filename_prefix": "job", "images": ["6", 0]}},
     })
     return g
 
 
 def inpaint_workflow(prompt: str, source: str, mask: str, seed: int, denoise: float) -> dict:
-    """Перерисовать область: исходник и маска уже лежат во входной папке ComfyUI.
-
-    Отдельной inpaint-модели нет, поэтому область держит DifferentialDiffusion:
-    серое значение маски решает, на каком шаге пиксель перестанет быть
-    зафиксированным, и жёсткого стыка не возникает. Маска приходит с сервера уже
-    размытой по кромке — градиент, на котором это держится, есть.
-
-    На выходе ImageCompositeMasked с исходником: VAE прогоняет весь кадр, и
-    незакрашенное иначе поедет по цвету. Затем проход-гармонизация: первый проход
-    рисует предмет, не видя красок вокруг, второй перерисовывает его на слабом
-    denoise уже глядя на окружение, и снова composite по маске.
-    """
+    """Перерисовать область. Стык держит DifferentialDiffusion по размытой маске с сервера;
+    composite с исходником — чтобы VAE не сдвинул цвет вне маски; второй проход на слабом
+    denoise сводит предмет с окружением."""
     g = zimage_base(prompt)
     g.update({
+        "dd": {"class_type": "DifferentialDiffusion", "inputs": {"model": ["ms", 0]}},
         "src": {"class_type": "LoadImage", "inputs": {"image": source}},
         "msk": {"class_type": "LoadImageMask", "inputs": {"image": mask, "channel": "red"}},
         "enc": {"class_type": "VAEEncode", "inputs": {"pixels": ["src", 0], "vae": ["11", 0]}},
         "lat": {"class_type": "SetLatentNoiseMask",
                 "inputs": {"samples": ["enc", 0], "mask": ["msk", 0]}},
-        "5": {"class_type": "KSampler", "inputs": {
-            "seed": seed, "steps": ZIMAGE_STEPS, "cfg": 1.0,
-            "sampler_name": "res_multistep", "scheduler": "simple",
-            "denoise": round(denoise, 3), "model": ["dd", 0],
-            "positive": ["2", 0], "negative": ["3", 0], "latent_image": ["lat", 0],
-        }},
+        "5": sampler(seed, round(denoise, 3), ["dd", 0], ["lat", 0]),
         "6": {"class_type": "VAEDecode", "inputs": {"samples": ["5", 0], "vae": ["11", 0]}},
         "mix": {"class_type": "ImageCompositeMasked", "inputs": {
             "destination": ["src", 0], "source": ["6", 0], "x": 0, "y": 0,
             "resize_source": False, "mask": ["msk", 0]}},
         "enc2": {"class_type": "VAEEncode", "inputs": {"pixels": ["mix", 0], "vae": ["11", 0]}},
-        "ks2": {"class_type": "KSampler", "inputs": {
-            "seed": seed + 1, "steps": ZIMAGE_STEPS, "cfg": 1.0,
-            "sampler_name": "res_multistep", "scheduler": "simple",
-            "denoise": HARMONIZE_DENOISE, "model": ["dd", 0],
-            "positive": ["2", 0], "negative": ["3", 0], "latent_image": ["enc2", 0],
-        }},
+        "ks2": sampler(seed + 1, HARMONIZE_DENOISE, ["dd", 0], ["enc2", 0]),
         "dec2": {"class_type": "VAEDecode", "inputs": {"samples": ["ks2", 0], "vae": ["11", 0]}},
         "mix2": {"class_type": "ImageCompositeMasked", "inputs": {
             "destination": ["src", 0], "source": ["dec2", 0], "x": 0, "y": 0,
             "resize_source": False, "mask": ["msk", 0]}},
-        SAVE: {"class_type": "SaveImage",
-               "inputs": {"filename_prefix": "inpaint", "images": ["mix2", 0]}},
-        "dd": {"class_type": "DifferentialDiffusion", "inputs": {"model": ["ms", 0]}},
+        SAVE: {"class_type": "SaveImage", "inputs": {"filename_prefix": "inpaint", "images": ["mix2", 0]}},
     })
     return g
 
 
 def comfy_upload(name: str, data: bytes) -> str:
-    """Положить картинку во входную папку ComfyUI — LoadImage берёт файлы только оттуда."""
+    """Во входную папку ComfyUI. Имя постоянное — перезапись, а не новый файл на заявку."""
     r = requests.post(
         f"{COMFY}/upload/image", timeout=60,
         files={"image": (name, io.BytesIO(data), "image/png")},
@@ -171,29 +153,20 @@ def comfy_upload(name: str, data: bytes) -> str:
 
 
 class JobGone(Exception):
-    """Заявки больше нет на сервере (отмена или сборщик висяков) — пачку бросаем
-    молча, репортить /fail некому."""
+    """Заявку отменили или вернули в очередь — пачку бросаем, /fail не шлём."""
 
 
 def job_state(job_id: str) -> str:
-    """Жива ли заявка: ГМ мог отменить её посреди пачки."""
     try:
         r = requests.get(f"{SERVER}/api/worker/image-jobs/{job_id}/state",
                          headers=HEADERS, timeout=10)
         r.raise_for_status()
         return r.json().get("status") or "gone"
-    except Exception:  # noqa: BLE001 — сеть моргнула: считаем живой и рисуем дальше
+    except Exception:  # noqa: BLE001 — сеть моргнула: считаем живой
         return "claimed"
 
 
 def send_candidates(job_id: str, files: list) -> None:
-    """Отдать кандидатов серверу, пережив медленный или моргнувший канал.
-
-    Четыре PNG в полный кадр — это десятки мегабайт вверх по домашнему аплинку:
-    прежний минутный таймаут срывался ровно здесь, и вся нарисованная пачка
-    пропадала уже после рендера. Файлы читаем один раз и перематываем на каждый
-    заход — иначе повтор ушёл бы пустым.
-    """
     last = None
     for attempt in range(UPLOAD_TRIES):
         for _, (_, buf, _) in files:
@@ -208,21 +181,16 @@ def send_candidates(job_id: str, files: list) -> None:
         except requests.HTTPError as exc:
             code = exc.response.status_code if exc.response is not None else 0
             if code in (404, 409):
-                # заявку отменили или сборщик висяков вернул её в очередь —
-                # повторять бессмысленно, пачка уходит в корзину
                 raise JobGone(f"server says {code} on upload") from exc
             last = exc
-            print(f"[job {job_id}] upload attempt {attempt + 1} failed: {exc}")
-            time.sleep(5)
-        except Exception as exc:  # noqa: BLE001 — сеть, а не заявка: пробуем ещё
+        except Exception as exc:  # noqa: BLE001 — сеть, а не заявка: ещё раз
             last = exc
-            print(f"[job {job_id}] upload attempt {attempt + 1} failed: {exc}")
-            time.sleep(5)
-    raise RuntimeError(f"не удалось отдать кандидатов: {last}")
+        print(f"[job {job_id}] upload attempt {attempt + 1} failed: {last}")
+        time.sleep(5)
+    raise RuntimeError(f"upload failed: {last}")
 
 
 def fetch_blob(job_id: str, what: str) -> bytes:
-    """Исходник и маску отдаёт сервер: они привязаны к заявке, а не к кампании."""
     r = requests.get(
         f"{SERVER}/api/worker/image-jobs/{job_id}/{what}", headers=HEADERS, timeout=60)
     r.raise_for_status()
@@ -233,23 +201,18 @@ def run_graph(graph: dict) -> bytes:
     r = requests.post(f"{COMFY}/prompt", json={"prompt": graph}, timeout=30)
     r.raise_for_status()
     prompt_id = r.json()["prompt_id"]
-
-    # до 15 минут на кандидата: очередь ComfyUI своя, и время в ней тоже идёт. Пока пинг
-    # называет заявку, сервер её не трогает — сдаётся и сообщает о сбое сам воркер
+    # до 15 минут на кандидата, считая очередь ComfyUI
     for _ in range(900):
-        h = requests.get(f"{COMFY}/history/{prompt_id}", timeout=15).json()
-        entry = h.get(prompt_id)
+        entry = requests.get(f"{COMFY}/history/{prompt_id}", timeout=15).json().get(prompt_id)
         if entry:
             status = entry.get("status", {})
             if status.get("status_str") == "error":
                 raise RuntimeError(f"comfyui error: {status}")
-            outputs = entry.get("outputs", {})
-            img_info = next(iter(outputs.get(SAVE, {}).get("images", [])), None)
-            if img_info:
+            img = next(iter(entry.get("outputs", {}).get(SAVE, {}).get("images", [])), None)
+            if img:
                 resp = requests.get(f"{COMFY}/view", params={
-                    "filename": img_info["filename"],
-                    "subfolder": img_info.get("subfolder", ""),
-                    "type": img_info.get("type", "output"),
+                    "filename": img["filename"], "subfolder": img.get("subfolder", ""),
+                    "type": img.get("type", "output"),
                 }, timeout=30)
                 resp.raise_for_status()
                 return resp.content
@@ -260,10 +223,9 @@ def run_graph(graph: dict) -> bytes:
 def handle_job(job: dict) -> None:
     job_id = job["id"]
     prompt = job["prompt"]
-    # строка на кандидата: дубли хаба или та же строка с подсказкой ракурса — их собирает сервер
+    # строка на кандидата собирается на сервере
     variants = job.get("prompts") or [prompt]
-    width = job["width"]
-    height = job["height"]
+    width, height = job["width"], job["height"]
     inpaint = job.get("kind") == "inpaint"
     denoise = float(job.get("denoise") or 1.0)
     count = max(1, min(CANDIDATES, int(job.get("n_images") or CANDIDATES)))
@@ -274,69 +236,98 @@ def handle_job(job: dict) -> None:
     try:
         source = mask = ""
         if inpaint:
-            source = comfy_upload(f"pa_{job_id}_src.png", fetch_blob(job_id, "source"))
-            mask = comfy_upload(f"pa_{job_id}_mask.png", fetch_blob(job_id, "mask"))
+            source = comfy_upload("pa_source.png", fetch_blob(job_id, "source"))
+            mask = comfy_upload("pa_mask.png", fetch_blob(job_id, "mask"))
         render_error = None
+        fixed = int(job.get("seed") or 0)  # 0 — случайный
         for i in range(count):
             if i and job_state(job_id) != "claimed":
                 raise JobGone("canceled on server mid-batch")
             CURRENT["progress"] = f"{i + 1}/{count}"
-            # сид заявки: на нём держится сравнение сборок; ноль — случайный
-            fixed = int(job.get("seed") or 0)
             seed = fixed + i if fixed else random.randint(0, 2**31 - 1)
-            if inpaint:
-                # кадр и композиция заданы исходником: разнообразие даёт только seed,
-                # подсказки вроде «другой ракурс» здесь были бы прямым вредом
-                graph = inpaint_workflow(prompt, source, mask, seed, denoise)
-            else:
-                graph = workflow(variants[i % len(variants)], width, height, seed)
+            graph = (inpaint_workflow(prompt, source, mask, seed, denoise) if inpaint
+                     else workflow(variants[i % len(variants)], width, height, seed))
             try:
                 data = run_graph(graph)
-            except Exception as exc:  # noqa: BLE001 — уже нарисованное дороже падения:
-                # пачка уходит неполной, а не в корзину
+            except Exception as exc:  # noqa: BLE001 — нарисованное отдаём неполной пачкой
                 render_error = exc
                 print(f"[job {job_id}] candidate {i + 1}/{count} failed: {exc}")
                 break
             files.append(("files", (f"candidate_{i}.png", io.BytesIO(data), "image/png")))
         if not files:
-            raise render_error or RuntimeError("не нарисован ни один кандидат")
+            raise render_error or RuntimeError("no candidates drawn")
         send_candidates(job_id, files)
-        tail = f" (без {count - len(files)} из-за: {render_error})" if render_error else ""
+        tail = f" ({count - len(files)} missing: {render_error})" if render_error else ""
         print(f"[job {job_id}] {len(files)} candidates uploaded{tail}")
     except JobGone as gone:
         print(f"[job {job_id}] dropped: {gone}")
-    except Exception as exc:  # noqa: BLE001 — репортим наверх и едем дальше
+    except Exception as exc:  # noqa: BLE001 — репортим и едем дальше
         print(f"[job {job_id}] FAILED: {exc}")
         try:
             requests.post(
                 f"{SERVER}/api/worker/image-jobs/{job_id}/fail",
                 headers=HEADERS, data={"error": str(exc)[:2000]}, timeout=30,
             )
-        except Exception as tell:  # noqa: BLE001 — сервер недоступен: заявку
-            # подберёт серверный сборщик висяков, воркер не должен на этом падать
+        except Exception as tell:  # noqa: BLE001 — заявку подберёт серверный сборщик висяков
             print(f"[job {job_id}] fail report lost: {tell}")
     finally:
         CURRENT.update(job_id=None, progress=None)
 
 
-def main() -> None:
-    print(f"worker up: server={SERVER} comfy={COMFY} "
-          f"dit={ZIMAGE_UNET} steps={ZIMAGE_STEPS} cfg=1.0")
-    threading.Thread(target=heartbeat_loop, daemon=True).start()
-    while True:
+def start_comfy(folder: str) -> subprocess.Popen:
+    """Поднять ComfyUI из его папки (venv, .venv или portable) и дождаться ответа."""
+    root = Path(folder).resolve()
+    python = next((p for p in (
+        root / "venv" / "Scripts" / "python.exe", root / "venv" / "bin" / "python",
+        root / ".venv" / "Scripts" / "python.exe", root / ".venv" / "bin" / "python",
+        root.parent / "python_embeded" / "python.exe",
+    ) if p.is_file()), Path(sys.executable))
+    port = COMFY.rsplit(":", 1)[-1].split("/")[0]
+    log = open(HERE / "comfyui.log", "w", encoding="utf-8")  # noqa: SIM115 — живёт до выхода
+    proc = subprocess.Popen([str(python), "main.py", "--listen", "127.0.0.1", "--port", port],
+                            cwd=root, stdout=log, stderr=subprocess.STDOUT)
+    print(f"starting ComfyUI from {root} (log: worker/comfyui.log)")
+    while proc.poll() is None:
         try:
-            # caps — чтобы сервер не отдал заявку на правку воркеру старой версии:
-            # тот нарисовал бы по её промпту обычную картинку и подменил кадр
-            r = requests.get(f"{SERVER}/api/worker/image-jobs/next",
-                             params={"caps": "inpaint"}, headers=HEADERS, timeout=15)
-            r.raise_for_status()
-            job = r.json().get("job")
-            if job:
-                handle_job(job)
-                continue
-        except Exception as exc:  # noqa: BLE001
-            print(f"poll error: {exc}")
-        time.sleep(POLL_SECONDS)
+            requests.get(f"{COMFY}/system_stats", timeout=2).raise_for_status()
+            return proc
+        except Exception:  # noqa: BLE001
+            time.sleep(2)
+    sys.exit(f"ComfyUI exited with code {proc.returncode}, see worker/comfyui.log")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Procyon Archive image worker")
+    ap.add_argument("--comfy", metavar="DIR", help="start ComfyUI from this folder and stop it on exit")
+    args = ap.parse_args()
+    if not SERVER or not TOKEN:
+        sys.exit("Set PA_SERVER_URL and PA_WORKER_TOKEN (environment or worker/.env)")
+    comfy = start_comfy(args.comfy) if args.comfy else None
+    print(f"worker up: server={SERVER} comfy={COMFY} dit={ZIMAGE_UNET} steps={ZIMAGE_STEPS} cfg=1.0")
+    threading.Thread(target=heartbeat_loop, daemon=True).start()
+    try:
+        while True:
+            try:
+                # caps: заявки inpaint не уйдут воркеру старой версии
+                r = requests.get(f"{SERVER}/api/worker/image-jobs/next",
+                                 params={"caps": "inpaint"}, headers=HEADERS, timeout=15)
+                r.raise_for_status()
+                job = r.json().get("job")
+                if job:
+                    handle_job(job)
+                    continue
+            except Exception as exc:  # noqa: BLE001
+                print(f"poll error: {exc}")
+            time.sleep(POLL_SECONDS)
+    except KeyboardInterrupt:
+        print("stopping")
+    finally:
+        if comfy:
+            comfy.terminate()
+            try:
+                comfy.wait(15)
+            except subprocess.TimeoutExpired:
+                comfy.kill()
 
 
 if __name__ == "__main__":

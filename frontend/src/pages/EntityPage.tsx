@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, c, isPublicView, type Dict, thumb, thumbFull } from '../api'
+import { api, c, isPublicView, type Dict, thumb } from '../api'
 import { useApp, useAsync } from '../ctx'
 import {
-  asList, Chip, ClockDial, ColorPicker, Modal, MultiPick, Select, VisChip, rankRoman, statusTone,
+  asList, ColorPicker, Modal, MultiPick, Select, VisChip, rankRoman, statusTone,
 } from '../ui'
 import { IconImage, IconPlus, IconSpark } from '../components/icons'
-import { ClockMoves, useClockMoves } from '../components/ClockMoves'
 import CropModal from '../components/CropModal'
 import EntityPicker from '../components/EntityPicker'
 import { FieldEye } from '../components/FieldEye'
@@ -21,7 +20,10 @@ import { ANY_PLAYER, OwnerMenu } from '../components/OwnerMenu'
 import { AffiliationPicker, AffiliationView } from '../components/AffiliationPicker'
 import PasteImage from '../paste'
 import LinksPanel from '../components/LinksPanel'
+import EntityMedia from '../components/EntityMedia'
+import EntityClocks from '../components/EntityClocks'
 import { RecordsPanel } from '../components/RecordsPanel'
+import CharacterSheet from '../components/charsheet/CharacterSheet'
 
 // маршрут ещё умеет /profile,/records,/links,/media — подвкладок больше нет,
 // весь контент рисуется одной страницей, редирект оставлен ради старых ссылок
@@ -161,13 +163,16 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
     )
   }
   if (!e) return <div className="dim">{t('common:loading')}</div>
+  // персонажа ведёт его бланк: своей страницей в разделе команды, поверх доски — в том же окне
+  if (e.kind === 'character') {
+    return inModal ? <CharacterSheet id={id} onClose={onClose} /> : <Navigate to={`/crew/team/${id}`} replace />
+  }
 
   const def: Dict = meta?.kinds?.[e.kind] || {}
   const kindLabel = def.label || L(e.kind) || e.kind
   const [backTo, backLabel] = BACK[e.kind] || ['/database', 'back.database']
   const own: Dict = e.fields || {}
 
-  const isChar = e.kind === 'character'  // отличается только набором полей, не вёрсткой
   // своя принадлежность бессмысленна: локация не стоит в локации, фракция не входит в себя
   const showLoc = e.kind !== 'location'
   const showFac = e.kind !== 'faction'
@@ -182,16 +187,13 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
   // ранг — в шапке справа: у правящего всегда (пустой бледно), у стола — только заданный
   const showRank = !!rankDef && (rankVal !== '' || hidden.has('rank') || (canEdit && (isGM || !hidden.has('rank'))))
 
-  const showAlias = isChar || e.kind === 'npc'
+  const showAlias = e.kind === 'npc'
   const hasStatuses = (def.statuses || []).length > 0
 
-  const classDef: Dict | undefined = (def.fields || []).find((f: Dict) => f.key === 'playbook')
-  const classVal = text(own.playbook)
-  const showClass = !!classDef && (act === 'playbook' || classVal !== '' || hidden.has('playbook'))
 
   // ключ на gm_ сервер вообще не отдаёт столу (strip_gm_fields) — и подписи ему не рисуем
   const defs: Dict[] = (def.fields || [])
-    .filter((f: Dict) => f.key !== 'rank' && f.key !== 'playbook')
+    .filter((f: Dict) => f.key !== 'rank')
     .filter((f: Dict) => isGM || !String(f.key).startsWith('gm_'))
   // пустой список text() отдаёт как «[]» — множество меряем длиной
   const filled = (f: Dict) => (f.type === 'multi' ? asList(own[f.key]).length > 0
@@ -329,7 +331,6 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
   const blanks: [string, string][] = [
     ...(showFac && !showFacField ? [['faction_ids', t('factions')] as [string, string]] : []),
     ...(showLoc && !showLocField ? [['location_ids', locLabel] as [string, string]] : []),
-    ...(classDef && !showClass ? [['playbook', classDef.label] as [string, string]] : []),
     ...defs.filter(f => !shown.includes(f) && !locked(f.key)).map(f => [f.key, f.label] as [string, string]),
   ]
   const short = shown.filter(f => f.type !== 'textarea')
@@ -484,16 +485,6 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
                     {showAlias && e.alias && e.name && <div className="dos-alias">{t('quoted', { s: e.alias })}</div>}
                   </div>}
 
-              {showClass && (
-                <div className={`dos-role${shut('playbook')}`} data-act="playbook">
-                  {canEdit && !locked('playbook')
-                    ? <Select className="ent-class-pick" value={classVal} empty={t('page.playbook_empty')}
-                        options={classDef!.options || []} title={classDef!.label}
-                        optionLabel={o => o} onChange={v => setOwn('playbook', v)} />
-                    : <b>{locked('playbook') ? '?' : classVal || '—'}</b>}
-                  {eye('playbook')}
-                </div>
-              )}
             </div>
 
             {showRank && (
@@ -536,7 +527,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
 
           {(short.length > 0 || showAff) && (
             <section className="dos-sec">
-              <h4 className="dos-sec-t">{isChar ? t('page.sheet') : t('page.details')}</h4>
+              <h4 className="dos-sec-t">{t('page.details')}</h4>
               <div className="dos-facts">
                 {showFacField && (
                   <div className={`dos-fact${shut('faction_ids')}`} data-act="faction_ids">
@@ -595,12 +586,12 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
                 <LinksPanel entityId={id} kind={e.kind} name={e.name} />
               </div>
               <div className="ent-sub col">
-                <Clocks entityId={id} />
+                <EntityClocks entityId={id} />
               </div>
             </div>
             <div className="ent-sub col">
               <h3>{t('page.media')}</h3>
-              <Media entityId={id} bump={bump} readonly={readonly}
+              <EntityMedia entityId={id} bump={bump} readonly={readonly}
                 tail={!readonly && <>
                   <label className="att-add" title={t('page.add_file_tip')}>
                     <input type="file"
@@ -626,7 +617,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
 
       <div className="panel col" style={{ paddingBottom: 18 }}>
         <RecordsPanel entityType="entity" entityId={id}
-          title={isChar ? t('page.records_char') : t('page.records')} />
+          title={t('page.records')} />
       </div>
 
       {genOpen && (
@@ -689,158 +680,5 @@ function Area({ value, rows, placeholder, onSave }: {
     <textarea ref={box} rows={rows || 3} value={v} placeholder={placeholder}
       onChange={ev => setV(ev.target.value)}
       onBlur={() => { if ((value || '') !== v) onSave(v) }} />
-  )
-}
-
-/* --- вложения --------------------------------------------------------------- */
-
-/** Вложения карточки: миниатюры плиткой, снимок разворачивается на весь экран,
- *  свой файл убирает загрузивший, чужой — ГМ. */
-function Media({ entityId, bump, readonly, onChange, onBrush, tail }: {
-  entityId: string; bump: number; readonly: boolean; onChange: () => void
-  onBrush: (a: Dict) => void
-  /** плитки «добавить» в конце сетки, на месте следующего снимка */
-  tail?: ReactNode
-}) {
-  const { isGM, campaign } = useApp()
-  const { t } = useTranslation('entity')
-  const [rows, loading, reload, err] = useAsync<Dict[]>(
-    () => api.get(`${c()}/attachments?target_type=entity&target_id=${entityId}`), [entityId, bump])
-  const [shot, setShot] = useState(-1)
-  const [oops, setOops] = useState('')
-  const atts = rows || []
-  const isImage = (a: Dict) => String(a.mime || '').startsWith('image/')
-  const shots = atts.filter(isImage)
-  const myMemberId = campaign?.my_member_id
-
-  const drop = async (a: Dict) => {
-    const name = a.caption || a.filename || t('page.file')
-    if (!confirm(t('media.delete_confirm', { name }))) return
-    setOops('')
-    try {
-      await api.del(`${c()}/attachments/${a.id}`)
-      reload(); onChange()
-    } catch (ex: any) { setOops(ex?.message || t('media.delete_failed')) }
-  }
-
-  // видимость поштучная: файл остаётся у ГМа, стол его просто не получает
-  const setVis = async (a: Dict, hide: boolean) => {
-    setOops('')
-    try {
-      await api.patch(`${c()}/attachments/${a.id}`, { visibility: hide ? 'gm' : 'crew' })
-      reload(); onChange()
-    } catch (ex: any) { setOops(ex?.message || t('media.vis_failed')) }
-  }
-
-  if (loading && !rows) return <div className="dim">{t('common:loading')}</div>
-  if (err) return <div className="empty">{t('media.unavailable')}</div>
-  if (!atts.length && !tail) return <div className="empty">{t('media.empty')}</div>
-
-  return (
-    <>
-      {oops && <div className="lnk-err">{oops}</div>}
-      <div className="att-grid">
-        {atts.map(a => {
-          const label = a.caption || a.filename || t('page.file')
-          const mine = isGM || (!!myMemberId && a.uploaded_by === myMemberId)
-          const i = shots.indexOf(a)
-          const shut = isGM && a.visibility === 'gm'
-          return (
-            <div key={a.id} className={`att${shut ? ' att-shut' : ''}`} title={label}>
-              <div className="att-box imgbox">
-                {isImage(a)
-                  ? <button type="button" className="att-shot" onClick={() => setShot(i)}
-                      aria-label={t('media.open', { name: label })}>
-                      <img src={thumbFull(a.url, 240, bump)} alt={label} loading="lazy" />
-                    </button>
-                  : <a className="att-shot att-file" href={a.url} target="_blank" rel="noreferrer">
-                      <span className="att-ext">
-                        {String(a.filename || '').split('.').pop()?.slice(0, 4) || t('page.file')}
-                      </span>
-                    </a>}
-                <ImgFlags hidden={shut} />
-                {!readonly && (
-                  <ImgActions small
-                    vis={isGM ? { hidden: shut, onChange: hide => setVis(a, hide) } : undefined}
-                    inpaint={isGM && isImage(a) ? {
-                      title: t('media.inpaint'), onClick: () => onBrush(a),
-                    } : undefined}
-                    remove={mine ? { title: t('media.delete_tip'), onClick: () => drop(a) } : undefined} />
-                )}
-              </div>
-              <span className="att-cap">{label}</span>
-            </div>
-          )
-        })}
-        {tail}
-      </div>
-
-      {shot >= 0 && shots[shot] && (
-        <Lightbox src={shots[shot].url} alt={shots[shot].filename}
-          caption={shots.length > 1
-            ? `${shots[shot].caption || shots[shot].filename} · ${shot + 1}/${shots.length}`
-            : shots[shot].caption || shots[shot].filename}
-          onClose={() => setShot(-1)}
-          onPrev={shots.length > 1 ? () => setShot((shot - 1 + shots.length) % shots.length) : undefined}
-          onNext={shots.length > 1 ? () => setShot((shot + 1) % shots.length) : undefined} />
-      )}
-
-    </>
-  )
-}
-
-/* --- счётчики сущности ------------------------------------------------------ */
-/* --- счётчики сущности ------------------------------------------------------ */
-
-/** Счётчики записи двигаются прямо с карточки, как в базе кампании;
- *  описание, история и правка — в базе. */
-function Clocks({ entityId }: { entityId: string }) {
-  const { L, isGM } = useApp()
-  const { t } = useTranslation('entity')
-  const [rows, loading, reload, err] = useAsync<Dict[]>(
-    () => api.get(`${c()}/clocks?status=&owner_id=${entityId}`), [entityId])
-  const moves = useClockMoves(rows, reload)
-  const list = (rows || [])
-    .filter(cl => cl.owner_type === 'entity' && cl.owner_id === entityId).map(moves.view)
-
-  return (
-    <div className="col">
-      <div className="row">
-        <h3>{t('clocks.title')}</h3>
-      </div>
-
-      {err && <div className="empty">{t('clocks.unavailable')}</div>}
-      {!err && loading && !rows && <div className="dim">{t('common:loading')}</div>}
-      {!err && !loading && list.length === 0 && <div className="empty">{t('clocks.empty')}</div>}
-
-      {!err && list.length > 0 && (
-        <div className="lnk-list clocks-list">
-          {list.map(cl => (
-            <div key={cl.id} className="lnk">
-              <ClockDial segments={cl.segments} filled={cl.filled} size={34}
-                hidden={cl.visibility === 'gm'} color={cl.color} />
-              <div className="lnk-main">
-                <div className="lnk-head">
-                  <Link className="lnk-name" to={`/database/clocks?open=${cl.id}`}
-                    title={t('clocks.open_tip')}>{cl.name}</Link>
-                  {cl.kind && <Chip tone="cyan">{cl.kind}</Chip>}
-                  {cl.status === 'abandoned' && <Chip tone="black">{L(cl.status)}</Chip>}
-                  {cl.status === 'completed' && <Chip tone="green">{L(cl.status)}</Chip>}
-                  {cl.status === 'active' && cl.filled >= cl.segments &&
-                    <Chip tone="amber">{t('clocks.filled')}</Chip>}
-                  {isGM && <VisChip v={cl.visibility} />}
-                </div>
-                <div className="clock-line">
-                  <span className="lnk-sub">{cl.filled}/{cl.segments}</span>
-                  <div className="spacer" />
-                  <ClockMoves cl={cl} moves={moves} />
-                </div>
-                {moves.oops(cl) && <div className="clock-err">{moves.oops(cl)}</div>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   )
 }

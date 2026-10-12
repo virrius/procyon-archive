@@ -1,132 +1,57 @@
-# Генерация картинок: запуск и остановка
+# Image worker
 
-Две независимые части:
+Draws Procyon Archive pictures on your own NVIDIA GPU.
 
-- **Procyon Archive** (docker: db/api/web) — можно держать поднятым всегда, GPU не трогает.
-  Стол играет на сервере `http://<сервер>:5180` (API `:18000`); локальный стек — песочница.
-- **Локальная генерация** (ComfyUI + `gen_worker.py`) — грузит видеокарту, поднимать только
-  когда реально генерируешь, гасить сразу после.
-
-Воркер крутится на домашней машине с GPU и поллит тот Archive, который назван в
-`PA_SERVER_URL` (`F:\scum_n_villainy\.env`) — по умолчанию сервер. Пока воркер не запущен,
-задачи копятся в очереди на сервере и разбираются при следующем старте.
-
-Адрес можно задать разово, аргументом (перебивает `.env`):
-
-```
-start_gen.bat http://localhost:8000
-start_worker_only.bat http://<сервер>:8000
+```mermaid
+flowchart LR
+  A[Procyon Archive] -- job --> W[gen_worker.py]
+  W -- graph --> C[ComfyUI on GPU]
+  C -- image --> W
+  W -- candidates --> A
 ```
 
-Постоянно — правкой `PA_SERVER_URL` в `.env`. Воркер читает адрес на старте: сменил — перезапусти.
+While the worker runs, it takes jobs from the queue. Nothing to switch in the app.
 
-Рисующая модель — Z-Image-Turbo: `z_image_turbo_int8_convrot.safetensors`, энкодер
-`qwen_3_4b_fp8_mixed.safetensors`, VAE `z_image_ae.safetensors`; 8 шагов, cfg 1.0,
-`res_multistep` по simple, `ModelSamplingAuraFlow` со сдвигом 3.0. Всё это константы
-`gen_worker.py`, из окружения воркер берёт только `PA_SERVER_URL`, `PA_WORKER_TOKEN` и,
-по желанию, `COMFY_URL`. Негатива нет: при cfg 1.0 он не участвует в выводе.
+## Requirements
 
-## Правка области (inpaint)
+- NVIDIA GPU, 16 GB VRAM
+- [ComfyUI](https://github.com/Comfy-Org/ComfyUI)
+- Python 3.10+ with `requests` (`pip install -r requirements.txt`)
 
-Второй вид заявки: ГМ закрашивает кистью область на уже сохранённом портрете или кадре
-и пишет, что там должно оказаться. Воркер забирает с сервера подготовленный исходник и
-маску (`/api/worker/image-jobs/<id>/source` и `/mask`, размер кратен 8, кромка маски уже
-размыта), кладёт их во входную папку ComfyUI и рисует 4 варианта — разнообразие только по
-seed, ракурс и композицию держит исходник.
+Models, into ComfyUI's `models/`:
 
-Отдельной модели для этого нет: область правит та же Z-Image, а стык держит штатный узел
-`DifferentialDiffusion`. Он подменяет функцию маски шума — серое значение пикселя решает,
-на каком шаге тот перестаёт быть зафиксированным, поэтому границы «здесь рисуем, здесь нет»
-не существует в принципе. Держится это на градиенте: маска приходит с сервера уже размытой
-по кромке. Модель уже в VRAM, значит чередование «сгенерил — поправил» не тянет за собой
-перезагрузку весов.
+| File | Folder |
+|---|---|
+| [z_image_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_int8_convrot.safetensors) | `diffusion_models` |
+| [qwen_3_4b_fp8_mixed.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b_fp8_mixed.safetensors) | `text_encoders` |
+| [ae.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors) | `vae` |
 
-Сила правки задаёт `denoise` в KSampler: 1.0 («заменить») — область переписывается начисто,
-0.75 («подправить») — форма исходника просвечивает. Латент в обоих случаях заводится через
-`VAEEncode` + `SetLatentNoiseMask`, на выходе `ImageCompositeMasked` с исходником: без него
-VAE прогоняет весь кадр и незакрашенное уезжает по цвету.
+## Setup
 
-Воркер просит задачи с `?caps=inpaint`. Старая версия воркера этого не шлёт и заявок на
-правку не получит — иначе она нарисовала бы по промпту правки обычную картинку и молча
-подменила кадр.
-
-Исходник и маска остаются в `F:\comfyui\input\pa_<job>_src.png` / `_mask.png` — ComfyUI входную
-папку сам не чистит. За кампанию набегают десятки мелких PNG; прибираются руками
-(`Remove-Item F:\comfyui\input\pa_*`), на генерацию их наличие не влияет.
-
-## Запуск генерации
-
-Проще всего — двойным кликом (или из терминала):
-
-```
-F:\scum_n_villainy\worker\start_gen.bat
-```
-
-Открывает два окна консоли: «ComfyUI» и «gen_worker». Токен и адрес Archive берёт сам из
-`F:\scum_n_villainy\.env` (`PA_WORKER_TOKEN=...`, `PA_SERVER_URL=...`), ждёт, пока ComfyUI
-ответит на `/system_stats`, и только потом стартует воркер. В логе воркера должно появиться
-`worker up: server=... comfy=... dit=... steps=8 cfg=1.0` — сверь, что server тот, что ждёшь.
-
-Дальше — в интерфейсе ГМ жмёшь пустое фото карточки → «сгенерировать по описанию».
-Задача встаёт в очередь, воркер её видит за 4 секунды.
-
-Ручной запуск (если `.bat` не подходит):
-
-1. **ComfyUI**:
+1. Server: `.env` next to `docker-compose.yml`, then `docker compose up -d`.
    ```
-   cd F:\comfyui
-   venv\Scripts\python.exe main.py --listen 127.0.0.1 --port 8188
+   PA_WORKER_TOKEN=any-long-random-string
    ```
-   Дождаться в логе `To see the GUI go to: http://127.0.0.1:8188`.
-
-2. **Воркер** (в соседнем терминале, ComfyUI должен уже слушать порт):
+2. Worker: `.env` next to `gen_worker.py`.
    ```
-   cd F:\scum_n_villainy\worker
-   set PA_SERVER_URL=http://<сервер>:8000
-   set PA_WORKER_TOKEN=<токен из .env, PA_WORKER_TOKEN>
-   F:\comfyui\venv\Scripts\python.exe gen_worker.py
+   PA_SERVER_URL=http://<server address>:7726
+   PA_WORKER_TOKEN=<same string>
    ```
 
-Токен воркера — тот же, что передан бэкенду в `PA_WORKER_TOKEN`. На сервере он лежит в
-`/opt/procyon-archive/.env` и совпадает с локальным. Без совпадения токенов `/api/worker/*`
-отвечает 401.
-
-## Остановка (освободить GPU)
+## Run
 
 ```
-F:\scum_n_villainy\worker\stop_gen.bat
+python gen_worker.py --comfy <ComfyUI folder>   # starts ComfyUI, stops it on exit
+python gen_worker.py                            # ComfyUI already running
 ```
 
-Или вручную: закрыть оба окна консоли (Ctrl+C) — либо, если запускалось в фоне без
-консоли:
+Ctrl+C frees the GPU. Jobs wait in the queue until the next start.
+ComfyUI not on `127.0.0.1:8188`: set `COMFY_URL`.
 
-```powershell
-Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
-  Where-Object { $_.CommandLine -match 'comfyui|gen_worker' } |
-  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
-```
+## Problems
 
-Проверить, что VRAM освободился:
-```
-nvidia-smi --query-gpu=memory.used,memory.total --format=csv
-```
-
-Незавершённые задачи (`pending`/`claimed`/`ready`) при остановке воркера никуда не денутся —
-они лежат в БД. При следующем запуске воркер продолжит с той, что была в очереди; ГМ у себя
-в модалке генерации в любой момент видит актуальный статус (открыть/закрыть окно — статус не
-теряется).
-
-## Частые грабли
-
-- **Два воркера разом** — если забыл погасить старый перед новым запуском, оба поллят и
-  генерация иногда достаётся не той версии кода. Перед стартом сверяйся со списком процессов
-  выше (`Where-Object CommandLine -match 'gen_worker'`), должен быть один.
-- **`os error 1455` / «файл подкачки мал»** при загрузке чекпоинта — не хватает pagefile
-  под 16GB-mmap. Разово чинится увеличением pagefile (см. `Get-CimInstance
-  Win32_PageFileSetting`), дальше не повторяется.
-- **Поправили `gen_worker.py`, а картинки прежние** — воркер читает код на старте.
-  После правки перезапусти воркер.
-- **CUDA malloc / VRAM** — если параллельно на этой же машине что-то ещё грузит GPU (игра,
-  видеозвонок), во время генерации возможны подтормаживания у другого
-  процесса. Это ожидаемо — либо не генерировать в моменты, когда GPU нужна для другого,
-  либо мириться с рывком.
+| In the log | Fix |
+|---|---|
+| `poll error: 401` | `PA_WORKER_TOKEN` differs on server and worker |
+| `ComfyUI exited` | see `worker/comfyui.log` |
+| `os error 1455` (Windows) | enlarge the page file |

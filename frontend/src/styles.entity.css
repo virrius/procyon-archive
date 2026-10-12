@@ -117,19 +117,6 @@ input.dos-name-in {
 .ent-aliasbox { flex: 0 1 240px; min-width: 140px; }
 .ent-namebox input, .ent-aliasbox input { width: 100%; margin: 0; }
 
-/* роль — класс персонажа: одна янтарная строка под именем */
-.dos-role {
-  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
-  margin-top: 12px;
-}
-.dos-role b { font-size: 15px; font-weight: 600; letter-spacing: .05em; color: var(--amber); }
-.dos-role .drop { width: auto; }
-.dos-role .drop-btn {
-  padding: 2px 8px; background: var(--surface2); border-color: var(--amber-dim); color: var(--amber);
-  font-size: 15px; font-weight: 600; letter-spacing: .05em; text-transform: none;
-}
-.drop-pop.ent-class-pick { min-width: 170px; }
-
 /* --- печать статуса: оттиск на кадре, а не строка под ним --------------------- */
 
 /* обойма не повёрнута: список вариантов и глаз стоят ровно, кренится только сам штамп */

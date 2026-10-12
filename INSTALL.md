@@ -1,63 +1,52 @@
 # Installing Procyon Archive
 
-What it looks like: https://virrius.github.io/procyon-archive-promo/
+Needs Windows 10/11, macOS or Linux with 8 GB RAM.
 
-You need a computer that can run Docker: Windows 10/11, macOS or Linux, 8 GB of RAM or more.
-Everything runs on that computer; players open it in a browser over your home network.
-
-## 1. Install Docker Desktop
-
-Download it from https://www.docker.com/products/docker-desktop/ and install it with the default
-settings. Restart the computer if it asks you to. Then open Docker Desktop once and leave it running.
-
-## 2. Get Procyon Archive
-
-Open https://github.com/virrius/procyon-archive, press the green **Code** button → **Download ZIP**,
-then unzip it anywhere, for example into `Documents\procyon-archive`.
-
-## 3. Start it
-
-Open a terminal in the unzipped folder:
-
-- **Windows:** open the folder, click the address bar at the top, type `cmd` and press Enter.
-- **macOS:** open Terminal, type `cd `, drag the folder into the window and press Enter.
-
-Then type this and press Enter:
-
-```
-docker compose up -d --build
+```mermaid
+flowchart LR
+  P[Players' browsers] -- http://your-ip:7726 --> D[Your computer: Docker]
 ```
 
-The first start takes 5–10 minutes. Later starts take seconds.
+## Install
 
-## 4. Sign in
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it.
+2. Download `procyon-archive.zip` from [Releases](https://github.com/virrius/procyon-archive/releases/latest) and unzip it.
+3. Open a terminal in the unzipped folder and run:
+   ```
+   docker compose up -d
+   ```
+   Windows: type `cmd` in the folder's address bar. macOS: type `cd `, drag the folder into Terminal.
+4. Open http://localhost:7726, sign in as `admin` / `admin`, set your password.
 
-Open http://localhost:5180 in a browser and sign in as `admin` with the password `admin`.
-It will ask you to set your own password right away.
+The first start downloads about 250 MB. After that Procyon Archive starts with Docker Desktop.
 
-The interface is in English. To switch it to Russian, open **Admin space → Language**.
+## First steps
 
-Then, in **Admin space**:
+| Where | What |
+|---|---|
+| Admin space → Campaigns | create a campaign, or **import from archive** → `demo-silence-over-brekk.zip` |
+| GM space → Accounts | **+ grant access**: a login per player |
+| Admin space → Language | English / Russian |
 
-1. **Campaigns**: type a name into the **new campaign** field and press **Create**. The campaign starts
-   with the sector's factions, places and the Procyon map already in it.
-2. To look around a filled campaign first, press **import from archive** and pick
-   `samples/demo-silence-over-brekk.zip` from the project folder.
+Players on your network open `http://<your computer's IP>:7726`.
 
-Open the campaign. Under **GM space → Accounts**, press **+ grant access** to create a login and
-password for each player, then give them to the players in person.
+## Optional: pictures and news
 
-Players on the same network open `http://<your computer's address>:5180`.
+| Feature | Setup |
+|---|---|
+| Prompts, news | Admin space → LLM: any OpenAI-compatible API |
+| Pictures | Admin space → Images: the same kind of API, or your GPU via the [worker](https://github.com/virrius/procyon-archive/tree/main/worker) |
 
-## Pictures and news (optional)
+## Manage
 
-Everything works without them. To write prompts and news, enter the address and key of any
-OpenAI-compatible service in **Admin space → LLM**. Pictures are drawn either by that kind of
-service (**Admin space → Images**) or by the local worker on your own NVIDIA card with 16 GB of
-memory (see `worker/README.md`).
+Run in the same folder:
 
-## Stopping and updating
+| | |
+|---|---|
+| Stop | `docker compose down` |
+| Update | `docker compose pull` then `docker compose up -d` |
+| Delete all campaigns | `docker compose down -v` |
+| Backup a campaign | Admin space → Campaigns → **export** |
 
-- Stop: run `docker compose down` in the same folder. Your campaigns stay.
-- Update: download the new ZIP, unzip it over the old folder and run `docker compose up -d --build`.
-- Start over from scratch (this **deletes all campaigns**): `docker compose down -v`.
+Port 7726 busy: change it in `docker-compose.yml`.
+From source: `docker compose up -d --build` in a clone of the repository.

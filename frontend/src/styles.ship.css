@@ -2,6 +2,8 @@
    Сплошные поверхности, канты 1px, янтарь — единственный акцент. */
 
 .ss { display: flex; flex-direction: column; gap: 10px; }
+.ss button, .ss summary.ghost { text-transform: none; letter-spacing: 0; }
+.ss button.tiny, .ss summary.tiny { font-size: 12px; }
 
 /* --- панель управления бланком: всегда у верхнего края экрана --- */
 .ss-tools {
@@ -44,30 +46,36 @@
 }
 .ss-line-in { padding: 4px 7px; font-size: 13.5px; }
 textarea.ss-line-in { min-height: 48px; }
-.ss-cap {
-  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--dim2); padding-top: 3px;
+
+/* поля бланка в правке читаются как текст бланка: без коробки, пунктир снизу;
+   рамка проступает при наведении и в правке — режим «Редактировать» не меняет лист */
+.ss .ss-line-in, .ss .drop.ss-size-sel .drop-btn {
+  background: transparent; border: 1px solid transparent; border-bottom: 1px dashed var(--line2);
 }
+.ss .ss-line-in:hover, .ss .drop.ss-size-sel .drop-btn:hover { background: transparent; border-bottom-color: var(--dim2); }
+.ss .ss-line-in:focus, .ss .drop.ss-size-sel.open .drop-btn {
+  border-color: transparent; border-bottom: 1px solid var(--amber); background: rgba(0, 0, 0, .22); outline: none;
+}
+.ss .ss-line-in { padding: 2px 3px 3px; font-size: 14px; }
+.ss textarea.ss-line-in { resize: none; min-height: 0; line-height: 1.45; field-sizing: content; }
+.ss .drop.ss-size-sel { width: auto; min-width: 0; }
+.ss .drop.ss-size-sel .drop-btn {
+  padding: 1px 4px; gap: 8px;
+  font-size: 13px; color: var(--amber);
+}
+/* подписи обычным регистром; ключи в локалях бывают строчными — первая буква поднимается здесь */
+.ss-cap { font-size: 12px; color: var(--dim2); padding-top: 3px; }
+.ss-cap::first-letter { text-transform: uppercase; }
 .ss-none { color: var(--dim2); }
 
 .ss-name { min-width: 0; }
-.ss-name h2 {
-  font-size: 24px; font-weight: 600; letter-spacing: .12em;
-  text-transform: uppercase; line-height: 1.15; overflow-wrap: break-word;
+.ss-name h2, .ss input.ss-name-in {
+  font-family: var(--display); font-size: 34px; font-weight: 600; letter-spacing: 0;
+  text-transform: none; line-height: 1.05; overflow-wrap: break-word;
 }
-.ss-blurb {
-  font-family: var(--util); font-size: 11px; letter-spacing: .09em;
-  text-transform: uppercase; color: var(--dim); margin-top: 3px;
-}
-input.ss-name-in {
-  width: 100%;
-  font-size: 22px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-}
-textarea.ss-blurb-in {
-  width: 100%; margin-top: 4px;
-  font-family: var(--util); font-size: 11px; letter-spacing: .09em;
-  text-transform: uppercase; min-height: 40px;
-}
+.ss input.ss-name-in { width: 100%; padding: 0 3px; }
+.ss-blurb, .ss textarea.ss-blurb-in { font-size: 13.5px; color: var(--dim); margin-top: 4px; }
+.ss textarea.ss-blurb-in { width: 100%; }
 
 /* --- полоса: ранг экипажа и размер корабля --- */
 .ss-strip {
@@ -78,14 +86,10 @@ textarea.ss-blurb-in {
   display: flex; align-items: center; gap: 10px;
   padding: 6px 12px; border-right: 1px solid var(--line);
 }
-.ss-strip-cell.grow { flex: 1; border-right: none; min-width: 0; }
+.ss-strip-cell.grow { flex: 1 0 auto; border-right: none; }
 .ss-strip-cell .ss-cap { padding-top: 0; white-space: nowrap; }
 
-.ss-size-sel { min-width: 150px; text-transform: none; }
-.ss-size {
-  font-family: var(--util); font-size: 11.5px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--dim2); padding: 1px 3px;
-}
+.ss-size { font-size: 13px; color: var(--dim2); padding: 1px 3px; }
 .ss-size.on { color: var(--amber); }
 button.ss-size {
   background: var(--surface); border: 1px solid var(--line);
@@ -103,10 +107,7 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
 
 .ss-lane { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .ss-lane-hd { display: flex; align-items: center; gap: 10px; }
-.ss-lane-t {
-  font-size: 10.5px; font-weight: 600; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--dim); white-space: nowrap;
-}
+.ss-lane-t { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.1; color: var(--txt); white-space: nowrap; }
 .ss-lane-rule { flex: 1; height: 1px; background: var(--line2); min-width: 12px; }
 /* панели в ряду тянутся до общей высоты — пустая карточка не оставляет дыру */
 .ss-lane-b {
@@ -122,18 +123,16 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
 
 /* --- панель --- */
 .ss-p { background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+/* рамка — у панели, внутри только линейка под заголовком */
 .ss-p-hd {
   display: flex; align-items: center; gap: 8px;
-  background: var(--surface2); border-bottom: 1px solid var(--line); padding: 4px 9px;
+  border-bottom: 1px solid var(--line); padding: 6px 10px 5px;
 }
-.ss-p-t {
-  font-size: 10.5px; font-weight: 600; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--txt);
-}
+.ss-p-t { font-size: 14px; font-weight: 600; color: var(--txt); }
 .ss-p-b { padding: 8px 9px; }
 .ss-p-hd .ss-cap { padding-top: 0; white-space: nowrap; }
 .ss-p-hd .ibtn { width: 22px; height: 22px; margin: -2px 0; }
-.ss-contact .ibtn, .sb-hd .ibtn, .sb-row .ibtn { width: 24px; height: 24px; }
+.ss-contact .ibtn, .sb-row .ibtn { width: 24px; height: 24px; }
 .ss-sub { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 5px; }
 .ss-slots { font-family: var(--util); font-size: 11px; color: var(--dim2); }
 .ss-empty { color: var(--dim2); font-size: 12.5px; font-style: italic; }
@@ -173,6 +172,10 @@ button.ss-pip.dmg.on:hover {
 /* --- списки с отметками --- */
 .ss-picks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .ss-pick { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+.ss-rest { font-size: 13px; line-height: 1.5; color: var(--dim2); }
+.ss-rest span { color: var(--dim); }
+.ss-rest span[title] { cursor: help; }
+.ss-picks + .ss-rest { margin-top: 8px; padding-top: 6px; border-top: 1px dotted var(--line); }
 .ss-tick {
   flex: none; display: block; width: 12px; height: 12px; padding: 0; min-width: 0;
   margin-top: 4px; background: #100f0d; border: 1px solid var(--line2);
@@ -209,6 +212,14 @@ button.ss-tick.on:hover { background: #eab458; border-color: #eab458; }
   font-size: 12.5px; color: var(--dim); border-left: 2px solid var(--line2);
   padding: 2px 0 4px 8px; margin: 2px 0 5px 0;
 }
+/* «подробнее ±» — в последней строке описания справа */
+.ss-tmore { display: flex; align-items: last baseline; gap: 16px; }
+.ss-tmore > .ss-text { flex: 1; min-width: 0; }
+.ss-tmore .ss-more-b {
+  flex: none; background: none; border: 0; padding: 0; white-space: nowrap; cursor: pointer;
+  font: 400 12px var(--ui); color: var(--dim2); text-transform: none; letter-spacing: 0;
+}
+.ss-tmore .ss-more-b:hover, .ss-tmore .ss-more-b[aria-expanded="true"] { background: none; color: var(--amber); }
 .ss-cost {
   flex: none; font-family: var(--util); font-size: 10.5px;
   color: var(--amber); border: 1px solid var(--amber-dim); padding: 0 4px;
@@ -246,11 +257,7 @@ button.ss-sq.on.rust:hover { background: #d06a49; border-color: #d06a49; }
 
 /* --- опыт экипажа --- */
 .ss-xp-bar { display: flex; align-items: center; gap: 8px; }
-.ss-why > summary {
-  cursor: pointer; list-style: none; padding: 5px 0 0;
-  font-family: var(--util); font-size: 10.5px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--dim2);
-}
+.ss-why > summary { cursor: pointer; list-style: none; padding: 5px 0 0; font-size: 12.5px; color: var(--dim2); }
 .ss-why > summary::-webkit-details-marker { display: none; }
 .ss-why > summary::after { content: " +"; }
 .ss-why[open] > summary::after { content: " −"; }
@@ -265,15 +272,18 @@ button.ss-sq.on.rust:hover { background: #d06a49; border-color: #d06a49; }
 /* --- знакомые --- */
 .ss-contacts { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0 18px; }
 /* имя с меткой отношения в строке, роль под ними во всю ширину и с переносом */
-.ss-contact { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.ss-contact { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.ss-contact-b { flex: 1; min-width: 0; }
+.ss-contact-img { flex: none; display: block; }
+.ss-contact .lnk-thumb { width: 44px; aspect-ratio: 4 / 5; }
+.ss-contact-img:hover .lnk-thumb { border-color: var(--amber-dim); }
 .ss-contact:last-child { border-bottom: none; }
 .ss-contact-hd { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .ss-contact-hd .ss-nm { min-width: 0; }
 a.ss-nm:hover { color: var(--amber); }
 .ss-role { font-size: 11.5px; color: var(--dim2); overflow-wrap: break-word; }
 .ss-flag {
-  flex: none; font-family: var(--util); font-size: 10.5px; letter-spacing: .06em;
-  text-transform: uppercase; padding: 1px 7px;
+  flex: none; font-size: 12px; padding: 1px 7px;
   background: var(--surface2); border: 1px solid var(--line2); color: var(--dim);
 }
 .ss-flag.friend { color: var(--olive); border-color: #495736; }
@@ -287,16 +297,18 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 .ss-npc-pick { padding: 0 6px 6px; }
 .ss-npc-pick input { font-size: 13px; padding: 5px 8px; }
 
-/* --- конструктор бланка (модалка ГМа) --- */
-.sb { display: flex; flex-direction: column; gap: 8px; }
+/* --- настройка бланков (GM space) --- */
+.sb { display: flex; flex-direction: column; gap: 12px; }
 .sb-note { font-size: 12.5px; color: var(--dim); }
 
-.sb-sect { border: 1px solid var(--line); background: var(--surface2); padding: 7px 9px; }
-.sb-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.sb-sect { border: 1px solid var(--line); border-left: 2px solid var(--line2); background: var(--surface2); padding: 9px 11px 11px; }
+.sb-sect.own { border-left-color: var(--amber); }
+.sb-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; min-height: 22px; }
 .sb-t {
   font-size: 10.5px; font-weight: 600; letter-spacing: .14em;
   text-transform: uppercase; color: var(--txt);
 }
+.sb-n { font-family: var(--util); font-size: 11px; color: var(--dim2); }
 .sb-src {
   font-family: var(--util); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
   color: var(--dim2); border: 1px solid var(--line2); padding: 0 5px;
@@ -304,28 +316,75 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 .sb-src.own { color: var(--amber); border-color: var(--amber-dim); }
 .sb-flat { font-size: 12.5px; color: var(--dim2); }
 
-.sb-group { border: 1px solid var(--line); background: var(--surface); }
-.sb-group > summary {
-  cursor: pointer; padding: 6px 9px; background: var(--surface2);
-  font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+.sb-group { display: flex; flex-direction: column; gap: 8px; }
+.sb-group-t {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+  border-bottom: 1px solid var(--line); padding: 6px 0 5px;
 }
-.sb-group > .sb-sect { border: none; border-top: 1px solid var(--line); background: var(--surface); }
+.sb-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.sb-pair > .sb-sect { min-width: 0; }
 
-.sb-rows { display: flex; flex-direction: column; gap: 4px; }
+/* карточки: поля без рамок, читаются как бланк; рамка проступает при наведении и в правке */
+.sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 8px; }
+.sb-entry {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; align-content: start;
+  gap: 2px 8px; border: 1px solid var(--line); background: var(--surface); padding: 6px 6px 7px 7px;
+  transition: border-color .12s;
+}
+.sb-entry:hover { border-color: var(--line2); }
+.sb-entry:focus-within { border-color: var(--amber-dim); }
+.sb-entry .sb-name, .sb-entry .sb-desc { background: transparent; border-color: transparent; }
+.sb-entry .sb-name:hover, .sb-entry .sb-desc:hover { border-color: var(--line); }
+.sb-entry .sb-name:focus, .sb-entry .sb-desc:focus { border-color: var(--amber-dim); background: #100f0d; outline: none; }
+.sb-entry .sb-name { padding: 3px 5px; font-size: 13.5px; font-weight: 600; letter-spacing: .01em; min-width: 0; }
+.sb-entry .ibtn { width: 24px; height: 24px; opacity: .3; transition: opacity .12s; }
+.sb-entry:hover .ibtn, .sb-entry:focus-within .ibtn { opacity: 1; }
+.sb-desc {
+  grid-column: 1 / -1; display: block; width: 100%; min-height: 0; resize: none; overflow: hidden;
+  padding: 3px 5px; font-size: 12.5px; line-height: 1.5; color: var(--dim);
+}
+.sb-sect > .sb-desc { padding: 6px 8px; min-height: 34px; color: var(--txt); }
+.sb-num { display: inline-flex; align-items: center; gap: 6px; }
+.sb-num-t, .sb-power .ss-cap {
+  font-family: var(--util); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim2);
+}
+
+.sb-addcard, .sb-addrow {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  border: 1px dashed var(--line2); background: transparent; color: var(--dim2);
+  font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+}
+.sb-addcard { justify-content: center; min-height: 58px; }
+.sb-addrow { padding: 6px 9px; margin-top: 2px; }
+.sb-addcard:hover, .sb-addrow:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--surface); }
+.sb-addcard svg, .sb-addrow svg { width: 12px; height: 12px; }
+
+.sb-rows { display: flex; flex-direction: column; gap: 2px; }
 .sb-row { display: flex; align-items: center; gap: 5px; }
-.sb-row input { padding: 4px 7px; font-size: 13px; }
-.sb-name { flex: 0 0 30%; min-width: 120px; }
-.sb-cost { flex: 0 0 56px; text-align: center; }
-.sb-text { flex: 1; min-width: 0; }
+.sb-row .sb-text {
+  flex: 1; min-width: 0; padding: 5px 7px; font-size: 13px;
+  background: transparent; border-color: transparent; border-bottom-color: var(--line);
+}
+.sb-row .sb-text:hover { border-color: var(--line); }
+.sb-row .sb-text:focus { border-color: var(--amber-dim); background: #100f0d; outline: none; }
+.sb-row .ibtn { opacity: .3; transition: opacity .12s; }
+.sb-row:hover .ibtn, .sb-row:focus-within .ibtn { opacity: 1; }
 
-.sb-powers { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
-.sb-power { display: flex; align-items: center; gap: 6px; margin: 0; }
-.sb-power .ss-cap { padding-top: 0; white-space: nowrap; }
-.sb-power input { width: 62px; padding: 4px 6px; text-align: center; }
+.sb-powers { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px 20px; margin-bottom: 6px; }
+.sb-power { display: flex; align-items: center; gap: 9px; }
+.sb-power .ss-cap { width: 72px; padding-top: 0; flex: none; }
+.sb-meter { display: flex; align-items: center; gap: 10px; }
+.sb-meter-n { font-family: var(--util); font-size: 13px; color: var(--amber); min-width: 14px; }
 
+@media (hover: none) {
+  .sb-entry .ibtn, .sb-row .ibtn { opacity: .65; }
+}
+
+/* правки уходят сами — состояние сохранения держим на виду у нижнего края */
 .sb-foot {
-  display: flex; align-items: center; gap: 8px;
-  border-top: 1px solid var(--line); padding-top: 10px; margin-top: 2px;
+  position: sticky; bottom: 0; z-index: 2;
+  display: flex; align-items: center; gap: 8px; min-height: 40px;
+  border-top: 1px solid var(--line); background: var(--surface); padding: 8px 0; margin-top: 2px;
 }
 
 .ss-meter { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
@@ -337,11 +396,9 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 @media (max-width: 860px) {
   /* реноме остаётся справа от названия, только уже */
   .ss-head { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 8px 12px; }
-  .ss-name h2 { font-size: 20px; }
+  .ss-name h2, .ss input.ss-name-in { font-size: 28px; }
   .ss-strip-cell { border-right: none; }
   .ss-dmg { flex-wrap: wrap; }
-  .sb-row { flex-wrap: wrap; }
-  .sb-name { flex: 1 1 100%; }
 }
 
 /* --- телефон: мельче шрифт, снимок под шапкой, данные в две колонки ---------- */
@@ -353,24 +410,20 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-status { gap: 6px; }
   .ss-lane { gap: 5px; }
   .ss-lane-b { gap: 6px; }
-  .ss-lane-t { font-size: 9.5px; letter-spacing: .14em; }
+  .ss-lane-t { font-size: 19px; }
 
   .ss-tools { margin: 0 -12px; padding: 6px 12px; gap: 6px; background: #100f0d; }
   .ss-tools .spacer { display: none; }
   .ss-tools .ss-mode { order: -1; }
   .ss-tools button { padding: 5px 9px; font-size: 10.5px; }
-  /* конструктор ГМа занимает полосу только когда бланк и так в правке */
-  .ss:not(.edit) .ss-build { display: none; }
 
   .ss-head { padding: 8px 9px; gap: 6px 10px; }
-  .ss-name h2 { font-size: 18px; letter-spacing: .07em; }
-  input.ss-name-in { font-size: 17px; letter-spacing: .07em; }
-  .ss-blurb, textarea.ss-blurb-in { font-size: 10px; }
-  textarea.ss-blurb-in { min-height: 34px; }
+  .ss-name h2, .ss input.ss-name-in { font-size: 26px; }
+  .ss-blurb, .ss textarea.ss-blurb-in { font-size: 12.5px; }
   .ss-line-v { min-height: 20px; font-size: 12.5px; }
-  .ss-line-in { font-size: 12.5px; padding: 3px 6px; }
+  .ss .ss-line-in { font-size: 12.5px; padding: 2px 3px 3px; }
   textarea.ss-line-in { min-height: 38px; }
-  .ss-cap { font-size: 9px; letter-spacing: .11em; }
+  .ss-cap { font-size: 11.5px; }
 
   /* полоса ранга и размера: две ячейки в строку, подпись сверху */
   .ss-strip { flex-direction: row; }
@@ -382,7 +435,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 
   /* заголовок раздела: название и счётчик в строке, показатель — строкой ниже */
   .ss-p-hd { flex-wrap: wrap; padding: 4px 7px; gap: 4px 6px; }
-  .ss-p-t { font-size: 9.5px; letter-spacing: .12em; }
+  .ss-p-t { font-size: 13.5px; }
   .ss-p-hd .ss-meter { flex: 1 0 100%; order: 5; }
   .ss-dmg { padding: 4px 7px; gap: 4px 6px; }
   .ss-p-b { padding: 6px 7px; }
@@ -411,14 +464,11 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-sqs { gap: 5px; }
   .ss-shot-img { max-height: 200px; }
   .ss-contact { padding: 5px 0; }
-  .ss-role, .ss-flag { font-size: 10px; }
+  .ss-role, .ss-flag { font-size: 11px; }
   .ss-npc-pick .lnk-hits { max-height: 55vh; }
 
-  /* конструктор ГМа: строки в столбик, поля во всю ширину */
-  .sb-row { gap: 6px; }
-  .sb-cost { flex: 0 0 64px; }
-  .sb-text { flex: 1 1 100%; }
-  .sb-power input { width: 72px; }
+  /* настройка бланков */
+  .sb-sect { padding: 8px 8px 10px; }
   .sb-foot { flex-wrap: wrap; }
 }
 

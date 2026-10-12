@@ -45,6 +45,7 @@ const GM_GROUP: Group = {
   items: [
     ['/gm/accounts', 'accounts'],
     ['/gm/boards', 'boards'],
+    ['/gm/sheets', 'sheets'],
     ['/gm/history', 'history'],
     ['/gm/rules', 'rules'],
     ['/gm/looks', 'looks'],

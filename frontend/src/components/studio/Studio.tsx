@@ -72,7 +72,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
                aspect: s.aspect || startAspect(kind, view), outfit: '', who: '', sex: '', people: s.people || '' }
     }
     const { kind, view } = kindForEntity(entity!)
-    const look = String(entity!.fields?.gm_appearance || entity!.fields?.look || '').trim()
+    const look = String((entity!.kind === 'character' ? entity!.fields?.look : entity!.fields?.gm_appearance) || '').trim()
     const name = String(entity!.name || '').trim()
     const summary = String(entity!.summary || '').trim()
     const said = [summary, look].filter(Boolean).join(' ')

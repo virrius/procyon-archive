@@ -8,5 +8,6 @@
   "password_short": "the password is too short",
   "owner_disable": "the campaign owner can't be disabled",
   "owner_revoke": "the campaign owner's access can't be revoked",
-  "account_locked": "this is an administrator, the campaign owner or a member of other campaigns: you can only remove them from this campaign"
+  "account_locked": "this is an administrator, the campaign owner or a member of other campaigns: you can only remove them from this campaign",
+  "bad_playbook": "unknown playbook: {keys}"
 }

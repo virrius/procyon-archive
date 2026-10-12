@@ -61,8 +61,7 @@
     "free_empty": "— unassigned character —",
     "free": "Unassigned characters",
     "link": "link",
-    "add_create": "+ create",
-    "character": "Character"
+    "add_create": "+ create"
   },
   "relations": {
     "title": "Faction status",
@@ -103,5 +102,15 @@
     "hint": "Heat is marked in the system where the crew left a trail. At 8 it clears, the wanted level goes up by 1, and the excess rolls over. Lower them by laying low.",
     "heat": "heat",
     "wanted": "wanted level"
+  },
+  "summary": {
+    "stress": "Stress",
+    "trauma": "Traumas",
+    "harm": "Harm",
+    "load": "Load",
+    "no_trauma": "none",
+    "unhurt": "unhurt",
+    "no_talents": "No special abilities",
+    "toggle": "Condition"
   }
 }

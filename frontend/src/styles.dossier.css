@@ -1,0 +1,174 @@
+/* «Досье»: личное дело из реестра — машинопись, снимок с метками, штамп статуса.
+   Лист не шире 1200px: слева разделы друг за другом, на широком экране справа плашка-справка. */
+
+.cs-file {
+  width: 100%; max-width: 1200px; margin-inline: auto;
+  background: var(--surface); border: 1px solid var(--line2); font-family: var(--util); font-size: 13px;
+}
+.cs-file-tab {
+  display: flex; gap: 6px 16px; align-items: center; flex-wrap: wrap;
+  padding: 7px 18px; border-bottom: 1px dashed var(--line2); color: var(--dim2); font-size: 11.5px; letter-spacing: .04em;
+}
+.cs-file-tab b { color: var(--dim); font-weight: 400; }
+.cs-file-tab .r { margin-left: auto; }
+.cs-file-b { padding: 18px 20px 20px; }
+.cs-file .rust { color: #e08a70; }
+.cs-file .dim { color: var(--dim2); font-weight: 400; }
+
+/* --- шапка: снимок, имя, анкета клетками --- */
+.cs-file-head {
+  display: grid; grid-template-columns: 190px minmax(0, 1fr); grid-template-rows: auto 1fr;
+  grid-template-areas: "photo who" "photo id"; column-gap: 24px;
+}
+.cs-file-photo {
+  grid-area: photo; margin: 0; position: relative; align-self: start;
+  border: 1px solid var(--line2); padding: 6px 6px 4px; background: #100f0d;
+}
+.cs-file-photo::before, .cs-file-photo::after {
+  content: ""; position: absolute; width: 12px; height: 12px; border: 2px solid var(--amber-dim); pointer-events: none; z-index: 1;
+}
+.cs-file-photo::before { left: -3px; top: -3px; border-right: 0; border-bottom: 0; }
+.cs-file-photo::after { right: -3px; bottom: -3px; border-left: 0; border-top: 0; }
+.cs-file-photo .cs-shot { border: 0; }
+.cs-file-photo figcaption { margin-top: 4px; text-align: center; font-size: 11px; color: var(--dim2); }
+.cs-file-who { grid-area: who; min-width: 0; position: relative; padding-right: 170px; }
+.cs-file-name {
+  margin: 2px 0 0; font-family: var(--display); font-size: 40px; font-weight: 600; line-height: 1.05;
+  color: var(--txt); overflow-wrap: break-word;
+}
+.cs-file-aka { margin-top: 5px; color: var(--dim); }
+.cs-stamp {
+  --st: var(--dim2);
+  position: absolute; right: 2px; top: 0; transform: rotate(-7deg);
+  border: 2px solid var(--st); color: var(--st); padding: 3px 11px;
+  font-weight: 700; font-size: 15px; letter-spacing: .18em; text-transform: uppercase; opacity: .9;
+}
+
+.cs-fid {
+  grid-area: id; align-self: start; margin: 20px 0 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 22px;
+}
+.cs-fid > div { min-width: 0; border-top: 1px solid var(--line2); padding-top: 6px; }
+.cs-fid dt { color: var(--dim2); font-size: 11.5px; letter-spacing: .04em; text-transform: lowercase; }
+.cs-fid dd { margin: 3px 0 0; min-width: 0; }
+.cs-fid dd > b { display: block; color: var(--txt); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.cs-fid-note { margin-top: 4px; font: 12.5px/1.5 var(--ui); color: var(--dim); }
+.cs-fid-note > div { white-space: pre-wrap; overflow-wrap: anywhere; }
+.cs-fid-note > .cut { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.cs-file button.cs-fid-more {
+  display: block; margin: 2px 0 0 auto; padding: 0; background: none; border: 0; cursor: pointer;
+  font: 400 12px var(--ui); color: var(--dim2); text-transform: none; letter-spacing: 0;
+}
+.cs-file button.cs-fid-more:hover, .cs-file button.cs-fid-more[aria-expanded="true"] { background: none; color: var(--amber); }
+
+/* --- разделы дела --- */
+.cs-fsec { min-width: 0; border-top: 1px dashed var(--line2); margin-top: 18px; padding-top: 13px; }
+.cs-fsec h3 {
+  margin: 0 0 11px; font-family: var(--util); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--amber);
+}
+.cs-file .cs-dos { font-family: var(--ui); }
+.cs-file .cs-dos + .cs-dos { margin-top: 12px; }
+.cs-file-tab .grif { color: var(--rust); letter-spacing: .12em; text-transform: uppercase; }
+
+/* резюме — машинописное заключение с подписью дознавателя */
+.cs-resume { margin: 0; max-width: 88ch; font: 400 13px/1.7 var(--util); color: var(--txt); text-wrap: pretty; }
+.cs-resume + .cs-resume { margin-top: 10px; }
+.cs-resume em { font-style: normal; color: #e08a70; }
+.cs-resume b { font-weight: 600; color: var(--amber); }
+.cs-sign { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 12px; color: var(--dim2); }
+.cs-sign .line { flex: 0 0 150px; border-bottom: 1px solid var(--line2); transform: translateY(-3px); }
+.cs-sign .sig {
+  margin-left: -140px; transform: rotate(-4deg); pointer-events: none;
+  font: italic 600 21px var(--display); color: #8f99b8;
+}
+
+/* вымаранное: скрытое от игрока и засекреченные места */
+.cs-red-g { white-space: nowrap; }
+.cs-red, .cs-file .unknown {
+  display: inline-block; height: 1.05em; vertical-align: -.2em; border-radius: 1px;
+  background: #080706; box-shadow: inset 0 0 0 1px #2c2822; color: transparent; user-select: none;
+}
+.cs-file .unknown { width: 22ch; overflow: hidden; }
+
+/* психопрофиль: черты и рычаги давления строками-определениями */
+.cs-file .ss-cap::first-letter { text-transform: none; }
+.cs-fpsy .ss-cap { margin: 0 0 6px; }
+.cs-fpsy .cs-fnote + .ss-cap { margin-top: 14px; }
+
+/* строка справки: подпись, отточие, значение */
+.cs-ff { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.cs-ff + .cs-ff { margin-top: 8px; }
+.cs-ff .k { color: var(--dim2); white-space: nowrap; }
+.cs-ff .dots { flex: 1; border-bottom: 1px dotted var(--line2); transform: translateY(-3px); min-width: 12px; }
+.cs-ff .v { color: var(--txt); font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.cs-file .cs-ff .v.rust { color: #e08a70; }
+.cs-file .cs-ff .v.dim { color: var(--dim2); font-weight: 400; }
+.cs-file .cs-ff .v.top { color: var(--amber); }
+.cs-fsub { margin-top: 3px; text-align: right; font: 12px/1.45 var(--ui); color: var(--dim2); }
+.cs-fsub.rust { color: #e08a70; }
+.cs-fsub.left { margin-top: 10px; text-align: left; }
+.cs-fsub + .cs-ff { margin-top: 10px; }
+.cs-fgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px 26px; }
+.cs-fattr { display: flex; flex-direction: column; gap: 5px; }
+.cs-fattr .cs-ff + .cs-ff { margin-top: 0; }
+.cs-fattr .cs-ff:first-child .v { color: var(--amber); }
+.cs-flvl { display: inline-flex; gap: 2px; vertical-align: middle; }
+.cs-flvl i { display: block; width: 8px; height: 8px; border: 1px solid var(--line2); }
+.cs-flvl { margin-right: 7px; }
+.cs-flvl i.on { background: #d4462c; border-color: #d4462c; }
+
+.cs-fnote { font-family: var(--ui); font-size: 13.5px; line-height: 1.55; color: var(--dim); max-width: 80ch; }
+.cs-fnote + .cs-fnote { margin-top: 8px; }
+.cs-fnote b { color: var(--txt); }
+
+/* приложения — выдуманные документы дела: вид ссылки, доступ закрыт */
+.cs-annex { margin: 0; padding-left: 22px; }
+.cs-annex li { color: var(--dim2); }
+.cs-annex li + li { margin-top: 6px; }
+.cs-annex .doc {
+  color: var(--dim); cursor: not-allowed;
+  text-decoration: underline dotted var(--line2); text-underline-offset: 3px;
+}
+.cs-annex .pp { margin-left: 8px; font-size: 12px; color: var(--dim2); white-space: nowrap; }
+.cs-annex .pp.seized { font-size: 11px; color: var(--rust); letter-spacing: .08em; text-transform: uppercase; }
+.cs-forgs .ss-cap { margin: 12px 0 6px; }
+.cs-forgs > h3 + .ss-cap { margin-top: 0; }
+
+/* --- широкий экран: справка колонкой справа, разделы слева идут подряд --- */
+@media (min-width: 1240px) {
+  .cs-fbody {
+    display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto auto auto 1fr;
+    grid-template-areas: "res data" "desc data" "psy data" "marks data";
+    border-top: 1px dashed var(--line2); margin-top: 20px;
+  }
+  .cs-fbody > .cs-fres { grid-area: res; border-top: 0; margin-top: 0; padding-top: 15px; }
+  .cs-fbody > .cs-fdesc { grid-area: desc; }
+  .cs-fbody > .cs-fpsy { grid-area: psy; }
+  .cs-fbody > .cs-fmarks { grid-area: marks; align-self: start; }
+  .cs-fbody > :is(.cs-fres, .cs-fdesc, .cs-fpsy, .cs-fmarks) { padding-right: 30px; }
+  .cs-fdata { grid-area: data; min-width: 0; border-left: 1px dashed var(--line2); padding-left: 24px; }
+  .cs-fdata > .cs-fsec { margin-top: 20px; }
+  .cs-fdata > .cs-fsec:first-child { border-top: 0; margin-top: 0; padding-top: 15px; }
+  .cs-fdata .cs-fgrid { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .cs-fdata .cs-fattr + .cs-fattr { margin-top: 8px; }
+}
+
+@media (max-width: 1100px) {
+  .cs-fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .cs-file-b { padding: 12px 12px 14px; }
+  .cs-file-tab { padding: 6px 12px; }
+  .cs-file-tab .r { margin-left: 0; }
+  .cs-file-head { grid-template-columns: 128px minmax(0, 1fr); grid-template-areas: "photo who" "id id"; column-gap: 14px; }
+  .cs-file-photo { padding: 4px 4px 3px; }
+  .cs-file-photo figcaption { font-size: 10px; }
+  .cs-file-who { padding-right: 0; }
+  .cs-file-name { font-size: 28px; }
+  .cs-stamp { position: static; display: inline-block; margin-top: 12px; transform: rotate(-4deg); font-size: 12.5px; }
+  .cs-fid { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 14px; }
+  .cs-ff { flex-wrap: wrap; }
+  .cs-fgrid { grid-template-columns: minmax(0, 1fr); }
+}

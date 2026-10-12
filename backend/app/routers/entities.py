@@ -404,7 +404,7 @@ def patch_entity(
     if after:
         journal.log(db, v, "entity", "update", target_id=e.id, title=e.name,
                     entity_id=e.id, detail=e.kind, visibility=e.visibility,
-                    before=before, after=after)
+                    before=before, after=after, merge=True)
     db.commit()
     return public_entity(e, v, peer_names(db, v.campaign_id, [e]))
 

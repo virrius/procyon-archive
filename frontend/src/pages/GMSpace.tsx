@@ -8,10 +8,11 @@ import HistoryFeed from '../components/HistoryFeed'
 import BoardsPage from './BoardsPage'
 import LooksPage from './LooksPage'
 import RulesPage from './RulesPage'
+import SheetsSetup from './SheetsSetup'
 
 // разделы ГМа: полоса вкладок снята, переключает их левое меню — здесь остался
 // только список допустимых адресов
-const SUBS = ['accounts', 'boards', 'history', 'rules', 'looks']
+const SUBS = ['accounts', 'boards', 'sheets', 'history', 'rules', 'looks']
 
 const ROLE_LABEL: Dict = { gm: 'role.gm', player: 'role.player', observer: 'role.observer' }
 const ROLE_TONE: Dict = { gm: 'red', player: 'cyan', observer: 'violet' }
@@ -127,6 +128,8 @@ export default function GMSpace() {
       )}
 
       {tab === 'boards' && <BoardsPage />}
+
+      {tab === 'sheets' && <SheetsSetup />}
 
       {tab === 'history' && <HistoryFeed />}
 
