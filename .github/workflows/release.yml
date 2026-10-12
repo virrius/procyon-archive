@@ -1,9 +1,11 @@
 name: Release
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, e.g. 0.1.0. Empty: test images tagged edge, no release.'
+        required: false
 
 permissions:
   contents: write
@@ -33,9 +35,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}-${{ matrix.part }}
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-            type=raw,value=edge,enable=${{ !startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
+            type=raw,value=latest,enable=${{ inputs.version != '' }}
+            type=raw,value=edge,enable=${{ inputs.version == '' }}
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
@@ -48,7 +50,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.part }}
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: inputs.version != ''
     needs: images
     runs-on: ubuntu-latest
     steps:
@@ -59,4 +61,5 @@ jobs:
           zip -r procyon-archive.zip procyon-archive
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" procyon-archive.zip --title "$GITHUB_REF_NAME" --generate-notes
+          VERSION: ${{ inputs.version }}
+        run: gh release create "v$VERSION" procyon-archive.zip --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes
