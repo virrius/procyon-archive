@@ -85,7 +85,7 @@ TAGS: list[dict] = [
     {"name": "messages", "description": "In-fiction mail to the crew: drafts the GM delivers; per-member read/pinned state."},
     {"name": "news", "description": "Sector news: GM writes items or orders journalist drafts (a job), then airs them to the table."},
     {"name": "map", "description": "Sector maps with numbered markers and freehand strokes; markers may link to an entity."},
-    {"name": "boards", "description": "Quest boards — the GM's pinboard (cards, threads). GM only; canvas coordinates for the browser."},
+    {"name": "boards", "description": "Story boards — the GM's pinboard (cards, threads). GM only; canvas coordinates for the browser."},
     {"name": "boards-agent", "description": (
         "The same boards for a caller that cannot see the canvas: `GET /boards-dump` lists boards, "
         "`GET /boards/{id}/dump` is a readable snapshot (cards by key, grid cells), "
@@ -107,7 +107,7 @@ TAGS: list[dict] = [
 
 API_DESCRIPTION = """
 Archive of a tabletop campaign (Scum & Villainy): records of people, factions, ships and places,
-progress clocks, mail, sector news, maps, quest boards, portraits and frames, rules.
+progress clocks, mail, sector news, maps, story boards, portraits and frames, rules.
 The game master (GM) runs it; players see only what the GM has opened to them.
 
 ## Start here

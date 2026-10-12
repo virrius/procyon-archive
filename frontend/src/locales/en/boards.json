@@ -1,6 +1,6 @@
 {
   "loading": "loading boards…",
-  "empty": "No boards yet. Create the first one — it will hold the quest's context: who's connected to whom, what's known, where the threads lead.",
+  "empty": "No boards yet. Create the first one — it will hold the story's context: who's connected to whom, what's known, where the threads lead.",
   "bar": {
     "board": "board",
     "new": "+ board",
@@ -14,7 +14,7 @@
   "new": {
     "title": "New board",
     "dirty": "What you've filled in will be lost — the board hasn't been created.",
-    "about": "What the quest is about",
+    "about": "What the story is about",
     "create": "create"
   },
   "err": {

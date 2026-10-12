@@ -70,7 +70,7 @@
     "bare_title": "Remove the generated text and comments, keep only the gist",
     "bare": "Kill the journalist",
     "add": "+ Story",
-    "quiet_gm": "All quiet on the air so far. Write the first story with the plus above or from a quest board.",
+    "quiet_gm": "All quiet on the air so far. Write the first story with the plus above or from a story board.",
     "quiet": "All quiet on the air so far.",
     "drafts": "Drafts",
     "drafts_hint": "only you can see them until they air",
