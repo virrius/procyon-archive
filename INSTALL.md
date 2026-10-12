@@ -35,7 +35,8 @@ Players on your network open `http://<your computer's IP>:7726`.
 | Feature | Setup |
 |---|---|
 | Prompts, news | Admin space → LLM: any OpenAI-compatible API |
-| Pictures | Admin space → Images: the same kind of API, or your GPU via the [worker](https://github.com/virrius/procyon-archive/tree/main/worker) |
+| Pictures via API | Admin space → Images: an OpenAI-compatible image API |
+| Pictures on your GPU | local pipeline, ComfyUI + worker: [worker/README.md](https://github.com/virrius/procyon-archive/blob/main/worker/README.md) |
 
 ## Manage
 
