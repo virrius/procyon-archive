@@ -26,7 +26,7 @@ from ..deps import editor, gm_only, viewer
 from ..i18n import campaign_lang, ctr, reset_campaign, tr, use_campaign
 from ..models import Attachment, Campaign, Entity, ImageGenJob
 from ..hub_draw import HubDrawError, NoEditing, brief, can_edit, draw, edit
-from ..server_cfg import campaign_kit, doc_override, draw_conf, hub_conf, parse_kit
+from ..server_cfg import campaign_kit, doc_override, draw_conf, hub_conf, parse_kit, wardrobe_for
 from ..langpack import prompting as P
 from ..translit import slugify, translit
 from ..visibility import Viewer, apply_scope, can_see, entity_editable
@@ -103,8 +103,8 @@ def outfit_key(title: str, taken: set[str]) -> str:
     return key
 
 
-def wardrobe_out(camp: Campaign) -> dict:
-    ward = campaign_kit(camp).get("wardrobe") or {}
+def wardrobe_out(camp: Campaign, gm: bool) -> dict:
+    ward = wardrobe_for(camp, gm)
     return {"wardrobe": [{"key": k, **v} for k, v in ward.items()]}
 
 
@@ -114,6 +114,7 @@ class OutfitIn(BaseModel):
     title: str = Field(max_length=200, description="Outfit name; the key is derived from it (Latin slug) and never changes.")
     wear: list[str] = Field(default=[], description="Clothing phrases, as returned in `slots.wear` of a prompt draft. At least one.")
     image: str = Field(default="", description="URL of a candidate frame used as the outfit thumbnail (`/api/campaigns/{id}/files/{attachment_id}`).")
+    visibility: Literal["crew", "gm"] = Field(default="crew", description="`crew`: every player can use the look in the workshop; `gm`: the GM only. Players always create `crew` looks.")
 
 
 class OutfitOut(BaseModel):
@@ -121,6 +122,7 @@ class OutfitOut(BaseModel):
     title: str = ""
     wear: list[str] = []
     image: str = ""
+    visibility: str = "crew"
 
 
 class WardrobeOut(BaseModel):
@@ -133,8 +135,9 @@ class OutfitCreatedOut(WardrobeOut):
 
 @router.get("/wardrobe", tags=["workshop"], summary="List the campaign wardrobe", response_model=WardrobeOut)
 def get_wardrobe(v: Viewer = Depends(editor), db: Session = Depends(get_db)):
-    """Outfits a prompt draft can wear (`wardrobe` field of `POST /image-prompt`). Any editor may read."""
-    return wardrobe_out(db.get(Campaign, v.campaign_id))
+    """Outfits a prompt draft can wear (`wardrobe` field of `POST /image-prompt`). Any editor may read;
+    players get only `crew` looks."""
+    return wardrobe_out(db.get(Campaign, v.campaign_id), v.is_gm)
 
 
 def clean_outfit(body: OutfitIn) -> dict:
@@ -144,7 +147,7 @@ def clean_outfit(body: OutfitIn) -> dict:
     wear = [x.strip() for x in body.wear if x.strip()]
     if not wear:
         raise HTTPException(400, tr("images.outfit_empty"))
-    return {"title": title, "wear": wear, "image": body.image.strip()}
+    return {"title": title, "wear": wear, "image": body.image.strip(), "visibility": body.visibility}
 
 
 def keep_outfit_image(db: Session, campaign_id: str, key: str, url: str) -> None:
@@ -160,12 +163,14 @@ def create_outfit(body: OutfitIn, v: Viewer = Depends(editor),
                   db: Session = Depends(get_db)):
     """Store an outfit; its `key` is a slug of the title. 400 when the title or `wear` is empty."""
     item = clean_outfit(body)
+    if not v.is_gm:
+        item["visibility"] = "crew"
     camp = db.get(Campaign, v.campaign_id)
     ward = campaign_kit(camp).get("wardrobe") or {}
     key = outfit_key(item["title"], set(ward))
     keep_outfit_image(db, camp.id, key, item["image"])
     save_wardrobe(camp, db, key, item)
-    return {"key": key, **wardrobe_out(camp)}
+    return {"key": key, **wardrobe_out(camp, v.is_gm)}
 
 
 @router.put("/wardrobe/{key}", tags=["workshop"], summary="Replace an outfit",
@@ -179,7 +184,7 @@ def update_outfit(key: str, body: OutfitIn, v: Viewer = Depends(gm_only),
     item = clean_outfit(body)
     keep_outfit_image(db, camp.id, key, item["image"])
     save_wardrobe(camp, db, key, item)
-    return wardrobe_out(camp)
+    return wardrobe_out(camp, v.is_gm)
 
 
 @router.delete("/wardrobe/{key}", tags=["workshop"], summary="Remove an outfit", response_model=WardrobeOut)
@@ -192,7 +197,7 @@ def delete_outfit(key: str, v: Viewer = Depends(gm_only), db: Session = Depends(
         drop_files(a)
         db.delete(a)
     save_wardrobe(camp, db, key, None)
-    return wardrobe_out(camp)
+    return wardrobe_out(camp, v.is_gm)
 
 
 PromptKind = Literal["person", "frame", "action"]
@@ -367,6 +372,8 @@ def create_image_prompt(
     body.register = P().norm_register(body.register)
     camp = db.get(Campaign, v.campaign_id)
     check_draft_choices(body.kind, body.view, body.register, campaign_kit(camp))
+    if body.wardrobe not in wardrobe_for(camp, v.is_gm):
+        body.wardrobe = ""
     return draft_slots(camp, body.kind, body.register, text, body.view, body.wardrobe,
                        body.who, body.sex, body.people, body.seed_key, body.candidates)
 
@@ -394,6 +401,8 @@ def rebuild_image_prompt(
     check_draft_choices(body.kind, body.view, body.register, kit)
     if not isinstance(body.slots.get("takes"), list):
         raise HTTPException(400, tr("images.no_takes"))
+    if body.wardrobe not in wardrobe_for(camp, v.is_gm):
+        body.wardrobe = ""
     wear = P().kit.outfit_slots(kit, body.wardrobe).get("wear") if body.kind == "person" and body.wardrobe else None
     if wear:
         body.slots = dress(body.slots, wear)

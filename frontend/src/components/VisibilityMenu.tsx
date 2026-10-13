@@ -25,10 +25,12 @@ export type VisibilityMenuProps = {
   allowGM?: boolean
   compact?: boolean
   hint?: string
+  /** a narrower choice than the campaign's scopes, e.g. crew/gm only */
+  scopes?: string[]
 }
 
 export function VisibilityMenu({
-  value, visibleTo, onChange, disabled, allowGM, compact, hint,
+  value, visibleTo, onChange, disabled, allowGM, compact, hint, scopes: only,
 }: VisibilityMenuProps) {
   const { campaign, isGM, meta } = useApp()
   const { t } = useTranslation('entity')
@@ -40,7 +42,7 @@ export function VisibilityMenu({
   const [active, setActive] = useState(0)
 
   const gmOk = allowGM ?? isGM
-  const scopes: string[] = ((meta?.visibility_scopes as string[]) || ALL_SCOPES)
+  const scopes: string[] = (only || (meta?.visibility_scopes as string[]) || ALL_SCOPES)
     .filter(s => gmOk || s !== 'gm')
   const cur = value || 'crew'
   const to = visibleTo || []

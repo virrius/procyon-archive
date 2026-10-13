@@ -5,13 +5,14 @@ import { useApp } from '../../ctx'
 import { useLayer } from '../../layers'
 import { GenWorkerBadge } from '../GenWorkerBadge'
 import Lightbox from '../Lightbox'
+import VisibilityMenu from '../VisibilityMenu'
 import AttemptCard, { type Change, type Pick } from './AttemptCard'
 import MaskCanvas, { type MaskApi } from './MaskCanvas'
 import { append, canDictate, useDictation } from './useDictation'
 import {
   ASPECTS, CYRILLIC, KINDS, STRENGTH, VIEWS, aspectKey, aspectOf, codeRegisters, destOf, isLive,
   kindForEntity, rememberRegisters, startAspect,
-  type Attempt, type Candidate, type FrameView, type Outfit, type PromptKind, type Register,
+  LOOK_SCOPES, type Attempt, type Candidate, type FrameView, type Outfit, type PromptKind, type Register,
 } from './kit'
 import '../../styles.gallery.css'
 import '../../styles.studio.css'
@@ -310,6 +311,13 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     } catch (e: any) { setErr(e?.message || t('err.rename_failed')) }
   }
 
+  const showOutfit = async (o: Outfit, visibility: string) => {
+    try {
+      const r = await api.put(`${c()}/wardrobe/${encodeURIComponent(o.key)}`, { ...o, visibility })
+      setWardrobe(r?.wardrobe || [])
+    } catch (e: any) { setErr(e?.message || t('err.look_vis_failed')) }
+  }
+
   const dropOutfit = async (o: Outfit) => {
     if (!confirm(t('forget_confirm', { title: o.title }))) return
     try {
@@ -501,6 +509,8 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
                   title={t('look_name')}
                   onBlur={e => void renameOutfit(curOutfit, e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }} />
+                <VisibilityMenu value={curOutfit.visibility || 'crew'} visibleTo={[]} scopes={LOOK_SCOPES} compact
+                  onChange={s => void showOutfit(curOutfit, s)} />
                 <button type="button" className="ghost tiny" onClick={() => void dropOutfit(curOutfit)}>{t('forget')}</button>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, c, thumbFull, type Dict } from '../api'
+import VisibilityMenu from '../components/VisibilityMenu'
+import { LOOK_SCOPES } from '../components/studio/kit'
 import { useAsync } from '../ctx'
 import '../styles.looks.css'
 
@@ -31,8 +33,15 @@ export default function LooksPage() {
     try {
       const e = edit[o.key]
       await api.put(`${c()}/wardrobe/${encodeURIComponent(o.key)}`,
-        { ...o, ...e, wear: fromText(e.wear) })
+        { ...o, ...e, visibility: o.visibility, wear: fromText(e.wear) })
       done(o.key); reload()
+    } catch (e: any) { alert(e.message) } finally { setBusy('') }
+  }
+  const show = async (o: Dict, visibility: string) => {
+    setBusy(o.key)
+    try {
+      await api.put(`${c()}/wardrobe/${encodeURIComponent(o.key)}`, { ...o, visibility })
+      reload()
     } catch (e: any) { alert(e.message) } finally { setBusy('') }
   }
   const drop = async (o: Dict) => {
@@ -66,6 +75,8 @@ export default function LooksPage() {
                     {busy === o.key ? t('saving') : t('common:save')}
                   </button>
                 )}
+                <VisibilityMenu value={o.visibility || 'crew'} visibleTo={[]} scopes={LOOK_SCOPES}
+                  disabled={!!busy} onChange={s => void show(o, s)} />
               </div>
             </div>
           </div>
