@@ -6,7 +6,13 @@
 
 ## Run
 
-Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/): Windows, macOS or Linux. Procyon Archive itself takes about 200 MB of memory.
+Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) on Windows, macOS or Linux. Procyon Archive itself is light:
+
+- **CPU:** any 64-bit, x86 or ARM.
+- **Memory:** about 200 MB.
+- **Disk:** about 1 GB, plus pictures as the campaign grows: two months of play came to 400 MB.
+- **Pictures on your own GPU, optional:** NVIDIA with 16 GB, 20 GB of disk, about 15 s a picture.
+  See the [local image worker](worker/README.md).
 
 1. Download `procyon-archive.zip` from [Releases](https://github.com/virrius/procyon-archive/releases/latest) and unzip it.
 2. Open a terminal in the unzipped folder and run `docker compose up -d`.

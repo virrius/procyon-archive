@@ -14,9 +14,13 @@ While the worker runs, it takes jobs from the queue. Nothing to switch in the ap
 
 ## Requirements
 
-- NVIDIA GPU, 16 GB VRAM
+- NVIDIA GPU with 16 GB VRAM
+- About 20 GB of disk: ComfyUI with PyTorch 6 GB, models 12 GB
 - [ComfyUI](https://github.com/Comfy-Org/ComfyUI)
 - Python 3.10+ with `requests` (`pip install -r requirements.txt`)
+
+Tested on an RTX 4070 Ti SUPER 16 GB, Core i5-13400F, 32 GB RAM: about 15 s a picture at 832×1216, 8 steps,
+so a request of four variants takes about a minute. The first picture after start is slower while the models load.
 
 Models, into ComfyUI's `models/`:
 
