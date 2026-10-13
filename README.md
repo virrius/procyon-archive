@@ -65,3 +65,7 @@ samples/        demo campaign
 docs/           pictures for this README
 DEVELOPMENT.md  how to develop, deploy, release
 ```
+
+## License
+
+Code: [MIT](LICENSE). An unofficial fan tool: Scum and Villainy, its rulebook texts and rules clippings belong to their authors.
