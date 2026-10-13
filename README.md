@@ -27,6 +27,7 @@ Where players connect:
 ## First steps
 
 1. Sign in as `admin` / `admin` and set your password.
+   Or set it before the first start: in `docker-compose.yml`, replace `${PA_ADMIN_PASSWORD:-}` with your password.
 2. Admin space → Language: English or Russian. It sets the interface, generated texts and, by default,
    the presets of new campaigns: rulebook factions and places, sector map, playbooks, rules clippings.
 3. Admin space → Campaigns: create a campaign, or **import from archive** → `DEMO_CAMPAIGN.zip` (in English).

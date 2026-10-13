@@ -1,10 +1,11 @@
-"""Первый запуск: на пустой базе заводим админа с паролем по умолчанию.
+"""Первый запуск: на пустой базе заводим админа — с паролем из PA_ADMIN_PASSWORD или по умолчанию.
 
 Демо-кампании нет: кампания стартует с фракциями, местами и картой книги
 (book_lore.seed_campaign), а готовые кампании заливаются импортом (samples/).
 """
 from __future__ import annotations
 
+from .config import settings
 from .db import SessionLocal
 from .models import User
 from .security import hash_password
@@ -18,11 +19,14 @@ def ensure_admin() -> None:
     try:
         if db.query(User.id).first():
             return
+        password = settings.admin_password or ADMIN_PASSWORD
+        default = password == ADMIN_PASSWORD
         db.add(User(
-            login=ADMIN_LOGIN, password_hash=hash_password(ADMIN_PASSWORD),
-            display_name="Admin", is_admin=True, password_default=True,
+            login=ADMIN_LOGIN, password_hash=hash_password(password),
+            display_name="Admin", is_admin=True, password_default=default,
         ))
         db.commit()
-        print(f"[seed] admin account created: {ADMIN_LOGIN} / {ADMIN_PASSWORD} — change the password")
+        print(f"[seed] admin account created: {ADMIN_LOGIN} / "
+              + (f"{ADMIN_PASSWORD} — change the password" if default else "password from PA_ADMIN_PASSWORD"))
     finally:
         db.close()

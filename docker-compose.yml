@@ -23,6 +23,7 @@ services:
       PA_JWT_SECRET: ${PA_JWT_SECRET:-}
       PA_UPLOAD_DIR: /data/uploads
       PA_WORKER_TOKEN: ${PA_WORKER_TOKEN:-}
+      PA_ADMIN_PASSWORD: ${PA_ADMIN_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy
