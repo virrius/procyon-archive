@@ -22,7 +22,7 @@ export const KITS: { sec: string; label: string }[] = [
 
 export const MOD_SECS = [...SYSTEMS.map(s => ({ sec: s.sec, label: s.label })), ...KITS]
 
-/** Книжный бланк корабля этого типа — то, поверх чего ложится настройка ГМа. */
+/** The book ship sheet of this type: what the GM's setup is laid over. */
 export function shipBook(meta: Dict | null, fields: Dict): { types: Dict; type: Dict; book: ShipBook } {
   const types = dict(meta?.ship_types)
   const type = dict(types[String(fields.ship_type || '')])
@@ -40,9 +40,9 @@ export function shipBook(meta: Dict | null, fields: Dict): { types: Dict; type: 
   }
 }
 
-/** Смена типа ставит заводскую комплектацию нового корабля вместо прежних отметок:
- *  чужие модули на бланке путают сильнее, чем потеря пары галочек.
- *  `dropped` — сколько отметок уйдёт, чтобы спросить подтверждение. */
+/** A type change sets the new ship's stock loadout instead of the old marks:
+ *  foreign modules on the sheet confuse more than losing a couple of checks.
+ *  `dropped`: how many marks will be lost, to ask for confirmation. */
 export function stockFields(meta: Dict | null, fields: Dict, k: string): { patch: Dict; dropped: number } {
   const t = dict(dict(meta?.ship_types)[k])
   const stock = list(t.start_modules)

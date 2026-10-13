@@ -26,7 +26,7 @@ const SUBS: [string, string][] = [
 
 const fld = (e: Dict, key: string) => String(e.fields?.[key] ?? '').trim()
 
-/** внутри категории — как в бланке и на «Отношениях»: сильные сверху, дальше по имени */
+/** within a category — as on the sheet and in Faction status: strongest first, then by name */
 const byRank = (a: Dict, b: Dict) =>
   (Number(fld(b, 'rank')) || 0) - (Number(fld(a, 'rank')) || 0)
   || String(a.name || '').localeCompare(String(b.name || ''), 'ru')
@@ -60,51 +60,51 @@ export default function Database() {
   )
 }
 
-/* --- счётчики -------------------------------------------------------------- */
+/* --- clocks ---------------------------------------------------------------- */
 
 function ClocksTab() {
   const { isGM, memberName, campaign, L } = useApp()
   const { t } = useTranslation('database')
-  // ?open=<id> — приход с карточки сущности: счётчик сразу открыт окном
+  // ?open=<id> — coming from an entity card: the clock opens in a window right away
   const [params, setParams] = useSearchParams()
   const asked = params.get('open') || ''
   const [form, setForm] = useState<Dict | null>(null)
-  const [owner, setOwner] = useState<Dict | null>(null)  // запись, к которой привязан счётчик
+  const [owner, setOwner] = useState<Dict | null>(null)  // entry the clock is linked to
   const [tickFor, setTickFor] = useState<Dict | null>(null)
-  const [openId, setOpenId] = useState(asked)  // карточка целиком живёт в модалке
+  const [openId, setOpenId] = useState(asked)  // the full card lives in a modal
   const closeOpen = () => {
     setOpenId('')
     if (asked) setParams({}, { replace: true })
   }
-  // из поиска можно прийти, уже стоя на счётчиках: вкладка не перемонтируется
+  // search can lead here while already on clocks: the tab doesn't remount
   useEffect(() => { if (asked) setOpenId(asked) }, [asked])
   const [rows, loading, reload, error] = useAsync<Dict[]>(
     () => api.get(`${c()}/clocks?status=`), [])
   const kinds = useClockKinds(rows)
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // table view is read-only
   const canEdit = !readonly && campaign?.my_role !== 'observer'
   const may = useClockMay()
   const moves = useClockMoves(rows, reload)
   const shown = (rows || []).map(moves.view)
-  // окно счётчика всегда со свежими данными; завершённый уходит из «активных»,
-  // но окно остаётся на последнем снимке — вернуть его в работу можно сразу
+  // the clock window always has fresh data; a completed clock leaves "active",
+  // but the window stays on the last snapshot — it can be put back to work right away
   const lastOpen = useRef<Dict | null>(null)
   const openRow = (rows || []).find(cl => cl.id === openId)
   if (openRow) lastOpen.current = moves.view(openRow)
   const open = !openId ? null
     : openRow ? moves.view(openRow)
     : lastOpen.current?.id === openId ? moves.view(lastOpen.current) : null
-  // историю перечитываем, когда сервер уже ответил, а не на оптимистичном сдвиге
+  // history is re-read once the server has replied, not on the optimistic tick
   const histKey = useRef('')
   if (open && !moves.busy(open)) histKey.current = `${open.id}:${open.filled}:${open.status}`
-  // сервер отдаёт уже отсортированным по типу, «без типа» — в конце; режем на группы по порядку
+  // the server returns them sorted by type, "no type" last; split into groups in that order
   const groups: [string, Dict[]][] = []
   for (const cl of shown) {
     const k = String(cl.kind || '')
     if (groups.length && groups[groups.length - 1][0] === k) groups[groups.length - 1][1].push(cl)
     else groups.push([k, [cl]])
   }
-  // завершённые и отменённые — бледным хвостом своей группы
+  // completed and cancelled ones go to the dimmed tail of their group
   const idle = (cl: Dict) => cl.status !== 'active'
   for (const g of groups) g[1].sort((a, b) => Number(idle(a)) - Number(idle(b)))
 

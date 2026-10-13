@@ -29,9 +29,9 @@ from .boards import (
 )
 from .entities import UUID_RE
 
-# Доска для того, кто её не видит: снимок раскладки словами и пакетная правка.
-# Карточки зовутся ключами (`gregor-varg`), координаты ходят клетками сетки, а
-# сцена целиком — карточки и нити между ними — ставится одним запросом.
+# The board for someone who cannot see it: a snapshot of the layout in words and batch edits.
+# Cards are addressed by keys (`gregor-varg`), coordinates move in grid cells, and
+# a whole scene — cards and the threads between them — is placed in one request.
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["boards-agent"], responses=AUTH_ERRORS)
 
@@ -41,12 +41,12 @@ Color = Literal["amber", "rust", "steel", "plum", "olive", "white", "black"]
 REF_DOC = "Name of the {what} (case-insensitive; a unique substring works too) or its id. Unknown → 404; several matches → 400 listing the candidates with ids."
 CELL_DOC = "Grid cell (one cell = 40 canvas units); `col` grows to the right, `row` down."
 
-GAP = 1          # клетка воздуха между карточками при авторазмещении
-MAX_COL = 60     # ширина полосы поиска свободного места, в клетках
+GAP = 1          # a cell of air between cards in auto-placement
+MAX_COL = 60     # width of the strip searched for free space, in cells
 
 
 def resolve(db: Session, campaign_id: str, cards: list[BoardCard]) -> tuple[dict, dict, dict]:
-    """Записи, счётчики и владельцы счётчиков одним заходом."""
+    """Entries, clocks and clock owners in one pass."""
     ids = [c.entity_id for c in cards if c.entity_id]
     entities = {
         e.id: e
@@ -71,7 +71,7 @@ def resolve(db: Session, campaign_id: str, cards: list[BoardCard]) -> tuple[dict
 
 
 def cell(card: BoardCard) -> tuple[int, int, int, int]:
-    """Карточка в клетках: col, row, ширина, высота (высота — оценка по роду)."""
+    """A card in cells: col, row, width, height (height is an estimate by kind)."""
     return (
         int(round(card.x / COL)),
         int(round(card.y / ROW)),
@@ -81,7 +81,7 @@ def cell(card: BoardCard) -> tuple[int, int, int, int]:
 
 
 def free_spot(boxes: list[tuple[int, int, int, int]], cols: int, rows: int) -> tuple[int, int]:
-    """Первое свободное место сверху вниз: карточки не должны ложиться друг на друга."""
+    """The first free spot, top to bottom: cards must not land on top of each other."""
     for row in range(0, 400):
         for col in range(0, MAX_COL):
             clash = any(
@@ -95,7 +95,7 @@ def free_spot(boxes: list[tuple[int, int, int, int]], cols: int, rows: int) -> t
 
 
 def norm_notes(notes: list[dict] | None) -> list[dict]:
-    """Записке нужен свой id: по нему её правят и убирают на доске."""
+    """A note needs its own id: the board edits and removes it by that id."""
     out = []
     for n in notes or []:
         if not isinstance(n, dict):
@@ -109,7 +109,7 @@ def norm_notes(notes: list[dict] | None) -> list[dict]:
 
 
 def find_entity(db: Session, campaign_id: str, ref: str) -> Entity:
-    """Запись зовут по имени: айди агенту неоткуда взять, а имя ГМ произносит вслух."""
+    """An entry is referred to by name: the agent has nowhere to get the id from, and the GM says the name aloud."""
     e = db.get(Entity, ref) if UUID_RE.fullmatch(ref) else None
     if e is not None and e.campaign_id == campaign_id:
         return e
@@ -294,8 +294,8 @@ def dump_board(board_id: str, v=Depends(gm_only), db: Session = Depends(get_db))
             item["image_url"] = card.image_url
             item["title"] = card.title
         if card.kind == "sketch":
-            # росчерки агенту ни о чём не говорят — наружу идёт их число; подписи
-            # читаются, поэтому уходят текстом
+            # strokes tell the agent nothing — only their count goes out; text labels
+            # are readable, so they go out as text
             marks = [m for m in (card.ink or []) if isinstance(m, dict)]
             item["strokes"] = len([m for m in marks if m.get("kind") != "text"])
             labels = [str(m.get("text") or "") for m in marks if m.get("kind") == "text"]
@@ -482,7 +482,7 @@ def batch_board(board_id: str, body: BatchIn = Body(examples=[BATCH_EXAMPLE]), v
             if op.row is not None:
                 card.y = op.row * ROW
             done[card.key] = "updated"
-            # блок записи пересобирается, только когда меняются записки или то, к чему они приросли
+            # the entry block is rebuilt only when the notes change or what they are attached to changes
             if op.notes is not None or op.entity or op.clock:
                 sync_block(db, v, card, board)
 

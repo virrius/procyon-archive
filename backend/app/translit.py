@@ -1,4 +1,4 @@
-"""Кириллица латиницей: ключи из названий и промпт рисующей модели, которая кириллицу не читает."""
+"""Cyrillic to Latin: keys from names, and prompts for the drawing model, which can't read Cyrillic."""
 from __future__ import annotations
 
 _LOWER = {
@@ -16,7 +16,7 @@ def translit(text: str) -> str:
 
 
 def slugify(text: str, fallback: str, limit: int = 48) -> str:
-    """Латиница, цифры и дефисы: ключ читается и в снимке, и в правке."""
+    """Latin letters, digits and hyphens: the key reads well both in the snapshot and in edits."""
     out: list[str] = []
     for ch in translit((text or "").strip().lower()):
         if ch.isascii() and ch.isalnum():

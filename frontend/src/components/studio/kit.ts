@@ -11,11 +11,11 @@ export type Attempt = {
 }
 
 export const isLive = (s: Status) => s === 'pending' || s === 'claimed'
-/** Сколько часов осталось невыбранным кандидатам: потом сервер их снесёт */
+/** How many hours unpicked candidates have left: then the server deletes them */
 export const hoursLeft = (iso: string) => Math.max(0, Math.ceil((+new Date(iso) - Date.now()) / 3600e3))
 export const CYRILLIC = /[а-яёА-ЯЁ]/
 
-/* Родные размеры Z-Image: стороны кратны 16 при бюджете около мегапикселя */
+/* Native Z-Image sizes: sides are multiples of 16 at a budget of about a megapixel */
 export type Aspect = { key: string; width: number; height: number }
 export const ASPECTS: Aspect[] = [
   { key: '4:5', width: 832, height: 1216 },
@@ -28,7 +28,7 @@ export const aspectOf = (key?: string) => ASPECTS.find(a => a.key === key) ?? AS
 export const aspectBySize = (w: number, h: number) =>
   ASPECTS.find(a => a.width === w && a.height === h)?.key ?? `${w}×${h}`
 
-/* Старые снимки формы хранили номер пропорции в списке того же порядка */
+/* Old form snapshots stored the aspect index in a list of the same order */
 export const aspectKey = (v: unknown): string | undefined =>
   typeof v === 'number' ? ASPECTS[v]?.key : typeof v === 'string' && ASPECTS.some(a => a.key === v) ? v : undefined
 
@@ -38,7 +38,7 @@ export const KINDS: PromptKind[] = ['person', 'frame', 'action']
 export type FrameView = 'ship' | 'handheld' | 'structure' | 'planet' | 'landscape' | 'interior'
 export const VIEWS: FrameView[] = ['ship', 'handheld', 'structure', 'planet', 'landscape', 'interior']
 
-// регистр уходит хабу словарём угла сеттинга, а в строку — своей головой стиля
+// the register goes to the hub as a setting-corner dictionary, and into the prompt line as its own style head
 export type Register = string
 export const REGISTERS: Register[] = ['derelict', 'junk', 'frontier', 'hightech', 'hegemony', 'luxe', 'precursor']
 export const codeRegisters = (): [Register, string, string][] =>
@@ -52,7 +52,7 @@ export const DEFAULT_ASPECT: Record<string, string> = {
 export const startAspect = (kind: PromptKind, view: FrameView) =>
   DEFAULT_ASPECT[kind === 'frame' ? view : kind] || '4:5'
 
-/** Направление и подтип по виду карточки: корабль — кадром корабля, место — по типу */
+/** Direction and subtype by card kind: a ship gets a ship frame, a place goes by its type */
 export function kindForEntity(e: Dict): { kind: PromptKind; view: FrameView } {
   const lt = String(e.fields?.loc_type || '')
   if (e.kind === 'ship') return { kind: 'frame', view: 'ship' }
@@ -70,15 +70,15 @@ export const kindTitle = (p: Dict) => {
   if (p.kind === 'frame') return i18n.t(VIEWS.includes(p.view) ? `studio:view.${p.view}` : 'studio:kind.frame')
   return KINDS.includes(p.kind) ? i18n.t(`studio:kind.${p.kind}`) : ''
 }
-// регистры кампании приходят с сервера: добавленные админом подписываются так же, как кодовые
+// campaign registers come from the server: ones added by the admin get labels the same way as built-in ones
 let loadedRegisters: [Register, string, string][] = []
 export const rememberRegisters = (rows: [Register, string, string][]) => { loadedRegisters = rows }
 export const registerTitle = (r?: string) =>
   loadedRegisters.find(([k]) => k === r)?.[1]
   || (r && REGISTERS.includes(r) ? i18n.t(`studio:register.${r}`) : r) || ''
 
-/* Части промпта: хаб пишет, код склеивает в этом порядке. Флаг — часть своя у каждого
-   дубля (лицо, поза, свет), без флага — общая на все */
+/* Prompt parts: the hub writes them, the code joins them in this order. Flagged: a part of its own for each
+   take (face, pose, light); unflagged: shared by all */
 export const PARTS: Record<PromptKind, [string, boolean][]> = {
   person: [['look', false], ['face', true], ['outfit', false], ['pose', true], ['place', false], ['light', true]],
   frame: [['subject', false], ['people', false], ['place', false], ['angle', true], ['light', true]],
@@ -97,7 +97,7 @@ export const strengthTitle = (d: number) => i18n.t(`studio:strength.${d >= 0.99 
 
 export type Outfit = { key: string; title: string; wear: string[]; image?: string }
 
-/** Куда ложится выбранный вариант попытки */
+/** Where the picked candidate of an attempt goes */
 export type Dest = 'entity' | 'scene' | 'replace'
 export const destOf = (a: Attempt): Dest =>
   a.kind === 'inpaint' && a.params?.mode !== 'new' ? 'replace' : a.entity_id ? 'entity' : 'scene'

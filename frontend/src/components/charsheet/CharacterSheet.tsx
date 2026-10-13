@@ -33,13 +33,13 @@ import '../../styles.char.css'
 const AUTOSAVE_MS = 700
 const TABS = ['sheet', 'setup', 'dossier'] as const
 type Tab = typeof TABS[number]
-// имя, прозвище и описание лежат в карточке, а не в fields — правятся тем же черновиком
+// name, alias and description live in the card, not in fields; they are edited by the same draft
 const TOP = ['name', 'alias', 'summary'] as const
 const topOf = (e: Dict): Dict => ({ name: e.name || '', alias: e.alias || '', summary: e.summary || '' })
 const norm = (k: string, v: any) => (k === 'name' ? String(v ?? '').trim() : String(v ?? ''))
 
-/** Персонаж — три вкладки: «Бланк» (игровые отметки, кликаются всегда), «Настройка» (разовые
- *  выборы: бланк, происхождение, навыки, таланты, знакомые) и «Досье». Автосохранение — как у корабля. */
+/** Character: three tabs, "Sheet" (play marks, always clickable), "Setup" (one-time
+ *  choices: playbook, heritage, actions, abilities, friends) and "Dossier". Autosave works as for the ship. */
 export default function CharacterSheet({ id, onClose }: { id: string; onClose?: () => void }) {
   const nav = useNavigate()
   const { pathname } = useLocation()
@@ -73,7 +73,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
   const dirtyRef = useRef(dirty)
   dirtyRef.current = dirty
 
-  // перезагрузка после студии или кадрирования не затирает ненаписанный черновик
+  // reloading after the studio or cropping doesn't overwrite an unsaved draft
   const seen = useRef('')
   useEffect(() => {
     if (!loaded || loaded.id !== id) return
@@ -106,7 +106,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     return () => { dead = true }
   }, [canEdit, id, genOpen])
 
-  // вкладка: своя страница держит её в адресе, окно поверх доски — у себя
+  // tab: a standalone page keeps it in the URL, a window over the board keeps it locally
   const urlTab = onClose ? modalTab : pathname.split('/').filter(Boolean)[3] || ''
   const goTab = useCallback((k: Tab, replace = false) => {
     if (onClose) setModalTab(k)
@@ -114,7 +114,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
   }, [onClose, nav, id])
   const pb = playbookKey(meta, fields.playbook)
   const hiddenPb = !isGM && (e?.hidden_fields || []).includes('playbook')
-  // новый персонаж без бланка сразу открывается на настройке
+  // a new character without a playbook opens straight on Setup
   useEffect(() => {
     if (e && canEdit && !urlTab && !pb && !hiddenPb && meta) goTab('setup', true)
   }, [e, canEdit, urlTab, pb, hiddenPb, meta, goTab])
@@ -143,7 +143,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     }
   }, [id, saved, savedTop, t])
 
-  /* правки уходят сами: пауза в наборе, смена вкладки, уход со страницы */
+  /* edits go out on their own: a typing pause, a tab change, leaving the page */
   const saveRef = useRef(save)
   saveRef.current = save
   const draft = useRef({ fields, top })
@@ -166,7 +166,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
 
-  // телефон: панель уезжает с прокруткой, у края остаются «назад» и «наверх»
+  // phone: the panel scrolls away, "back" and "back to top" stay at the edge
   const floaty = phone && !onClose
   const [toolsEl, setToolsEl] = useState<HTMLDivElement | null>(null)
   const [away, setAway] = useState(false)
@@ -191,14 +191,14 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
   }
   if (!e) return <div className="dim">{t('common:loading')}</div>
 
-  /* --- черновик и мгновенные правки ------------------------------------------ */
+  /* --- draft and instant edits ----------------------------------------------- */
 
   const touched = () => { setPhase(''); setErr('') }
   const set = (k: string, v: any) => { setFields(f => ({ ...f, [k]: v })); touched() }
   const patch = (part: Dict) => { setFields(f => ({ ...f, ...part })); touched() }
   const setTopKey = (k: string, v: string) => { setTop(p => ({ ...p, [k]: v })); touched() }
 
-  // владелец, видимость, статус, портрет, принадлежность — сразу одним ключом
+  // owner, visibility, status, portrait, affiliation: sent at once, one key each
   const push = async (part: Dict) => {
     const prev = e
     setE({ ...e, ...part })
@@ -218,7 +218,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     goTab(k)
   }
 
-  /* --- доступ к полям ---------------------------------------------------------- */
+  /* --- field access ------------------------------------------------------------ */
 
   const hidden = new Set<string>((e.hidden_fields || []) as string[])
   const locked = (k: string) => !isGM && hidden.has(k)
@@ -228,12 +228,12 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     else next.delete(k)
     void push({ hidden_fields: [...next] })
   }
-  // глаз — на настройке и в досье; на бланке только у закрытого поля, чтобы ГМ видел, что закрыто
+  // eye: on Setup and Dossier; on Sheet only on a hidden field, so the GM sees it is hidden
   const eye = (k: string) => isGM && !readonly && (tab !== 'sheet' || hidden.has(k)) && (
     <FieldEye hidden={hidden.has(k)} onChange={hide => setHidden(k, hide)} />
   )
 
-  /* --- бланк ------------------------------------------------------------------- */
+  /* --- playbook ---------------------------------------------------------------- */
 
   const def: Dict = meta?.kinds?.character || {}
   const sheet: Dict = dict(meta?.char_sheet)
@@ -252,7 +252,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     setFields(f => {
       const next: Dict = { ...f, playbook: b.label }
       if (!pointsOf(dict(f.actions))) next.actions = { ...b.start }
-      // снаряжение прежнего бланка уходит, обычные предметы остаются
+      // the old playbook's items go away, ordinary items stay
       next.items = Object.fromEntries(Object.entries(dict(f.items))
         .filter(([key]) => !key.startsWith('pb:') || own.items.some(x => `pb:${x.key}` === key)))
       return next
@@ -276,10 +276,10 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
     setNpcs(prev => (prev.some(n => n.id === npc.id) ? prev : [...prev, npc]))
     try {
       await api.post(`${c()}/links`, { from_id: id, to_id: npc.id, label: t('contact_link'), visibility: 'crew' })
-    } catch { /* связь необязательна: знакомый уже записан в бланк */ }
+    } catch { /* the link is optional: the friend is already written into the sheet */ }
   }
 
-  /* --- портрет и файлы ----------------------------------------------------------- */
+  /* --- portrait and files -------------------------------------------------------- */
 
   const shotLocked = locked('image_url')
   const upload = async (file: File, asPhoto: boolean) => {
@@ -559,7 +559,7 @@ export default function CharacterSheet({ id, onClose }: { id: string; onClose?: 
   )
 }
 
-/** Длинное поле досье: правится по щелчку, в чтении пустое не показывается. */
+/** Long dossier field: edited on click; when reading, an empty one is not shown. */
 function DosText({ label, value, edit, locked, gm, lead, eye, onChange }: {
   label: string; value: any; edit: boolean; locked?: boolean; gm?: boolean; lead?: boolean
   eye?: ReactNode; onChange: (v: string) => void

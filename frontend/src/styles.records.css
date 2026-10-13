@@ -1,6 +1,6 @@
-/* Записи сущности — из них собирается всё, что известно.
-   Сплошные поверхности, 1px канты, левый кант = аудитория записи.
-   Без сеток, прозрачностей и свечения. */
+/* Entry notes — everything known is built from them.
+   Solid surfaces, 1px borders, left border = the note's audience.
+   No grids, translucency or glow. */
 
 .rec-panel { display: flex; flex-direction: column; gap: 10px; }
 
@@ -16,7 +16,7 @@
 
 .rec-list { display: flex; flex-direction: column; gap: 8px; }
 
-/* каркас карточки задан двумя классами — иначе его перебивают .crew-block/.gm-block */
+/* the card frame uses two classes — otherwise .crew-block/.gm-block override it */
 .rec-list > .rec {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -27,7 +27,7 @@
   border-top-color: var(--line2); border-right-color: var(--line2);
   border-bottom-color: var(--line2);
 }
-/* аудитория записи — левый кант, те же цвета, что в общей теме */
+/* note audience — the left border, same colors as the shared theme */
 .rec-list > .rec.crew-block   { border-left: 3px solid var(--line2); }
 .rec-list > .rec.sel-block    { border-left: 3px solid var(--amber); }
 .rec-list > .rec.secret-block { border-left: 3px solid var(--plum); }
@@ -79,7 +79,7 @@
   .rec-list > .rec { padding: 8px 9px 6px 10px; }
 }
 
-/* связи записи */
+/* note links */
 .rec-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
 .rec-link {
   display: inline-flex; align-items: center; gap: 4px;

@@ -1,7 +1,7 @@
-"""Первый запуск: на пустой базе заводим админа — с паролем из PA_ADMIN_PASSWORD или по умолчанию.
+"""First run: on an empty database, create the admin — with the password from PA_ADMIN_PASSWORD or the default.
 
-Демо-кампании нет: кампания стартует с фракциями, местами и картой книги
-(book_lore.seed_campaign), а готовые кампании заливаются импортом (samples/).
+There is no demo campaign: a campaign starts with the book's factions, locations and map
+(book_lore.seed_campaign), and ready-made campaigns are brought in by import (samples/).
 """
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
-/* Слои поверх экрана: окна, просмотр фото, выпадающие списки.
-   Escape закрывает только верхний — иначе одно нажатие в выпадашке схлопывает и окно под ней. */
+/* Overlay layers: modals, photo viewer, dropdowns.
+   Escape closes only the top one — otherwise one press in a dropdown also closes the modal beneath. */
 
 import { useEffect, useRef } from 'react'
 
@@ -8,16 +8,16 @@ type Layer = { order: number; close: () => void }
 const stack: Layer[] = []
 let seq = 0
 
-// слушатель вешается раньше любого экрана: доска и прочие подписчики на Escape
-// нажатие, закрывшее слой, уже не получают
+// the listener is attached before any screen: the board and other Escape subscribers
+// don't receive a press that already closed a layer
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || !stack.length) return
   e.stopImmediatePropagation()
   stack[stack.length - 1].close()
 })
 
-/** Слой, который снимается Escape, пока open. Порядок — по рендеру: окно,
- *  открытое разом с вложенным, всё равно остаётся под ним. */
+/** A layer closed by Escape while open. Order follows render: a modal
+ *  opened together with a nested one still stays beneath it. */
 export function useLayer(open: boolean, close: () => void) {
   const fn = useRef(close)
   fn.current = close

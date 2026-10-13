@@ -2,9 +2,9 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-/* Язык интерфейса: один на экземпляр, выбирает админ в Admin space; в браузере — копия, чтобы
-   не мигать при загрузке. Тексты — src/locales/<язык>/<раздел>.json,
-   раздел (namespace) — область интерфейса, ключ в коде: t('раздел:ключ') */
+/* UI language: one per instance, set by the admin in Admin space; the browser keeps a copy to
+   avoid flicker on load. Texts live in src/locales/<lang>/<namespace>.json,
+   a namespace is a UI area, the key in code is t('namespace:key') */
 export const LANGS = ['ru', 'en'] as const
 export type Lang = typeof LANGS[number]
 export const LANG_TITLES: Record<Lang, string> = { ru: 'Русский', en: 'English' }
@@ -22,8 +22,8 @@ function startLang(): Lang {
   try {
     const saved = localStorage.getItem(LANG_KEY)
     if (saved && (LANGS as readonly string[]).includes(saved)) return saved as Lang
-  } catch { /* приватный режим */ }
-  // до первого ответа сервера — язык браузера
+  } catch { /* private mode */ }
+  // until the server first responds — the browser language
   return (navigator.language || '').toLowerCase().startsWith('ru') ? 'ru' : 'en'
 }
 
@@ -39,11 +39,11 @@ void i18n.use(initReactI18next).init({
 document.documentElement.lang = i18n.language
 
 export const lang = () => (i18n.resolvedLanguage || i18n.language || 'en') as Lang
-// локаль для дат и чисел: toLocaleString(locale())
+// locale for dates and numbers: toLocaleString(locale())
 export const locale = () => (lang() === 'en' ? 'en-US' : 'ru-RU')
 
 export function setLang(next: Lang) {
-  try { localStorage.setItem(LANG_KEY, next) } catch { /* приватный режим */ }
+  try { localStorage.setItem(LANG_KEY, next) } catch { /* private mode */ }
   document.documentElement.lang = next
   void i18n.changeLanguage(next)
 }

@@ -8,7 +8,7 @@ import { FieldEye } from './FieldEye'
 import { usePickHits } from './EntityPicker'
 import '../styles.news.css'
 
-/** Привязка новости: запись кампании или счётчик. */
+/** News link: a campaign entry or a clock. */
 export type Attach = { type: 'entity' | 'clock'; id: string; name: string; kind: string }
 
 export const attachOfEntity = (e: Dict): Attach =>
@@ -16,11 +16,11 @@ export const attachOfEntity = (e: Dict): Attach =>
 export const attachOfClock = (cl: Dict): Attach =>
   ({ type: 'clock', id: cl.id, name: clockTitle(cl), kind: 'clock' })
 
-/* «Lazarus — анархист» → «анархист»: позывной и так стоит рядом */
+/* "Lazarus — anarchist" → "anarchist": the handle is right next to it anyway */
 const after = (text: string, head: string) =>
   String(text || '').replace(head, '').replace(/^\s*[—–-]\s*/, '').trim()
 
-/** Пока условие держится — fn раз в ms. Заказ депеш пишется в фоне, его состояние опрашиваем. */
+/** While the condition holds, fn every ms. A dispatch order is written in the background; we poll its state. */
 export function usePoll(on: boolean, fn: () => void, ms = 3000) {
   const ref = useRef(fn)
   ref.current = fn
@@ -31,8 +31,8 @@ export function usePoll(on: boolean, fn: () => void, ms = 3000) {
   }, [on, ms])
 }
 
-/** Поле «о ком и о чём»: выбранное — метками прямо в поле, со стрелками и Backspace.
-    Ищет тот же поиск, что у EntityPicker, — записи и счётчики одним списком. */
+/** The "Who and what it's about" field: picks as chips right in the field, with arrows and Backspace.
+    Uses the same search as EntityPicker: entries and clocks in one list. */
 export function AttachField({ value, onChange }: { value: Attach[]; onChange: (v: Attach[]) => void }) {
   const { L } = useApp()
   const { t } = useTranslation('news')
@@ -44,7 +44,7 @@ export function AttachField({ value, onChange }: { value: Attach[]; onChange: (v
     q, on: open, limit: 12, clocks: 'all', exclude: value.map(a => a.id),
   })
 
-  // клик мимо поля закрывает подсказки
+  // a click outside the field closes the suggestions
   useEffect(() => {
     if (!open) return
     const h = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false) }
@@ -94,10 +94,10 @@ export function AttachField({ value, onChange }: { value: Attach[]; onChange: (v
   )
 }
 
-/** Ответ сервера на действие с черновиком: заказ после него (null — заказ закрыт) и вышедшая новость. */
+/** Server reply to a draft action: the order after it (null: order closed) and the aired story. */
 export type DraftResult = { job: Dict | null; news?: Dict }
 
-/** Отклики жителей сети: позывной, кто он и откуда, реплика. */
+/** Net chatter comments: handle, who they are and where from, comment. */
 export function CommentsField({ value, onChange }: { value: Dict[]; onChange: (v: Dict[]) => void }) {
   const { t } = useTranslation('news')
   const set = (i: number, patch: Dict) => onChange(value.map((x, j) => (j === i ? { ...x, ...patch } : x)))
@@ -124,7 +124,7 @@ export function CommentsField({ value, onChange }: { value: Dict[]; onChange: (v
 
 const said = (xs: Dict[]) => xs.filter(x => String(x.text || '').trim())
 
-/** Черновик заказа. Правки сохраняются сами, через секунду после ввода, — окно можно закрыть в любой момент. */
+/** Order draft. Edits save themselves a second after typing; the window can be closed at any moment. */
 export function DraftSlip({ job, draft, onResult }: {
   job: Dict
   draft: Dict
@@ -163,7 +163,7 @@ export function DraftSlip({ job, draft, onResult }: {
   const writeComments = async () => {
     setChatting(true); setErr('')
     try {
-      // жители читают свежий текст: сначала сохраняем правки
+      // the commenters read the fresh text: save edits first
       await api.patch(url, { headline, lead, lead_hidden: leadHidden, text, comments })
       setComments((await api.post(`${url}/comments`, {})).comments || [])
     } catch (e: any) { setErr(e?.message || t('draft.comments_failed')) }
@@ -214,11 +214,11 @@ export function DraftSlip({ job, draft, onResult }: {
   )
 }
 
-/** Заказ целиком: пишется — пустые листы, сорвался — причина и повтор, готов — черновики. */
+/** The whole order: writing shows blank sheets, failed shows the reason and retry, ready shows drafts. */
 export function JobView({ job, toFeed, onJob, onResult }: {
   job: Dict
   toFeed?: boolean
-  /** заказ сменил состояние (повтор) или закрыт (null) */
+  /** the order changed state (retry) or was closed (null) */
   onJob: (job: Dict | null) => void
   onResult: (draft: Dict, r: DraftResult) => void
 }) {
@@ -270,15 +270,15 @@ export function JobView({ job, toFeed, onJob, onResult }: {
   )
 }
 
-/** Новость: три депеши выбранного журналиста о том, что случилось, или текст ГМа.
-    Открывается плюсом в «Новостях» и с доски квеста — с уже привязанными карточками.
-    Заказ пишется на сервере: окно можно закрыть, черновики дождутся в «Новостях». */
+/** Story: three dispatches by the chosen journalist about what happened, or the GM's own text.
+    Opens from the plus in "News" and from a story board, with entries already linked.
+    The order is written on the server: the window can be closed, the drafts will wait in "News". */
 export default function NewsGenerator({ attach = [], onClose, onAired, toFeed }: {
   attach?: Attach[]
   onClose: () => void
-  /** новость вышла в эфир или заказ сменился — ленте пора перечитаться */
+  /** the story aired or the order changed: time for the feed to reload */
   onAired?: () => void
-  /** окно открыто не из ленты — показать дорогу к ней */
+  /** the window was opened outside the feed: show the way to it */
   toFeed?: boolean
 }) {
   const { t } = useTranslation('news')
@@ -318,7 +318,7 @@ export default function NewsGenerator({ attach = [], onClose, onAired, toFeed }:
   const setJob = (id: string, job: Dict | null) =>
     setJobs(js => (job ? js.map(x => (x.id === id ? job : x)) : js.filter(x => x.id !== id)))
 
-  // в окне выпущенный черновик сменяется строкой «в эфире», в ленте черновиков он просто исчезает
+  // in the window an aired draft turns into an "on the air" line; in the drafts feed it just disappears
   const result = (job: Dict, draft: Dict, r: DraftResult) => {
     setJobs(js => js.map(x => (x.id !== job.id ? x : {
       ...x, drafts: x.drafts.map((d: Dict) => (d.i !== draft.i ? d : r.news ? { ...d, aired: true } : { ...d, gone: true })),

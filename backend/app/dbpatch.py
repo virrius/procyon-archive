@@ -8,9 +8,9 @@ from .db import engine
 
 log = logging.getLogger("dbpatch")
 
-# Схема живых баз догоняет модели: create_all заводит новые таблицы, а колонки,
-# добавленные или снятые в моделях, правятся здесь. Каждая запись идемпотентна;
-# записи, которые уже прошли на всех известных базах, отсюда убираются.
+# The schema of live databases catches up with the models: create_all adds new tables, while columns
+# added to or removed from the models are patched here. Every entry is idempotent;
+# entries that have already run on all known databases are removed from here.
 
 # (table, column, type + null/default clause)
 _COLUMNS: list[tuple[str, str, str]] = [
@@ -18,14 +18,14 @@ _COLUMNS: list[tuple[str, str, str]] = [
 ]
 
 _DROP_TABLES: list[str] = [
-    # «заметки»-обсуждения: интерфейс снят 09.10.2026, на обоих экземплярах таблица пуста
+    # discussion "notes": the UI was removed on 2026-10-09, the table is empty on both instances
     "notes",
-    # тики счётчиков прежнего вида: история счётчика давно читается из журнала событий
+    # old-style clock ticks: clock history has long been read from the event log
     "clock_events",
 ]
 
 _DROP_COLUMNS: list[tuple[str, str]] = [
-    # инструкции слотовой сборки и рендерер: сборка теперь одна, прозой
+    # slot-assembly instructions and the renderer: there is now one assembly, in prose
     ("campaigns", "img_meta_prompt"),
     ("campaigns", "img_object_prompt"),
     ("campaigns", "img_scene_prompt"),
@@ -34,16 +34,16 @@ _DROP_COLUMNS: list[tuple[str, str]] = [
     ("server_settings", "img_meta_prompt"),
     ("server_settings", "img_object_prompt"),
     ("server_settings", "img_scene_prompt"),
-    # хаб — настройка сервера, у кампании его больше нет
+    # the hub is a server setting, campaigns no longer have it
     ("campaigns", "img_base_url"),
     ("campaigns", "img_model"),
     ("campaigns", "img_api_key"),
     ("campaigns", "news_base_url"),
     ("campaigns", "news_model"),
     ("campaigns", "news_api_key"),
-    # негатив рисующая модель не читает (Z-Image, cfg 1.0)
+    # the drawing model doesn't read the negative prompt (Z-Image, cfg 1.0)
     ("image_gen_jobs", "negative_prompt"),
-    # поля без читателя: статус знания и раскладка карты прежних версий
+    # fields nobody reads: knowledge status and the map layout of earlier versions
     ("entities", "knowledge_status"),
     ("entity_links", "knowledge_status"),
     ("content_blocks", "knowledge_status"),
@@ -80,10 +80,10 @@ def _statements() -> list[str]:
 
 
 def patch_schema() -> None:
-    """Догнать схему живой базы. Сбой оператора — ошибка в логе: тихо пропущенный ALTER
-    всплывёт потом падением на вставке."""
+    """Bring a live database schema up to date. A failed statement is an error in the log: a silently skipped ALTER
+    would surface later as a failed insert."""
     for sql in _statements():
-        # своя транзакция на оператор: Postgres после ошибки откатывает всю
+        # one transaction per statement: after an error Postgres rolls back the whole transaction
         try:
             with engine.begin() as conn:
                 conn.execute(text(sql))

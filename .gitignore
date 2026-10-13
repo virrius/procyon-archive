@@ -1,14 +1,14 @@
-# секреты и токены
+# secrets and tokens
 local_secrets/
 .env
 
-# локальная надстройка compose для разработки
+# local compose override for development
 docker-compose.override.yml
 
-# данные рантайма (uploads, БД наполняется штатно)
+# runtime data (uploads; the database fills itself)
 data/
 
-# зависимости и кэши
+# dependencies and caches
 node_modules/
 __pycache__/
 *.pyc
@@ -16,18 +16,18 @@ __pycache__/
 .playwright-mcp/
 frontend/dist/
 
-# логи воркера
+# worker logs
 worker/*.log
 worker/*.err
 worker/*.err.log
 
-# разовые тестовые кадры
+# one-off test renders
 gen_test16/
 
-# кэш инкрементальной сборки TS
+# TS incremental build cache
 frontend/tsconfig.tsbuildinfo
 
-# эталоны стиля (картинки, в репозиторий не нужны)
+# style references (images, not for the repo)
 style_refs/
 
 *.pdf

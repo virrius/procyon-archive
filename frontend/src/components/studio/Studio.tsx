@@ -19,12 +19,12 @@ import '../../styles.studio.css'
 const POLL_MS = 2500
 const SAVE_MS = 700
 
-/** Что правим кистью: сохранённая картинка или невыбранный вариант попытки */
+/** What the brush edits: a saved picture or an unpicked candidate of an attempt */
 export type BrushSource = { id: string; url: string; title: string; sub: string }
 
 type Pult = {
   draft: string; kind: PromptKind; view: FrameView; register: Register; aspect: string; outfit: string
-  // портрет: кто и пол; кадр: есть ли люди. Пусто — решает хаб
+  // portrait: who and gender; frame: whether there are people. Empty: the hub decides
   who: string; sex: string; people: string
 }
 
@@ -34,8 +34,8 @@ const PEOPLE = ['some', 'none']
 
 const sceneKey = () => `pa_scene_form:${store.campaign || ''}`
 
-/** Что пульт карточки помнит на сервере: развилки, а описание — только если ГМ его правил.
- *  Непраленое описание собирается из карточки заново: правка облика в карточке доезжает сюда сама */
+/** What a card's control panel stores on the server: the choices, and the description only if the GM edited it.
+ *  An unedited description is rebuilt from the card: an appearance edit in the card reaches here on its own */
 function formOf(p: Pult, auto: string): Dict {
   const { draft, ...forks } = p
   return draft.trim() && draft.trim() !== auto.trim() ? { ...forks, draft, edited: true } : forks
@@ -48,16 +48,16 @@ function loadScene(): Partial<Pult> {
   } catch { return {} }
 }
 
-/** Мастерская: слева пульт — что нарисовать, справа лента попыток. Одна на портрет
- *  карточки, кадр кампании и правку области. Без entity — «Кадры кампании». */
+/** Studio: the control panel on the left (what to draw), the attempts feed on the right. One for a card portrait,
+ *  a campaign frame and an area edit. Without entity: "Campaign frames". */
 export default function Studio({ entity, source, embedded, onClose, onChanged }: {
   entity?: Dict
-  /** открыть сразу кистью по этой картинке */
+  /** open straight to the brush over this picture */
   source?: BrushSource | null
-  /** встроена в страницу («Кадры»), а не окном поверх карточки */
+  /** embedded in the page ("Frames"), not a window over a card */
   embedded?: boolean
   onClose?: () => void
-  /** что-то легло в карточку или коллекцию — странице пора перечитать */
+  /** something landed in the card or collection: time for the page to reload */
   onChanged?: (how?: Pick) => void
 }) {
   const { t } = useTranslation('studio')
@@ -84,7 +84,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
 
   const [pult, setPultRaw] = useState<Pult>(base)
   const [loaded, setLoaded] = useState(scene)
-  // память пульта пишется только после действия ГМа: открыть мастерскую — не правка
+  // panel memory is written only after a GM action: opening the studio is not an edit
   const touched = useRef(false)
   const setPult: typeof setPultRaw = v => { touched.current = true; setPultRaw(v) }
   const [attempts, setAttempts] = useState<Attempt[]>([])
@@ -98,7 +98,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
   const [wardrobe, setWardrobe] = useState<Outfit[]>([])
   const [registers, setRegisters] = useState<[Register, string, string][] | null>(null)
 
-  // кисть
+  // brush
   const [brushSrc, setBrushSrc] = useState<BrushSource | null>(source || null)
   const [brush, setBrush] = useState(64)
   const [erase, setErase] = useState(false)
@@ -109,7 +109,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
   const feedBox = useRef<HTMLDivElement>(null)
 
   useEffect(() => { if (source) { setBrushSrc(source); setAsk('') } }, [source])
-  // холст стоит над лентой — показываем его, где бы лента ни была прокручена
+  // the canvas sits above the feed: show it wherever the feed is scrolled
   useEffect(() => { if (brushSrc) feedBox.current?.scrollTo({ top: 0 }) }, [brushSrc])
 
   const stopped = useRef(false)
@@ -124,7 +124,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     text => (brushSrc ? setAsk(a => append(a, text)) : setPult(p => ({ ...p, draft: append(p.draft, text) }))),
     setErr, !!embedded)
 
-  // --- лента ------------------------------------------------------------------
+  // --- feed -------------------------------------------------------------------
 
   const refresh = async () => {
     window.clearTimeout(timer.current)
@@ -152,7 +152,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listUrl])
 
-  // память пульта: у карточки — на сервере, у «Кадров» — в браузере
+  // panel memory: on the server for a card, in the browser for "Frames"
   useEffect(() => {
     if (scene) return
     let dead = false
@@ -171,7 +171,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
         }))
         setLoaded(true)
       })
-      // память не прочиталась — пульт работает, но сохранённое не затирает
+      // memory didn't load: the panel works but doesn't overwrite what's saved
       .catch(() => {})
     return () => { dead = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,7 +180,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
   useEffect(() => {
     if (!loaded || !touched.current) return
     if (scene) {
-      try { localStorage.setItem(sceneKey(), JSON.stringify(pult)) } catch { /* полный диск */ }
+      try { localStorage.setItem(sceneKey(), JSON.stringify(pult)) } catch { /* disk full */ }
       return
     }
     const t = window.setTimeout(() => {
@@ -193,7 +193,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
   const pickKind = (k: PromptKind) => setPult(p => ({ ...p, kind: k, aspect: startAspect(k, p.view) }))
   const pickView = (w: FrameView) => setPult(p => ({ ...p, view: w, aspect: startAspect(p.kind, w) }))
 
-  // --- попытки ----------------------------------------------------------------
+  // --- attempts ---------------------------------------------------------------
 
   const post = async (prompt: string, width: number, height: number, params: Dict) => {
     const j: Attempt = await api.post(jobsUrl, { prompt, width, height, params })
@@ -217,7 +217,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
         register: pult.register, aspect: box.key, draft: text, slots: r.slots || null, hand: false,
         outfit: outfit || undefined,
       }
-      // рисуется только показанный промпт: сначала смотрим и правим, потом «нарисовать»
+      // only the shown prompt is drawn: look and edit first, then "draw"
       setDraftAtt({
         id: 'draft', kind: 'txt2img', status: 'pending', error: '', entity_id: entity?.id || null,
         candidates: [], n_images: scene ? 1 : 4, prompt: r.prompt || '', width: box.width,
@@ -287,7 +287,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     }
   }
 
-  // образ — одежда удачного кадра: дальше её подставляют в каждый кадр дословно
+  // look: the outfit of a good frame; from here on it's inserted verbatim into every frame
   const saveOutfit = async (slots: Dict, image: string) => {
     const wear = ((slots.wear as string[]) || []).filter(Boolean)
     if (!wear.length) { setErr(t('err.no_wear')); return }
@@ -319,7 +319,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     } catch (e: any) { setErr(e?.message || t('err.forget_failed')) }
   }
 
-  // --- кисть ------------------------------------------------------------------
+  // --- brush ------------------------------------------------------------------
 
   const brushOn = (cd: Candidate, no: number) => {
     mic.stop()
@@ -335,7 +335,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     mic.stop()
     setErr(''); setPhase('hub')
     try {
-      // без исходного промпта правка области перерисует весь кадр: сбой чтения — стоп, а не догадка
+      // without the source prompt an area edit redraws the whole frame: a read failure stops, no guessing
       const baseRow = await api.get(`${c()}/inpaint-base/${brushSrc.id}`)
       const r = await api.post(`${c()}/inpaint-prompt`, { text: said, base_prompt: baseRow?.prompt || '' })
       const prompt = String(r.prompt || '').trim()
@@ -359,7 +359,7 @@ export default function Studio({ entity, source, embedded, onClose, onChanged }:
     }
   }
 
-  // --- раскладка --------------------------------------------------------------
+  // --- layout -----------------------------------------------------------------
 
   const feed = useMemo(() => {
     const live = attempts.map(a => ({ a, kept: undefined as undefined | { id: string; label: string } }))

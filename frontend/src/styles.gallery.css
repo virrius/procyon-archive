@@ -1,5 +1,5 @@
-/* Галерея сущностей — картотека архива.
-   Сплошные поверхности, канты 1px, без сеток, прозрачностей и свечения. */
+/* Entry gallery — the archive's card catalog.
+   Solid surfaces, 1px borders, no grids, translucency or glow. */
 
 .eg-bar { display: flex; flex-direction: column; gap: 6px; }
 .eg-bar .eg-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -25,7 +25,7 @@
 .eg-tog.on { background: var(--amber); color: #17140f; border-color: var(--amber); }
 .eg-tog.on .n { color: #5a4518; }
 .eg-tog.on:hover { background: #eab458; border-color: #eab458; color: #17140f; }
-/* пустой архив: чип на месте, но бледный */
+/* empty archive: the chip stays but dimmed */
 .eg-tog:disabled, .eg-tog:disabled:hover {
   background: var(--surface); color: var(--dim2); border-color: var(--line); cursor: default;
 }
@@ -42,7 +42,7 @@
 }
 .eg-group-hd .n { font-family: var(--util); font-size: 11px; color: var(--dim2); }
 
-/* группы игроков: без рамок — отделяет только широкий зазор; группа шириной в свои карточки */
+/* player groups: no frames — only a wide gap separates them; each group is as wide as its cards */
 .eg-groups.boxed { --eg-col: 268px; --eg-pad: 0px; flex-flow: row wrap; gap: 22px 48px; }
 .eg-groups.boxed .eg-group {
   flex: 0 1 calc(var(--eg-n, 1) * (var(--eg-col) + 12px));
@@ -57,7 +57,7 @@
 .eg-grid {
   display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  /* плитки одного размера: ряд ровняется по самой высокой */
+  /* tiles of equal size: a row aligns to the tallest */
   grid-auto-rows: 1fr;
 }
 
@@ -68,25 +68,25 @@
   display: flex; flex-direction: column;
 }
 .eg-card:hover { border-color: var(--line2); }
-/* выделение с клавиатуры — ровная рамка самой плитки, а не контур ссылки внутри */
+/* keyboard focus — a clean frame on the tile itself, not an outline on the link inside */
 .eg-card:focus-within { border-color: var(--amber); }
 .eg-card > a { display: block; color: inherit; }
 .eg-card > a:focus-visible { outline: none; }
 .eg-card > a:hover { text-decoration: none; }
 
 .eg-shot-box { position: relative; display: block; }
-/* снимок показываем целиком: вписать иначе — через кадрирование */
+/* the image is shown whole: to fit it differently, use cropping */
 .eg-photo {
   display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
   background: #100f0d; border-bottom: 1px solid var(--line);
 }
-/* пломбы на снимке: статус слева внизу, ранг справа — с отступом от канта */
+/* seals on the image: status bottom left, Tier on the right — inset from the border */
 .eg-badge {
   position: absolute; bottom: 8px; z-index: 2;
   font-family: var(--util); line-height: 1.3;
   text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
 }
-/* статус — печать на кадре: та же двойная обводка, что на карточке, только мельче */
+/* status is a stamp on the image: the same double outline as on the card, only smaller */
 .eg-status {
   --st: var(--dim2);
   --ink: #100f0d;
@@ -106,7 +106,7 @@
 .eg-status.t-work  { --st: #e3c93a; }
 .eg-status.t-win   { --st: #3f9a45; }
 .eg-status.t-grey  { --st: #8a8a8a; }
-/* ранг — золотая пломба: одна цифра, без подписи */
+/* Tier is a gold seal: one numeral, no label */
 .eg-rank {
   right: 9px; font-family: Georgia, "Times New Roman", serif;
   font-size: 19px; letter-spacing: .06em; text-transform: none;
@@ -117,7 +117,7 @@
   font-size: 13.5px; font-weight: 600; line-height: 1.3; color: var(--txt);
   display: flex; align-items: baseline; justify-content: center; gap: 6px; text-align: center;
 }
-/* длинное имя переносится, но не растит карточку без края: две строки и многоточие */
+/* a long name wraps but doesn't grow the card endlessly: two lines and an ellipsis */
 .eg-name > span:first-child {
   min-width: 0; overflow: hidden; overflow-wrap: break-word;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
@@ -127,9 +127,9 @@
   display: -webkit-box; -webkit-box-orient: vertical;
   -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
 }
-/* карточка без полей: описание длиннее, но высота у всех плиток одна */
+/* a card without fields: longer description, but all tiles share one height */
 .eg-sub.full { -webkit-line-clamp: 5; line-clamp: 5; min-height: calc(1.35em * 5); }
-/* закрыто от стола — тот же язык, что на полной карточке: рустовый кант и тёплая подложка */
+/* hidden from the table — same look as the full card: rust border and warm background */
 .eg-sub.shut {
   border-left: 3px solid var(--rust); background: #1f1512;
   margin-left: -9px; padding: 2px 0 2px 6px;
@@ -143,9 +143,9 @@
 
 .eg-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .eg-chips .eg-tag { color: var(--txt); border-color: var(--line); text-transform: none; letter-spacing: 0; }
-/* ключ приглушён, значение читается — «Фракция: Гильдия инженеров» */
+/* key muted, value readable — “Faction: Guild of Engineers” */
 .eg-chips .eg-tag > i { font-style: normal; color: var(--dim2); }
-/* длинный перечень значений переносится внутри чипа, а не вылезает из карточки */
+/* a long list of values wraps inside the chip instead of overflowing the card */
 .eg-chips .eg-tag {
   max-width: 100%; white-space: normal; overflow-wrap: break-word; line-height: 1.4;
   align-items: baseline;
@@ -160,16 +160,16 @@
 }
 
 @media (max-width: 700px) {
-  /* на телефоне плитка — строкой: снимок слева, досье справа, каждая своей высоты */
+  /* on phones a tile is a row: image on the left, dossier on the right, each its own height */
   .eg-grid, .eg-groups.boxed .eg-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; gap: 10px; }
   .eg-groups.boxed { gap: 18px; }
   .eg-groups.boxed .eg-group { flex-basis: 100%; }
   .eg-bar input[type="text"], .eg-bar select { max-width: none; }
 }
 
-/* ── плитка галереи: снимок главный, ниже — досье в четыре строки ─────────────
-   имя антиквой, прозвище курсивом, роль одной янтарной строкой, суть, факты
-   описью «ключ — значение». Служебное (владелец, видимость) — по наведению */
+/* ── gallery tile: the image leads, below it a four-line dossier ─────────────
+   serif name, italic alias, role as one amber line, gist, facts as a
+   “key — value” list. Service info (owner, visibility) shows on hover */
 
 .tile {
   --ratio: 4 / 3;
@@ -191,18 +191,18 @@
 .tile-shot > img, .tile-shot > .tile-stub {
   display: block; width: 100%; height: 100%;
 }
-/* снимок целиком, без обрезки: вписать в кадр — дело кадрирования превью (crop_box) */
+/* the whole image, uncropped: fitting it to the frame is the preview crop's job (crop_box) */
 .tile-shot > img { position: relative; object-fit: contain; }
-/* поля вокруг вписанного снимка — тот же снимок, размытый и притушенный */
+/* the margins around the fitted image are the same image, blurred and dimmed */
 .tile-shot > img.tile-bg {
   position: absolute; inset: 0; object-fit: cover;
   filter: blur(14px) brightness(.4) saturate(.8); transform: scale(1.15);
 }
-/* выбыл из игры — кадр выцветает, подпись статуса остаётся цветной */
+/* out of play — the image fades, the status label keeps its color */
 .tile-gone .tile-shot > img { filter: grayscale(1) brightness(.72); }
 
-/* ранг лежит на самом кадре: римская цифра с чертой сверху и снизу, как на монете;
-   читаемость держит тень угла */
+/* Tier sits on the image itself: a roman numeral with rules above and below, like on a coin;
+   a corner shadow keeps it readable */
 .tile-rank {
   position: absolute; top: 0; right: 0; z-index: 2;
   padding: 9px 12px 18px 26px;
@@ -217,7 +217,7 @@
 }
 .tile-rank.hid .tr-num { color: #e79a83; }
 
-/* статус — печать на кадре: двойная обводка, лёгкий наклон */
+/* status is a stamp on the image: double outline, slight tilt */
 .tile-status {
   --st: var(--dim2); --ink: #100f0d;
   position: absolute; left: 10px; bottom: 9px; z-index: 2; max-width: 60%;
@@ -256,7 +256,7 @@
   font-family: var(--ui); font-style: normal; font-weight: 400;
   display: block; font-size: .82em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* тип дела (работёнка, слух) — разрядкой между двумя чертами над названием */
+/* job type (job, rumor) — letter-spaced between two rules above the title */
 .tile-type.hid { color: #e0a992; }
 .tile-type {
   padding: 3px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
@@ -273,7 +273,7 @@
 .tile-sum.long { -webkit-line-clamp: 6; line-clamp: 6; min-height: calc(1.45em * 6); }
 .tile-sum.hid { color: #c99a87; }
 
-/* опись: подпись слева, значение справа, одна строка на факт */
+/* fact list: label on the left, value on the right, one line per fact */
 .tile-facts {
   margin: auto 0 0; padding-top: 8px; border-top: 1px solid var(--line);
   display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 10px;
@@ -296,14 +296,14 @@
 }
 .tile-more:hover { color: var(--amber); background: none; }
 
-/* карточка закрыта от стола: рустовый кант по верху */
+/* card hidden from the table: rust border along the top */
 .tile.tile-gm { border-color: #3d2a23; background: #1c1411; }
 .tile.tile-gm:hover { border-color: #5c3327; }
-/* закрытое дело — бледным хвостом в конце галереи */
+/* a closed job — a dimmed tail at the end of the gallery */
 .tile.tile-faded { opacity: .5; }
 .tile.tile-faded:hover, .tile.tile-faded:focus-within { opacity: 1; }
 
-/* владелец и видимость — в правом нижнем углу плитки, на своей полосе: суть и опись под них не заезжают */
+/* owner and visibility — bottom right of the tile, on their own strip: gist and facts don't run under them */
 .tile-svc {
   position: absolute; bottom: 10px; right: 12px; z-index: 2;
   display: flex; gap: 4px;

@@ -13,8 +13,8 @@ import {
   TRAUMA_MAX, VET_MAX,
 } from './model'
 
-/** Что знает каждый свимлейн бланка: черновик полей и как его менять.
- *  `marks` — игровые отметки (вкладка «Бланк»), `pick` — разовые выборы (вкладка «Настройка»). */
+/** What each sheet swimlane knows: the field draft and how to change it.
+ *  `marks`: play marks ("Sheet" tab), `pick`: one-time choices ("Setup" tab). */
 export type Ctx = {
   f: Dict
   set: (k: string, v: any) => void
@@ -28,11 +28,11 @@ export type Ctx = {
   book: Book | null
   pb: string
   eff: ReturnType<typeof effective>
-  /** настройка бланков кампании */
+  /** campaign sheet setup */
   setup: Dict
-  /** поле закрыто ГМом и этому зрителю пришло пустым */
+  /** the GM hid the field and it came empty to this viewer */
   locked: (k: string) => boolean
-  /** глаз ГМа «закрыть от стола» */
+  /** GM's "hide from the table" eye */
   eye: (k: string) => ReactNode
 }
 
@@ -42,7 +42,7 @@ const textOf = (rows: any, name: string): string =>
   String((Array.isArray(rows) ? rows : []).find((r: Dict) => r?.name === name)?.text || '')
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s)
 
-/** Заметка к происхождению, прошлому, страсти: поле растёт по тексту. */
+/** Note for heritage, background, vice: the field grows with the text. */
 function NoteBox({ value, placeholder, onChange }: { value: string; placeholder: string; onChange: (v: string) => void }) {
   const box = useRef<HTMLTextAreaElement>(null)
   useLayoutEffect(() => {
@@ -57,7 +57,7 @@ function NoteBox({ value, placeholder, onChange }: { value: string; placeholder:
   )
 }
 
-/* --- происхождение, прошлое, страсть, креды ------------------------------- */
+/* --- heritage, background, vice, cred ------------------------------------- */
 
 function IdRow({ c, label, field, refKey, multi, ph }: {
   c: Ctx; label: string; field: string; refKey: string; multi?: boolean; ph: string
@@ -124,7 +124,7 @@ export function Identity({ c }: { c: Ctx }) {
   )
 }
 
-/** Происхождение, прошлое и страсть одной строкой под именем — на «Бланке». */
+/** Heritage, background and vice in one line under the name, on the "Sheet" tab. */
 export function IdLine({ c }: { c: Ctx }) {
   const { t } = useTranslation('char')
   const part = (field: string, label: string) => {
@@ -138,7 +138,7 @@ export function IdLine({ c }: { c: Ctx }) {
   return parts.length ? <div className="cs-idline">{parts}</div> : null
 }
 
-/** Подпись с правилом из книги: нажатие раскрывает две-три строки под ней. */
+/** Label with a rule from the book: clicking expands two or three lines under it. */
 function HelpHead({ k, tip, setTip, label, children }: {
   k: string; tip: string; setTip: (k: string) => void; label: string; children?: ReactNode
 }) {
@@ -151,12 +151,12 @@ function HelpHead({ k, tip, setTip, label, children }: {
   )
 }
 
-/* --- колонка состояния: всё, что меняется по ходу дела ---------------------- */
+/* --- state column: everything that changes during play ---------------------- */
 
 type RailPart = 'stress' | 'trauma' | 'harm' | 'load' | 'money'
 const RAIL_ALL: RailPart[] = ['stress', 'trauma', 'harm', 'load', 'money']
 
-/** `parts` — какие блоки показать: на телефоне колонка режется на куски между разделами бланка. */
+/** `parts`: which blocks to show; on a phone the column is cut into pieces between sheet sections. */
 export function Rail({ c, parts = RAIL_ALL }: { c: Ctx; parts?: RailPart[] }) {
   const { t } = useTranslation('char')
   const has = (k: RailPart) => parts.includes(k)
@@ -169,7 +169,7 @@ export function Rail({ c, parts = RAIL_ALL }: { c: Ctx; parts?: RailPart[] }) {
   const healing = num(c.f.healing)
   const armor = dict(c.f.armor)
   const stash = num(c.f.stash)
-  // ступени судьбы из книги, по строке заначки на ступень: ступень взята, когда её строка заполнена
+  // fate tiers from the book, one stash row per tier: a tier is reached when its row is full
   const tiers: any[][] = Array.isArray(c.sheet.stash) ? c.sheet.stash : []
   const tierName = (r?: any[]) => String(r?.[2] || '').split(':')[0].trim()
   const fateName = tierName(tiers[Math.max(Math.min(Math.floor(stash / 10), tiers.length) - 1, 0)]).toLowerCase()
@@ -297,7 +297,7 @@ export function Rail({ c, parts = RAIL_ALL }: { c: Ctx; parts?: RailPart[] }) {
   )
 }
 
-/** Нагрузка: уровень и занятое. На ПК — в колонке состояния, на телефоне — в «Снаряжении». */
+/** Load: level and used. On desktop in the state column, on a phone under "Items". */
 function LoadBlock({ c }: { c: Ctx }) {
   const { t } = useTranslation('char')
   const [tip, setTip] = useState('')
@@ -333,7 +333,7 @@ function LoadBlock({ c }: { c: Ctx }) {
   )
 }
 
-/* --- травмы выбирают на «Настройке»; на «Бланке» — только взятые ------------- */
+/* --- trauma is picked on "Setup"; "Sheet" shows only the taken ones ---------- */
 
 export function TraumaPick({ c }: { c: Ctx }) {
   const { t } = useTranslation('char')
@@ -364,7 +364,7 @@ export function TraumaPick({ c }: { c: Ctx }) {
   )
 }
 
-/** Счётчик лечения — круг на `n` делений, как на бумажном бланке. */
+/** Healing clock: a circle of `n` segments, as on the paper sheet. */
 function Clock({ n, value, onSet }: { n: number; value: number; onSet?: (v: number) => void }) {
   const r = 20, o = 22
   return (
@@ -381,7 +381,7 @@ function Clock({ n, value, onSet }: { n: number; value: number; onSet?: (v: numb
   )
 }
 
-/* --- навыки и опыт характеристик ------------------------------------------- */
+/* --- actions and attribute xp ---------------------------------------------- */
 
 export function ActionsLane({ c }: { c: Ctx }) {
   const { t } = useTranslation('char')
@@ -390,7 +390,7 @@ export function ActionsLane({ c }: { c: Ctx }) {
   const attrs: Attr[] = Array.isArray(c.sheet.attributes) ? c.sheet.attributes : []
   const acts = dict(c.f.actions)
   const xp = dict(c.f.xp)
-  // стартовые навыки бланка не снимаются — ниже них не опустить
+  // the playbook's starting actions can't be removed: you can't go below them
   const start = dict(c.book?.start)
   const setAct = (k: string, v: number) =>
     c.set('actions', { ...acts, [k]: Math.max(num(start[k]), Math.min(ACT_MAX, v)) })
@@ -455,9 +455,9 @@ export function ActionsLane({ c }: { c: Ctx }) {
   )
 }
 
-/* --- способность, таланты, опыт бланка ------------------------------------- */
+/* --- special abilities, playbook xp ---------------------------------------- */
 
-/** Таланты списком с отметками: выбор на «Настройке» и развитие по опыту бланка на «Бланке». */
+/** Abilities as a checklist: picked on "Setup" and advanced with playbook xp on "Sheet". */
 export function AbilitiesLane({ c, adv = false, setAdv, beside }: {
   c: Ctx; adv?: boolean; setAdv?: (v: boolean) => void; beside?: ReactNode
 }) {
@@ -473,7 +473,7 @@ export function AbilitiesLane({ c, adv = false, setAdv, beside }: {
   const pbs = Object.keys(dict(c.meta?.playbooks)).filter(k => k !== c.pb)
 
   const toggle = (k: string) => {
-    // в развитии только берут новый: взятое не снимается
+    // advancing only adds a new one: taken ones can't be removed
     if (adv) {
       if (taken.includes(k)) return
       c.patch({ talents: [...taken, k], xp: { ...xp, playbook: 0 } })
@@ -551,8 +551,8 @@ export function AbilitiesLane({ c, adv = false, setAdv, beside }: {
   )
 }
 
-/** Способности на «Бланке»: уникальная и взятые — карточками с текстом, невзятые — строкой.
- *  Развитие по опыту бланка разворачивает полный список с отметками. */
+/** Special abilities on "Sheet": the unique one and taken ones as cards with text, untaken ones as a line.
+ *  Advancing with playbook xp expands the full checklist. */
 export function AbilityCards({ c, adv, setAdv }: { c: Ctx; adv: boolean; setAdv: (v: boolean) => void }) {
   const { t } = useTranslation('char')
   const [why, setWhy] = useState(false)
@@ -589,7 +589,7 @@ export function AbilityCards({ c, adv, setAdv }: { c: Ctx; adv: boolean; setAdv:
   )
 }
 
-/** Карточка способности: «подробнее» справа в строке описания — не съедает строку под текстом. */
+/** Ability card: "more" sits at the right of the description's last line, so it doesn't take a line under the text. */
 function AbilityCard({ name, text, more, src, u }: { name: string; text: string; more?: string; src?: string; u?: boolean }) {
   const { t } = useTranslation('char')
   const [open, setOpen] = useState(false)
@@ -611,14 +611,14 @@ function AbilityCard({ name, text, more, src, u }: { name: string; text: string;
   )
 }
 
-/** Одна раскрытая карточка на блок: по нажатию, закрывается кликом мимо или Esc (на ПК ещё и по наведению — в CSS). */
+/** One open card per block: opens on click, closes on outside click or Esc (on desktop also on hover, in CSS). */
 function useOneOpen() {
   const [open, setOpen] = useState('')
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
     const shut = (e: MouseEvent) => {
-      // кнопки-подсказки блока переключают себя сами; всё остальное — клик мимо
+      // the block's tip buttons toggle themselves; anything else is an outside click
       const at = e.target as Element
       if (box.current?.contains(at) && at.closest('[aria-expanded]')) return
       setOpen('')
@@ -636,7 +636,7 @@ function useOneOpen() {
   return [open, setOpen, box] as const
 }
 
-/** Невзятые способности строкой; полный текст — карточкой под строкой по наведению, на телефоне по нажатию. */
+/** Untaken abilities in a line; full text as a card under the line on hover, on a phone on tap. */
 function RestLine({ label, items }: { label: string; items: Entry[] }) {
   const [open, setOpen, box] = useOneOpen()
   return (
@@ -660,7 +660,7 @@ function RestLine({ label, items }: { label: string; items: Entry[] }) {
   )
 }
 
-/** Опыт бланка в заголовке «Способностей»: шкала, развитие при полной, плюсик раскрывает, за что даётся. */
+/** Playbook xp in the "Special Abilities" heading: track, advance when full, a plus expands the xp triggers. */
 function XpHead({ c, why, setWhy, adv, setAdv }: {
   c: Ctx; why: boolean; setWhy: (v: boolean) => void; adv: boolean; setAdv: (v: boolean) => void
 }) {
@@ -684,7 +684,7 @@ function XpHead({ c, why, setWhy, adv, setAdv }: {
   )
 }
 
-/** За что даётся опыт — раскрывается плюсиком из заголовка. */
+/** xp triggers: expanded by the plus in the heading. */
 function XpWhy({ c }: { c: Ctx }) {
   const sx = dict(c.sheet.xp)
   return (
@@ -699,7 +699,7 @@ function XpWhy({ c }: { c: Ctx }) {
   )
 }
 
-/* --- снаряжение и нагрузка ------------------------------------------------- */
+/* --- items and load -------------------------------------------------------- */
 
 function ItemRow({ it, scope, c }: { it: Entry; scope: string; c: Ctx }) {
   const { t } = useTranslation('char')
@@ -776,7 +776,7 @@ export function GearLane({ c }: { c: Ctx }) {
   )
 }
 
-/* --- знакомые: карточки NPC, как у корабля --------------------------------- */
+/* --- friends: NPC cards, as for the ship ----------------------------------- */
 
 export function ContactsLane({ c, npcs, onAdd }: {
   c: Ctx; npcs: Dict[]; onAdd: (npc: Dict) => void
@@ -816,7 +816,7 @@ export function ContactsLane({ c, npcs, onAdd }: {
   )
 }
 
-/* --- создание: выбор бланка и шаги памятки --------------------------------- */
+/* --- creation: playbook choice and reference steps ------------------------- */
 
 export function PlaybookPick({ meta, onPick, onCancel }: {
   meta: Dict | null; onPick: (key: string) => void; onCancel?: () => void
@@ -853,7 +853,7 @@ export function Steps({ c, named, onDone }: { c: Ctx; named: boolean; onDone: ()
   const start = pointsOf(dict(c.book?.start))
   const spent = Math.max(0, pointsOf(dict(c.f.actions)) - start)
   const states = readContacts(c.f.contacts).map(r => r.state)
-  // [подпись, сделано, перебор] — перебор подсвечен, но «персонаж готов» не держит
+  // [label, done, over]: over is highlighted but doesn't block "character is ready"
   const steps: [string, boolean, boolean?][] = [
     [t('steps.playbook'), !!c.pb],
     [t('steps.talent'), list(c.f.talents).length > 0],
@@ -873,13 +873,13 @@ export function Steps({ c, named, onDone }: { c: Ctx; named: boolean; onDone: ()
   )
 }
 
-/* --- памятка с нижней части листа ------------------------------------------ */
+/* --- reference from the bottom of the sheet -------------------------------- */
 
 const MEMO_COL = 190
 const MEMO_GAP = 16
 const MEMO_POP = 340
 
-/** Группы памятки по колонкам подряд, чтобы самая высокая колонка была как можно ниже (высота — по длине строк). */
+/** Reference groups across columns in order, so the tallest column is as short as possible (height by line length). */
 function memoColumns(rows: Dict[], n: number): [number, number][] {
   const h = rows.map(r => 2 + (Array.isArray(r.lines) ? r.lines : [])
     .reduce((s: number, l: any) => s + Math.ceil(String(typeof l === 'object' && l ? l.text : l).length / 27), 0))
@@ -900,8 +900,8 @@ function memoColumns(rows: Dict[], n: number): [number, number][] {
   return best
 }
 
-/** `inHead` — открытой колонкой в шапке «Бланка» (видна только на широком экране).
- *  Строка памятки — текст или `{text, more}`: пояснение из книги карточкой по клику. */
+/** `inHead`: as an open column in the "Sheet" header (visible only on a wide screen).
+ *  A reference line is text or `{text, more}`: a book note as a card on click. */
 export function Reference({ sheet, inHead }: { sheet: Dict; inHead?: boolean }) {
   const { t } = useTranslation('char')
   const [open, setOpen, box] = useOneOpen()

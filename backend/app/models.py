@@ -48,9 +48,9 @@ class User(Base, PK, Stamps):
     display_name: Mapped[str] = mapped_column(String(120))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    # пароль выдан по умолчанию (первый админ): пока не сменён, API пускает только в /auth/me и /auth/password
+    # password was set by default (first admin): until it is changed, the API only allows /auth/me and /auth/password
     password_default: Mapped[bool] = mapped_column(Boolean, default=False)
-    # растёт при смене пароля: токены со старым номером больше не принимаются
+    # bumped on password change: tokens with an older version are no longer accepted
     token_version: Mapped[int] = mapped_column(Integer, default=0)
 
 
@@ -60,20 +60,20 @@ class Campaign(Base, PK, Stamps):
     description: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(30), default="active")
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    # язык стартовых материалов: канон, карта, корабль, вырезки правил; заведённое так и остаётся
+    # language of the starter content: canon, map, ship, rules clippings; what was created stays as is
     lang: Mapped[str] = mapped_column(String(5), default="")
     members: Mapped[list[CampaignMember]] = relationship(back_populates="campaign")
 
-    # гардероб кампании: {"wardrobe": {ключ: наряд}} — одежда удачных кадров стола
+    # campaign wardrobe: {"wardrobe": {key: outfit}} — outfits from the table's good frames
     img_prompt_kit: Mapped[str] = mapped_column(Text, default="")
-    # игровое время — дней от 1261.1.1; год, неделя и день недели считаются из него
+    # in-game time — days since 1261.1.1; year, week and weekday are derived from it
     world_day: Mapped[int] = mapped_column(Integer, default=0)
-    # настройка бланков экипажа поверх книги: {"common": [...], "playbooks": {ключ: {...}}}
+    # crew sheet setup on top of the book: {"common": [...], "playbooks": {key: {...}}}
     sheet_setup: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
 class ServerSettings(Base):
-    """Настройки сервера, общие для всех кампаний: хаб, модели и промпты. Одна строка с id «main»."""
+    """Server settings shared by all campaigns: hub, models and prompts. One row with id "main"."""
 
     __tablename__ = "server_settings"
     id: Mapped[str] = mapped_column(String(20), primary_key=True, default="main")
@@ -81,20 +81,20 @@ class ServerSettings(Base):
     hub_api_key: Mapped[str] = mapped_column(String(200), default="")
     img_model: Mapped[str] = mapped_column(String(100), default="")
     news_model: Mapped[str] = mapped_column(String(100), default="")
-    # кто рисует: worker | api; протокол сервиса hub_draw определяет по ответу.
-    # Адрес и ключ рисования пусты — берутся от текста
+    # who draws: worker | api; hub_draw detects the service protocol from its response.
+    # Empty drawing URL and key fall back to the text ones
     draw_kind: Mapped[str] = mapped_column(String(20), default="")
     draw_model: Mapped[str] = mapped_column(String(100), default="")
     draw_base_url: Mapped[str] = mapped_column(String(300), default="")
     draw_api_key: Mapped[str] = mapped_column(String(200), default="")
-    # инструкции хабу: правка области и три направления; пусто — текст из кода
+    # hub instructions: inpainting and the three directions; empty means the text from code
     img_inpaint_prompt: Mapped[str] = mapped_column(Text, default="")
     img_prose_person: Mapped[str] = mapped_column(Text, default="")
     img_prose_frame: Mapped[str] = mapped_column(Text, default="")
     img_prose_action: Mapped[str] = mapped_column(Text, default="")
-    # правки кита без гардероба: гардероб остаётся у кампании
+    # kit overrides without the wardrobe: the wardrobe stays with the campaign
     img_prompt_kit: Mapped[str] = mapped_column(Text, default="")
-    # язык экземпляра: интерфейс и генерация; пусто — английский
+    # instance language: UI and generation; empty means English
     lang: Mapped[str] = mapped_column(String(5), default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
 
@@ -136,11 +136,11 @@ class Entity(Base, PK, Stamps, VisMixin):
     fields: Mapped[dict] = mapped_column(JSONB, default=dict)
     owner_member_id: Mapped[str | None] = mapped_column(String(64))
     archived: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    # что ГМ пока не открыл игрокам: имена колонок карточки и ключи fields
+    # what the GM has not revealed to players yet: entity column names and fields keys
     hidden_fields: Mapped[list] = mapped_column(JSONB, default=list)
-    # снимок формы генерации: направление, регистр, манера, слоты, промпт. Живёт на
-    # карточке, а не на заявке, — заявку сносит отмена, а следующий кадр почти всегда
-    # правится от предыдущего. Столу не отдаётся: это кухня ГМа
+    # generation form snapshot: direction, register, manner, slots, prompt. Lives on the
+    # entity, not on the job: cancelling deletes the job, and the next frame is almost always
+    # edited from the previous one. Not sent to the table: GM-only
     gen_form: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
@@ -167,7 +167,7 @@ class ContentBlock(Base, PK, Stamps, VisMixin):
     created_by: Mapped[str | None] = mapped_column(String(64))
     created_by_gm: Mapped[bool] = mapped_column(Boolean, default=False)
     edited_by: Mapped[str | None] = mapped_column(String(64))
-    links: Mapped[list] = mapped_column(JSONB, default=list)  # id сущностей, о которых запись
+    links: Mapped[list] = mapped_column(JSONB, default=list)  # ids of the entities the note is about
 
 
 class Clock(Base, PK, Stamps, VisMixin):
@@ -176,14 +176,14 @@ class Clock(Base, PK, Stamps, VisMixin):
     name: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="")
     outcome: Mapped[str] = mapped_column(Text, default="")
-    kind: Mapped[str] = mapped_column(String(60), default="", index=True)  # тип, задаёт стол
+    kind: Mapped[str] = mapped_column(String(60), default="", index=True)  # type, set by the table
     color: Mapped[str] = mapped_column(String(20), default="amber")
     segments: Mapped[int] = mapped_column(Integer, default=6)
     filled: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(20), default="active")
     owner_type: Mapped[str | None] = mapped_column(String(30))
     owner_id: Mapped[str | None] = mapped_column(String(64), index=True)
-    # кому отдана правка: '*' — любой игрок, '' — только ГМ, иначе id участника
+    # who may edit: '*' — any player, '' — GM only, otherwise a member id
     owner_member_id: Mapped[str] = mapped_column(String(64), default="*")
 
 
@@ -192,7 +192,7 @@ class Message(Base, PK, Stamps, VisMixin):
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
     sender_display: Mapped[str] = mapped_column(String(200), default="UNKNOWN")
     sender_entity_id: Mapped[str | None] = mapped_column(String(64))
-    # привязка обычно закулисная; флаг открывает карточку отправителя столу
+    # the link is usually backstage; the flag reveals the sender's entry to the table
     sender_reveal: Mapped[bool] = mapped_column(Boolean, default=False)
     msg_type: Mapped[str] = mapped_column(String(40), default="crew")
     subject: Mapped[str] = mapped_column(String(300), default="")
@@ -201,12 +201,12 @@ class Message(Base, PK, Stamps, VisMixin):
     is_lead: Mapped[bool] = mapped_column(Boolean, default=False)
     expires_at: Mapped[str] = mapped_column(String(80), default="")
     delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # игровой день письма (как Campaign.world_day)
+    # in-game day of the message (like Campaign.world_day)
     world_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class News(Base, PK, Stamps, VisMixin):
-    """Новость сектора: депеша журналиста, которую ГМ выпустил в эфир."""
+    """Sector news: a journalist's dispatch that the GM has put on air."""
 
     __tablename__ = "news"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
@@ -214,21 +214,21 @@ class News(Base, PK, Stamps, VisMixin):
     body: Mapped[str] = mapped_column(Text, default="")
     byline: Mapped[str] = mapped_column(String(120), default="")
     journalist: Mapped[str] = mapped_column(String(60), default="")
-    # суть новости сводкой; ГМ может спрятать её от стола — тогда игроки разбираются по тексту
+    # the gist of the news as a summary; the GM can hide it from the table — then players work it out from the text
     lead: Mapped[str] = mapped_column(Text, default="")
     lead_hidden: Mapped[bool] = mapped_column(Boolean, default=False)
-    # отклики жителей сети: [{handle, who, text}]
+    # comments from net users: [{handle, who, text}]
     comments: Mapped[list] = mapped_column(JSONB, default=list)
-    # игровой день выхода (как Campaign.world_day); пусто — новость старше игрового времени
+    # in-game release day (like Campaign.world_day); empty means the news predates in-game time
     world_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    # о ком и о чём новость: записи кампании и счётчики
+    # who and what the news is about: campaign entries and clocks
     entity_ids: Mapped[list] = mapped_column(JSONB, default=list)
     clock_ids: Mapped[list] = mapped_column(JSONB, default=list)
 
 
 class NewsJob(Base, PK, Stamps):
-    """Заказ депеш журналисту: пишется в фоне, черновики ждут ГМа здесь же,
-    пока он не выпустит их в эфир или не уберёт."""
+    """A dispatch order for a journalist: written in the background; drafts wait for the GM here
+    until the GM puts them on air or discards them."""
 
     __tablename__ = "news_jobs"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
@@ -289,9 +289,9 @@ class MapStroke(Base, PK, Stamps, VisMixin):
 
 
 class Board(Base, PK, Stamps):
-    """Доска квеста: холст ГМа, куда стягиваются карточки, вырезки записей и
-    свободные заметки, связанные нитями. Кухня ГМа — столу не отдаётся вовсе, поэтому
-    ни у доски, ни у её карточек нет видимости."""
+    """Story board: the GM's canvas that collects cards, note clippings and
+    free notes tied with threads. GM-only — never sent to the table, so
+    neither the board nor its cards have visibility."""
 
     __tablename__ = "boards"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
@@ -303,40 +303,40 @@ class Board(Base, PK, Stamps):
 
 
 class BoardCard(Base, PK, Stamps):
-    """Карточка на доске: entity — миниатюра записи с ключевыми заметками, text —
-    свободный стикер, image — улика-кадр, clock — живой счётчик кампании,
-    sketch — поле, на котором ГМ рисует от руки, name — статист (npc-эпизодник): имя
-    и описание, в базу кампании не идёт. Координаты в единицах холста
-    (не в долях: холст бесконечный, фона под ним нет)."""
+    """A card on the board: entity — an entry thumbnail with key notes, text —
+    a free sticky note, image — a frame used as evidence, clock — a live campaign clock,
+    sketch — a field the GM draws on by hand, name — an extra (one-scene NPC): name
+    and description, not stored in the campaign database. Coordinates are in canvas units
+    (not fractions: the canvas is infinite, with no background under it)."""
 
     __tablename__ = "board_cards"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
     board_id: Mapped[str] = mapped_column(ForeignKey("boards.id"), index=True)
-    # человекочитаемый ключ в пределах доски: по нему карточку зовут в снимке и в
-    # пакетной правке, вместо uuid («gregor-varg», «ulika-manifest»)
+    # human-readable key within the board: used to address the card in the snapshot and in
+    # batch edits instead of a uuid ("gregor-varg", "ulika-manifest")
     key: Mapped[str] = mapped_column(String(64), default="", index=True)
     kind: Mapped[str] = mapped_column(String(20), default="text")
     entity_id: Mapped[str | None] = mapped_column(String(64), index=True)
-    # счётчик живёт своей жизнью в кампании: на доске лежит только ссылка на него
+    # a clock lives its own life in the campaign: the board holds only a link to it
     clock_id: Mapped[str | None] = mapped_column(String(64), index=True)
-    # записки, привязанные к карточке на доске: [{id, text, tag}]. В саму запись
-    # кампании они уходят одним блоком, сгруппированные по тегу
+    # notes attached to a card on the board: [{id, text, tag}]. They go into the campaign
+    # entry itself as one block, grouped by tag
     notes: Mapped[list] = mapped_column(JSONB, default=list)
-    # id того блока: правка ложится в него, а не плодит новые записи
+    # id of that block: edits go into it instead of spawning new notes
     block_id: Mapped[str | None] = mapped_column(String(64))
     title: Mapped[str] = mapped_column(String(300), default="")
     body: Mapped[str] = mapped_column(Text, default="")
     image_url: Mapped[str] = mapped_column(String(500), default="")
     color: Mapped[str] = mapped_column(String(20), default="amber")
-    # кегль текстового поля: подпись на доске бывает и мелкой пометкой, и заголовком
+    # text field font size: a board caption can be a small mark or a heading
     font_size: Mapped[int] = mapped_column(Integer, default=14)
     x: Mapped[float] = mapped_column(Float, default=0.0)
     y: Mapped[float] = mapped_column(Float, default=0.0)
     w: Mapped[float] = mapped_column(Float, default=240.0)
-    # высота задаётся вручную только у полей, где её нечем вывести из содержимого
-    # (набросок); у остальных карточек высоту считает браузер по тексту
+    # height is set manually only for fields where it can't be derived from the content
+    # (sketch); for other cards the browser computes the height from the text
     h: Mapped[float] = mapped_column(Float, default=0.0)
-    # росчерки наброска: [{color, width, pts: [x, y, ...]}] в координатах карточки
+    # sketch strokes: [{color, width, pts: [x, y, ...]}] in card coordinates
     ink: Mapped[list] = mapped_column(JSONB, default=list)
     collapsed: Mapped[bool] = mapped_column(Boolean, default=False)
     z: Mapped[int] = mapped_column(Integer, default=0)
@@ -344,7 +344,7 @@ class BoardCard(Base, PK, Stamps):
 
 
 class BoardEdge(Base, PK, Stamps):
-    """Нить между карточками: как красная верёвка на детективной доске."""
+    """A thread between cards: like the red string on a detective's board."""
 
     __tablename__ = "board_edges"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
@@ -368,52 +368,52 @@ class Attachment(Base, PK, Stamps, VisMixin):
     target_id: Mapped[str | None] = mapped_column(String(64), index=True)
     caption: Mapped[str] = mapped_column(String(300), default="")
     uploaded_by: Mapped[str | None] = mapped_column(String(64))
-    # рамка превью в пикселях оригинала, "x,y,w,h"; пусто — превью со всего кадра.
-    # Файл при кадрировании не режем: миниатюры берут рамку, полный размер — оригинал
+    # preview box in original-image pixels, "x,y,w,h"; empty means a preview of the whole frame.
+    # The file is not cut when cropping: thumbnails use the box, full size uses the original
     crop_box: Mapped[str] = mapped_column(String(60), default="")
 
 
 class ImageGenJob(Base, PK, Stamps):
-    """Заявка на генерацию портрета: ГМ ставит промпт, локальный воркер поллит,
-    приносит 4 кандидата, ГМ выбирает — остальные удаляются. Живёт до выбора/отмены,
-    поэтому её можно свернуть (закрыть окно) и вернуться позже — статус переживает
-    закрытие модалки на фронте."""
+    """Portrait generation job: the GM sets a prompt, the local worker polls,
+    brings 4 candidates, the GM picks one and the rest are deleted. Lives until picked/cancelled,
+    so it can be minimized (window closed) and resumed later — the status survives
+    closing the modal on the frontend."""
 
     __tablename__ = "image_gen_jobs"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
-    # пусто — заявка не привязана к карточке (кадр кампании, экран «Кадры кампании»)
+    # empty means the job is not tied to an entity (a campaign frame, the Campaign frames screen)
     entity_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
-    # txt2img — рисуем с нуля; inpaint — перерисовываем область готовой картинки по
-    # маске. Второй случай тянет за собой исходник, маску и другой граф в воркере
+    # txt2img — draw from scratch; inpaint — redraw an area of an existing image by a
+    # mask. The latter brings along a source, a mask and a different graph in the worker
     kind: Mapped[str] = mapped_column(String(20), default="txt2img", index=True)
-    # inpaint: что правим и по какой маске (маска — своё вложение, target_id = id заявки)
+    # inpaint: what we edit and with which mask (the mask is its own attachment, target_id = job id)
     source_attachment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    # кусок исходника, который реально уходит в модель: "x,y,w,h" в координатах
-    # подготовленной копии. Пусто — правим кадр целиком (маска почти во весь кадр)
+    # the part of the source actually sent to the model: "x,y,w,h" in coordinates of the
+    # prepared copy. Empty means the whole frame is edited (the mask covers almost all of it)
     crop_box: Mapped[str] = mapped_column(String(60), default="")
-    # когда воркер забрал заявку и какой это заход: пропавшего воркера видно только
-    # по этим двум полям — иначе заявка висит в claimed вечно (см. reap_stale_jobs)
+    # when the worker claimed the job and which attempt this is: a lost worker shows only
+    # through these two fields — otherwise the job hangs in claimed forever (see reap_stale_jobs)
     claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    # 1.0 — переписать область начисто, ниже — подправить, сохранив исходную форму
+    # 1.0 — repaint the area from scratch, lower — touch it up, keeping the original shape
     denoise: Mapped[float] = mapped_column(Float, default=1.0)
     prompt: Mapped[str] = mapped_column(Text, default="")
     width: Mapped[int] = mapped_column(Integer, default=768)
     height: Mapped[int] = mapped_column(Integer, default=960)
     n_images: Mapped[int] = mapped_column(Integer, default=4)
-    # сид по заявке: две сборки промпта сравнимы, только если шум под ними один
+    # per-job seed: two prompt builds are comparable only if the noise under them is the same
     seed: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     error: Mapped[str] = mapped_column(Text, default="")
     created_by: Mapped[str | None] = mapped_column(String(64))
-    # развилки и слоты попытки: лента мастерской показывает, из чего она собрана
+    # the attempt's branches and slots: the Studio feed shows what it was built from
     params: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
 class Event(Base, PK):
-    """Журнал кампании: кто, когда и что поправил. Пишется на каждую правку
-    (см. history.log), поэтому переживает удаление самой записи — в отличие от
-    created_at/updated_at строк. `before`/`after` держат только изменившиеся ключи."""
+    """Campaign log: who changed what and when. Written on every edit
+    (see history.log), so it survives deletion of the record itself — unlike
+    row created_at/updated_at. `before`/`after` hold only the changed keys."""
 
     __tablename__ = "events"
     campaign_id: Mapped[str] = mapped_column(ForeignKey("campaigns.id"), index=True)
@@ -424,7 +424,7 @@ class Event(Base, PK):
     by_gm: Mapped[bool] = mapped_column(Boolean, default=False)
     target_id: Mapped[str] = mapped_column(String(64), default="")
     target_title: Mapped[str] = mapped_column(String(200), default="")
-    # карточка, на которую ведёт ссылка из ленты (запись, заметка, счётчик — на своей)
+    # the entry the feed links to (an entry, note or clock links to its own)
     entity_id: Mapped[str | None] = mapped_column(String(64), index=True)
     detail: Mapped[str] = mapped_column(String(400), default="")
     visibility: Mapped[str] = mapped_column(String(20), default="")

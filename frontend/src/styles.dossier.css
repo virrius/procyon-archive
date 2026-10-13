@@ -1,5 +1,5 @@
-/* «Досье»: личное дело из реестра — машинопись, снимок с метками, штамп статуса.
-   Лист не шире 1200px: слева разделы друг за другом, на широком экране справа плашка-справка. */
+/* Dossier: a personal file from the registry — typewriter text, a marked-up photo, a status stamp.
+   The sheet is at most 1200px wide: sections stacked on the left, a fact panel on the right on wide screens. */
 
 .cs-file {
   width: 100%; max-width: 1200px; margin-inline: auto;
@@ -15,7 +15,7 @@
 .cs-file .rust { color: #e08a70; }
 .cs-file .dim { color: var(--dim2); font-weight: 400; }
 
-/* --- шапка: снимок, имя, анкета клетками --- */
+/* --- header: photo, name, a form in boxes --- */
 .cs-file-head {
   display: grid; grid-template-columns: 190px minmax(0, 1fr); grid-template-rows: auto 1fr;
   grid-template-areas: "photo who" "photo id"; column-gap: 24px;
@@ -61,7 +61,7 @@
 }
 .cs-file button.cs-fid-more:hover, .cs-file button.cs-fid-more[aria-expanded="true"] { background: none; color: var(--amber); }
 
-/* --- разделы дела --- */
+/* --- file sections --- */
 .cs-fsec { min-width: 0; border-top: 1px dashed var(--line2); margin-top: 18px; padding-top: 13px; }
 .cs-fsec h3 {
   margin: 0 0 11px; font-family: var(--util); font-size: 11.5px; font-weight: 600;
@@ -71,7 +71,7 @@
 .cs-file .cs-dos + .cs-dos { margin-top: 12px; }
 .cs-file-tab .grif { color: var(--rust); letter-spacing: .12em; text-transform: uppercase; }
 
-/* резюме — машинописное заключение с подписью дознавателя */
+/* summary — a typewritten conclusion signed by the investigator */
 .cs-resume { margin: 0; max-width: 88ch; font: 400 13px/1.7 var(--util); color: var(--txt); text-wrap: pretty; }
 .cs-resume + .cs-resume { margin-top: 10px; }
 .cs-resume em { font-style: normal; color: #e08a70; }
@@ -83,7 +83,7 @@
   font: italic 600 21px var(--display); color: #8f99b8;
 }
 
-/* вымаранное: скрытое от игрока и засекреченные места */
+/* redacted: what is hidden from the player and classified passages */
 .cs-red-g { white-space: nowrap; }
 .cs-red, .cs-file .unknown {
   display: inline-block; height: 1.05em; vertical-align: -.2em; border-radius: 1px;
@@ -91,12 +91,12 @@
 }
 .cs-file .unknown { width: 22ch; overflow: hidden; }
 
-/* психопрофиль: черты и рычаги давления строками-определениями */
+/* psych profile: traits and leverage as definition rows */
 .cs-file .ss-cap::first-letter { text-transform: none; }
 .cs-fpsy .ss-cap { margin: 0 0 6px; }
 .cs-fpsy .cs-fnote + .ss-cap { margin-top: 14px; }
 
-/* строка справки: подпись, отточие, значение */
+/* fact row: label, dot leader, value */
 .cs-ff { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .cs-ff + .cs-ff { margin-top: 8px; }
 .cs-ff .k { color: var(--dim2); white-space: nowrap; }
@@ -122,7 +122,7 @@
 .cs-fnote + .cs-fnote { margin-top: 8px; }
 .cs-fnote b { color: var(--txt); }
 
-/* приложения — выдуманные документы дела: вид ссылки, доступ закрыт */
+/* attachments — fictional case documents: look like links, access denied */
 .cs-annex { margin: 0; padding-left: 22px; }
 .cs-annex li { color: var(--dim2); }
 .cs-annex li + li { margin-top: 6px; }
@@ -135,7 +135,7 @@
 .cs-forgs .ss-cap { margin: 12px 0 6px; }
 .cs-forgs > h3 + .ss-cap { margin-top: 0; }
 
-/* --- широкий экран: справка колонкой справа, разделы слева идут подряд --- */
+/* --- wide screen: fact panel as a right column, sections run on the left --- */
 @media (min-width: 1240px) {
   .cs-fbody {
     display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto auto auto 1fr;

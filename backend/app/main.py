@@ -48,7 +48,7 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     generate_unique_id_function=operation_id,
-    # 422 тоже `{"detail": "…"}`: схема ошибки валидации одна на все ручки
+    # 422 is also `{"detail": "…"}`: one validation error schema for all endpoints
     responses=error_responses(422),
 )
 
@@ -65,7 +65,7 @@ CAMPAIGN_PATH = re.compile(r"^/api/campaigns/([0-9a-f-]{36})(?:/|$)")
 
 @app.middleware("http")
 async def request_lang(request: Request, call_next):
-    """Язык ответа — читателя; язык того, что ляжет в кампанию, — самой кампании."""
+    """Response language is the reader's; the language of what goes into the campaign is the campaign's own."""
     token = i18n.use(i18n.pick(request.headers.get("accept-language")))
     hit = CAMPAIGN_PATH.match(request.url.path)
     camp = i18n.use_campaign(hit.group(1) if hit else None)
@@ -117,8 +117,8 @@ async def validation_error(request: Request, exc: RequestValidationError):
 
 @app.exception_handler(DataError)
 async def data_error(request: Request, exc: DataError):
-    """Слишком длинное значение — ошибка запроса; id не того вида (не UUID) — такой строки нет.
-    Сессию закрывает get_db, транзакция откатывается."""
+    """A value that is too long is a bad request; an id of the wrong form (not a UUID) means no such row.
+    get_db closes the session, and the transaction is rolled back."""
     if isinstance(exc.orig, StringDataRightTruncation):
         return JSONResponse(status_code=400, content={"detail": i18n.tr("errors.too_long")})
     return JSONResponse(status_code=404, content={"detail": i18n.tr("errors.not_found")})

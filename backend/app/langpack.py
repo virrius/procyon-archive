@@ -1,9 +1,9 @@
-"""Модули, чьи тексты зависят от языка, загружены дважды.
+"""Modules whose texts depend on the language are loaded twice.
 
-Оригинал — русский, двойник ``app.<имя>__en`` — тот же файл, загруженный под другим
-именем: язык модуль узнаёт из своего имени (``i18n.twin_lang``). Модуль берётся на языке
-кампании, к которой относится запрос (вне кампании — экземпляра), в момент вызова:
-``langpack.prompting().default_kit()``, а не ``from .prompting import ...``.
+The original is Russian; the twin ``app.<name>__en`` is the same file loaded under another
+name: the module learns its language from its name (``i18n.twin_lang``). The module is taken in the
+language of the campaign the request belongs to (outside a campaign, the instance language) at call
+time: ``langpack.prompting().default_kit()``, not ``from .prompting import ...``.
 """
 from __future__ import annotations
 

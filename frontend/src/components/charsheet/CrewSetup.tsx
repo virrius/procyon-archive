@@ -7,9 +7,9 @@ import { bookOf, STRESS_MAX, STRESS_TOP } from './model'
 
 const LOAD_MAX = 3
 
-/** Настройка бланков экипажа (GM space): свои строки поверх книги на всю кампанию.
- *  `part` — ключ типажа или `common` (обычные предметы, общие для всех бланков).
- *  Черновик всей настройки держит страница — переход между типажами его не теряет. */
+/** Crew playbook setup (GM space): own rows on top of the book for the whole campaign.
+ *  `part`: a playbook key or `common` (ordinary items shared by all playbooks).
+ *  The page holds the draft of the whole setup: switching between playbooks doesn't lose it. */
 export default function CrewSetup({ part, all, setAll, state }: {
   part: string; all: Dict; setAll: (fn: (prev: Dict) => Dict) => void; state: ReactNode
 }) {

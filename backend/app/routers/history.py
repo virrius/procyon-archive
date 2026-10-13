@@ -16,7 +16,7 @@ from .entities import UUID_RE
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["history"], responses=AUTH_ERRORS)
 
-# источники ленты: журнал правок (events) + учётные действия (audit_log)
+# feed sources: the edit log (events) + account actions (audit_log)
 SOURCES = ("entity", "block", "note", "clock", "message", "news", "marker", "map", "link",
            "file", "rules", "board", "account")
 PAGE = 60
@@ -38,8 +38,8 @@ def _wanted(raw: str | None) -> set[str]:
 
 
 def _audit_scope(campaign_id: str, members: list[CampaignMember]):
-    """Учётные события кампании. Вход и смена пароля пишутся без кампании — их берём
-    только у её участников; входы ГМа-админа в каждую кампанию — шум, их не берём."""
+    """Account events of the campaign. Sign-in and password changes are written without a campaign, so they are taken
+    only for its members; a GM-admin's sign-ins to every campaign are noise and are skipped."""
     users = [str(m.user_id) for m in members]
     admins = [str(m.user_id) for m in members if m.user is not None and m.user.is_admin]
     loose = and_(AuditLog.campaign_id.is_(None), AuditLog.user_id.in_(users))
@@ -182,7 +182,7 @@ def list_history(
     page = rows[:limit]
     return {
         "events": page,
-        # курсор следующей страницы: пусто — лента дочитана до конца
+        # next page cursor: empty means the feed has been read to the end
         "next": page[-1]["at"] if len(page) == limit else None,
         "members": [
             {"id": m.id, "name": m.display_name or (m.user.display_name if m.user else "")}

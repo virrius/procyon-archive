@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// В контейнере исходники лежат на bind-mount: inotify оттуда не доходит,
-// поэтому файлы опрашиваем, а HMR-клиенту сообщаем внешний порт.
+// In the container the sources are on a bind mount: inotify events don't come through,
+// so files are polled, and the HMR client is told the external port.
 const poll = process.env.VITE_POLL === '1'
 const hmrPort = Number(process.env.VITE_HMR_PORT || 0)
 

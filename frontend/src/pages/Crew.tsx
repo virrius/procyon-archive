@@ -14,14 +14,14 @@ import * as EntityGalleryMod from '../components/EntityGallery'
 import { parseStamp, stamp } from '../components/WorldTime'
 import '../styles.mail.css'
 
-/** игровая дата письма; без неё — текущая дата кампании */
+/** in-game date of the message; without it, the campaign's current date */
 const mailDate = (m: Dict, today: number) => stamp(m.world_day ?? today)
 
-// параллельные компоненты отдают то именованный, то дефолтный экспорт
+// parallel components export either a named or a default export
 const pick = (m: any, name: string): any => (m && m[name]) || (m && m.default)
 const EntityGallery = pick(EntityGalleryMod, 'EntityGallery')
 
-// дело закончено так или иначе — карточка уходит в бледный хвост
+// the job is over one way or another — the card moves to the dimmed tail
 const JOB_CLOSED = ['done', 'failed', 'expired']
 
 const SUBS: [string, string][] = [
@@ -54,7 +54,7 @@ export default function Crew() {
   )
 }
 
-/* --- корабль --------------------------------------------------------------- */
+/* --- ship ------------------------------------------------------------------ */
 
 function ShipTab() {
   const [rows, loading] = useAsync<Dict[]>(() => api.get(`${c()}/entities?kind=ship`), [])
@@ -62,7 +62,7 @@ function ShipTab() {
   return <ShipSheet ship={ship} loading={loading} />
 }
 
-/* --- входящие -------------------------------------------------------------- */
+/* --- inbox ----------------------------------------------------------------- */
 
 function MailTab() {
   const { meta, isGM, L, campaign } = useApp()
@@ -73,9 +73,9 @@ function MailTab() {
   const [q, setQ] = useState('')
   const [busy, setBusy] = useState(false)
   const [unsaved, setUnsaved] = useState(false)
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // table view is read-only
   const canEdit = isGM && !readonly
-  // ?open=<id> — приход из поиска: письмо открывается сразу
+  // ?open=<id> — coming from search: the message opens right away
   const [params, setParams] = useSearchParams()
   const asked = params.get('open') || ''
 
@@ -97,7 +97,7 @@ function MailTab() {
     }
   }
 
-  // новое письмо — пустое и закрытое от стола; открывает его ГМ выбором «кто видит»
+  // a new message is empty and hidden from the table; the GM reveals it by picking who sees it
   const createDraft = async () => {
     setBusy(true)
     try {
@@ -216,7 +216,7 @@ function MailTab() {
         </div>
       )}
 
-      {/* --- одно окно: чтение и правка --------------------------------------- */}
+      {/* --- one window: reading and editing ---------------------------------- */}
       {msg && (
         <Modal wide onClose={() => { setMsg(null); reload() }}
           title={msg.subject || t('mail.transmission')}
@@ -259,15 +259,15 @@ function MailTab() {
   )
 }
 
-/* одно окно правки: локальная форма, PATCH по кнопке */
+/* one edit window: a local form, PATCH on button press */
 function MailEditor({ msg, types, onSave, onDelete, onLeave, onDirty }: {
   msg: Dict
   types: string[]
   onSave: (patch: Dict, status?: string) => Promise<void>
   onDelete: () => Promise<void>
-  /** уход на карточку отправителя закрывает окно письма */
+  /** going to the sender's card closes the message window */
   onLeave: () => void
-  /** форма разошлась с последним сохранённым — окно спросит, прежде чем закрыться */
+  /** the form differs from the last saved state — the window asks before closing */
   onDirty: (dirty: boolean) => void
 }) {
   const nav = useNavigate()
@@ -290,7 +290,7 @@ function MailEditor({ msg, types, onSave, onDelete, onLeave, onDirty }: {
   useEffect(() => { onDirty(dirty) }, [dirty])  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onDirty(false), [])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  // настоящего отправителя храним по id — карточку подтягиваем, чтобы показать имя
+  // the real sender is stored by id — the card is fetched to show the name
   useEffect(() => {
     const id = msg.sender_entity_id
     if (!id) return
@@ -318,7 +318,7 @@ function MailEditor({ msg, types, onSave, onDelete, onLeave, onDirty }: {
     finally { setBusy(false) }
   }
 
-  // переход на карточку отправителя закрывает окно — несохранённое письмо сначала сохраняем
+  // going to the sender's card closes the window — an unsaved message is saved first
   const leave = async (ev: React.MouseEvent, to: string) => {
     if (!dirty) { onLeave(); return }
     ev.preventDefault()
@@ -382,7 +382,7 @@ function Attachments({ messageId }: { messageId: string }) {
   const [rows, , reload] = useAsync<Dict[]>(
     () => api.get(`${c()}/messages/${messageId}/attachments`), [messageId])
   const [busy, setBusy] = useState(false)
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // table view is read-only
 
   const upload = async (file: File) => {
     setBusy(true)

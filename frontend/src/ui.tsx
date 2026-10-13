@@ -21,7 +21,7 @@ function liveLabels(group: string, keys: string[]): Dict {
 export const VIS_CLASS: Dict = {
   crew: 'crew-block', selected: 'sel-block', owner: 'secret-block', gm: 'gm-block',
 }
-/* палитра приборов: отметки карты и счётчики красим одним набором */
+/* instrument palette: map markers and clocks share one color set */
 export const PALETTE = ['amber', 'rust', 'steel', 'plum', 'olive', 'white']
 export const PALETTE_HEX: Dict = {
   amber: '#d8a24a', rust: '#c05a3c', steel: '#6f9a94',
@@ -33,8 +33,8 @@ export function Chip({ children, tone = '' }: { children: ReactNode; tone?: stri
   return <span className={`chip ${tone}`}>{children}</span>
 }
 
-/* тон печати статуса: в деле · тревога · чёрная метка · конец · выбыл.
-   ключи общие для всех типов — свои статусы у персонажа, контакта, корабля и артефакта */
+/* status stamp tone: in play · alarm · black mark · finished · out.
+   keys are shared by all types — characters, contacts, ships and artifacts have their own statuses */
 const STATUS_TONE: Dict = {
   active: 'ok', 'with crew': 'ok', visited: 'ok', confirmed: 'ok',
   injured: 'warn', hidden: 'warn', impounded: 'warn',
@@ -47,26 +47,26 @@ const STATUS_TONE: Dict = {
   offered: 'fresh', 'in progress': 'work', done: 'win', expired: 'grey',
 }
 
-/** Класс тона для печати статуса: t-ok · t-warn · t-black · t-dead · t-end · t-none;
-    у работёнки свои: t-fresh · t-work · t-win · t-grey. */
+/** Tone class for the status stamp: t-ok · t-warn · t-black · t-dead · t-end · t-none;
+    jobs have their own: t-fresh · t-work · t-win · t-grey. */
 export const statusTone = (v: any): string => STATUS_TONE[String(v ?? '')] || 'none'
 
 const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
 
-/** Ранг храним цифрой, читаем римской: «3» → «III». Незнакомое значение отдаём как есть. */
+/** Tier is stored as a digit and shown as a roman numeral: “3” → “III”. Unknown values pass through as is. */
 export function rankRoman(v: any): string {
   const s = String(v ?? '').trim()
   const n = Number(s)
   return s !== '' && Number.isInteger(n) && n >= 0 && n < ROMAN.length ? ROMAN[n] : s
 }
 
-/** Видимость только для показа — тот же чип, что у меню «кто видит», без выбора. */
+/** Read-only visibility — the same chip as the “Who can see” menu, without choice. */
 export function VisChip({ v }: { v?: string | null }) {
   if (!v) return null
   return <VisibilityMenu value={v} visibleTo={[]} disabled onChange={() => {}} />
 }
 
-/** Имя счётчика в списках: «привязанная запись: счётчик». Без привязки — как есть */
+/** Clock name in lists: “linked entry: clock”. Without a link — as is */
 export function clockTitle(cl: { name?: string; owner_name?: string } | null | undefined): string {
   const name = String(cl?.name || '')
   const owner = String(cl?.owner_name || '')
@@ -95,8 +95,8 @@ export function ClockDial({ segments, filled, size = 46, hidden = false, color }
   return <div className="clock"><svg width={size} height={size}>{paths}</svg></div>
 }
 
-/** Тронута ли форма: сравнение с состоянием на момент открытия.
- *  Несколько полей отдавать массивом — [name, status, …]. */
+/** Whether the form was touched: compared with its state when opened.
+ *  Pass several fields as an array — [name, status, …]. */
 export function useDirty(v: any): boolean {
   const first = useRef<string | null>(null)
   const now = JSON.stringify(v)
@@ -107,10 +107,10 @@ export function useDirty(v: any): boolean {
 export function Modal({ title, onClose, children, wide, watch, dirty, dirtyAsk }:
   {
     title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean
-    /** черновик формы: окно само сравнит его с состоянием на момент открытия
-     *  и спросит подтверждение, если закрывают с несохранённым */
+    /** form draft: the modal compares it with the state when opened
+     *  and asks for confirmation if closed with unsaved changes */
     watch?: any
-    /** признак «есть несохранённое» вручную — когда форма считает его сама */
+    /** manual “has unsaved changes” flag — when the form tracks it itself */
     dirty?: boolean
     dirtyAsk?: string
   }) {
@@ -120,17 +120,17 @@ export function Modal({ title, onClose, children, wide, watch, dirty, dirtyAsk }
   const touched = useDirty(watch)
   const unsaved = dirty ?? (watch !== undefined && touched)
 
-  // с пустой формы уходить нечему — снятый признак снимает и вопрос
+  // nothing to lose on an empty form — clearing the flag also clears the prompt
   useEffect(() => { if (!unsaved) setAsk(false) }, [unsaved])
 
   const tryClose = () => { if (unsaved) setAsk(true); else onClose() }
 
-  // окна вкладываются друг в друга (карточка → генерация снимка): Escape снимает верхнее,
-  // а в нём вопрос о несохранённом гасится первым
+  // modals nest (entry card → image generation): Escape closes the top one,
+  // and within it the unsaved-changes prompt is dismissed first
   useLayer(true, () => (ask ? setAsk(false) : tryClose()))
 
-  // закрываем, только если и нажатие, и отпускание были на фоне:
-  // иначе выделение текста, вылезшее мышкой за карточку, захлопывает окно
+  // close only if both press and release happened on the backdrop:
+  // otherwise a text selection dragged outside the card would close the modal
   const downOnBackdrop = useRef(false)
 
   return (
@@ -161,22 +161,22 @@ export function Modal({ title, onClose, children, wide, watch, dirty, dirtyAsk }
   )
 }
 
-/** Выбор из списка. Нативный select отдаёт раскрытый список системе —
- *  он рисуется мимо темы, поэтому меню своё, как у «кто видит» и «чей лист». */
+/** Pick from a list. A native select hands the open list to the OS —
+ *  it ignores the theme, so we use our own menu, like “Who can see” and the sheet owner picker. */
 export function Select({
   value, options, onChange, optionLabel, empty = '—', title, className, disabled, popCenter,
 }: {
   value: any
   options: string[]
   onChange: (v: string) => void
-  /** своя подпись варианта, если словарь не подходит (ранг читаем римской) */
+  /** custom option label when the dictionary doesn't fit (Tier shows as a roman numeral) */
   optionLabel?: (o: string) => string
-  /** подпись пустого значения; null — пустой вариант не предлагаем */
+  /** label for the empty value; null — no empty option offered */
   empty?: string | null
   title?: string
   className?: string
   disabled?: boolean
-  /** список серединой под кнопкой — для узких значений вроде ранга */
+  /** list centered under the button — for narrow values like Tier */
   popCenter?: boolean
 }) {
   const { L } = useApp()
@@ -237,9 +237,9 @@ export function Input({
 }: {
   label: string; value: any; onChange: (v: string) => void; type?: string
   options?: string[]; rows?: number
-  /** своя подпись варианта, если словарь не подходит (ранг читаем римской) */
+  /** custom option label when the dictionary doesn't fit (Tier shows as a roman numeral) */
   optionLabel?: (o: string) => string
-  /** подсказки к свободному вводу: выбрать из уже встречавшихся или вписать своё */
+  /** suggestions for free input: pick a value used before or type a new one */
   suggest?: string[]
   placeholder?: string
 }) {
@@ -265,13 +265,13 @@ export function Input({
   )
 }
 
-/** Значение поля-множества: массив строк; старые карточки могли хранить строку. */
+/** Multi-value field value: an array of strings; older entries may store a single string. */
 export const asList = (v: any): string[] =>
   Array.isArray(v)
     ? v.map(x => String(x).trim()).filter(Boolean)
     : String(v ?? '').split(',').map(x => x.trim()).filter(Boolean)
 
-/** max — потолок выбора из описания поля: набрав его, остальные варианты бледнеют */
+/** max — the selection cap from the field definition: once reached, the other options dim */
 export function MultiPick({ options, value, onChange, max }: {
   options: string[]; value: any; onChange: (v: string[]) => void; max?: number
 }) {

@@ -1,15 +1,15 @@
-"""Канон «Изгоев Галактики» (Scum & Villainy): корабли, модули, организации, сектор Процион.
+"""Canon of Scum and Villainy (Russian edition): ships, modules, factions, the Procyon sector.
 
-Источник истины — русское издание STSV01 «Изгои Галактики», выгрузка текста лежит
-в reference/izgoi_galaktiki_ru.md (модули стр. 126-129, бланки кораблей 130/138/146,
-организации гл. 9, сектор гл. 10). Ключи латиницей, подписи и описания — по книге.
+Source of truth is the Russian edition STSV01; the text dump is in
+reference/izgoi_galaktiki_ru.md (modules pp. 126-129, ship sheets 130/138/146,
+factions ch. 9, sector ch. 10). Keys in Latin script, labels and descriptions as in the book.
 """
 
 from __future__ import annotations
 
 import sys
 
-from .book_sheets import CHAR_SHEET, PLAYBOOK_SHEETS  # бланки персонажей
+from .book_sheets import CHAR_SHEET, PLAYBOOK_SHEETS  # character sheets
 from .book_text import with_text
 
 PLAYBOOK_SHEETS, CHAR_SHEET = with_text("ru", PLAYBOOK_SHEETS, CHAR_SHEET)
@@ -296,8 +296,8 @@ SHIP_TYPES: dict[str, dict] = {
 }
 
 
-# Организации сектора из главы 9 книги: короткое описание для карточки плюс
-# досье (территория, лица, ресурсы, особенность, союзники, враги, положение, цель).
+# Sector factions from chapter 9 of the book: a short description for the card plus a
+# dossier (turf, NPCs, assets, quirk, allies, enemies, situation, goal).
 ORGS: list[dict] = [
     {
         "name": "Гильдия инженеров", "category": "hegemony", "tier": 5,
@@ -1060,7 +1060,7 @@ ORGS: list[dict] = [
 ]
 
 
-# Системы Проциона: обзор, ключевые миры (с правилом и сценой из книги) и прочие места.
+# Procyon systems: overview, key worlds (with a rule and a scene from the book) and other locations.
 PROCYON: list[dict] = [
     {
         "system": "Рин",
@@ -1515,8 +1515,8 @@ PROCYON: list[dict] = [
 
 
 def book(lang: str | None = None):
-    """Канон на языке экземпляра: этот модуль — русская книга, book_defs_en — английская,
-    той же формы и в том же порядке."""
+    """Canon in the instance language: this module is the Russian book, book_defs_en the English one,
+    with the same shape and order."""
     from .i18n import instance_lang
 
     if (lang or instance_lang()) == "en":

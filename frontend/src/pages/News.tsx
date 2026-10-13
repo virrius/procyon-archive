@@ -19,10 +19,10 @@ const attachOf = (l: Dict): Attach => ({ type: l.type, id: l.id, name: l.name, k
 
 const BARE_KEY = 'pa_news_bare'
 const readBare = () => { try { return localStorage.getItem(BARE_KEY) === '1' } catch { return false } }
-const saveBare = (on: boolean) => { try { localStorage.setItem(BARE_KEY, on ? '1' : '0') } catch { /* приватное окно */ } }
+const saveBare = (on: boolean) => { try { localStorage.setItem(BARE_KEY, on ? '1' : '0') } catch { /* private window */ } }
 
-/** Новости сектора: депеши журналистов и тексты ГМа. Пишутся плюсом здесь или с доски квеста;
-    заказанные депеши ждут ГМа в черновиках над лентой. */
+/** Sector news: journalists' dispatches and GM texts. Written with the plus here or from a story board;
+    commissioned dispatches wait for the GM in drafts above the feed. */
 export default function News() {
   const { isGM } = useApp()
   const { t } = useTranslation('news')
@@ -36,11 +36,11 @@ export default function News() {
   usePoll(drafting.some(j => j.status === 'pending'), () => reloadJobs(true), 4000)
   const refresh = () => { reload(true); reloadJobs(true) }
 
-  // «убить журналиста»: от новости остаются заголовок и суть (и строка эфира с датой)
+  // "Kill the journalist": a story keeps only its headline and gist (and the air line with the date)
   const [bare, setBare] = useState(readBare)
   const toggleBare = () => { saveBare(!bare); setBare(!bare) }
 
-  // ?open=<id> — приход из поиска: лента прокручивается к новости и подсвечивает её
+  // ?open=<id> — coming from search: the feed scrolls to the story and highlights it
   const [params, setParams] = useSearchParams()
   const asked = params.get('open') || ''
   const [lit, setLit] = useState('')
@@ -174,7 +174,7 @@ export default function News() {
   )
 }
 
-// последний абзац, если это подпись журналиста, уходит под текст своей строкой
+// the last paragraph, if it's the journalist's signature, goes under the text on its own line
 function NewsBody({ text, byline }: { text: string; byline?: string }) {
   const paras = String(text || '').split(/\n\s*\n/)
   const sign = byline && paras.length > 1 && new RegExp(`^${byline.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+[—–-]`)

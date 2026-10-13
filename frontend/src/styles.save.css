@@ -1,4 +1,4 @@
-/* Панель сохранения. Сплошные поверхности, никакого свечения. */
+/* Save bar. Solid surfaces, no glow. */
 
 .sv { display: flex; align-items: center; gap: 8px; }
 .sv.compact { gap: 6px; }

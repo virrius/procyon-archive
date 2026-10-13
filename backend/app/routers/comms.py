@@ -109,7 +109,7 @@ class MessageAttachmentOut(BaseModel):
 
 
 def _card(db: Session, m: Message) -> dict | None:
-    """Карточка отправителя для стола — только когда ГМ раскрыл привязку."""
+    """Sender card for the table — only when the GM has revealed the link."""
     if not (m.sender_reveal and m.sender_entity_id):
         return None
     e = db.get(Entity, m.sender_entity_id)
@@ -135,7 +135,7 @@ def _out(m: Message, v: Viewer, state: MessageState | None, card: dict | None = 
 
 
 def _deliver(db: Session, v: Viewer, m: Message) -> None:
-    """Одна дорога в «доставлено» — и для PATCH status, и для /deliver."""
+    """The single path to "delivered" — for both PATCH status and /deliver."""
     m.status = "delivered"
     m.delivered_at = datetime.now(timezone.utc)
     journal.log(db, v, "message", "deliver", target_id=m.id,

@@ -1,5 +1,5 @@
-/* Быстрый просмотр карточки (components/EntityPeek.tsx): окно поверх экрана, только чтение.
-   Снимок слева, суть справа, ранг прибором по правому канту, ниже — записи. */
+/* Entry quick view (components/EntityPeek.tsx): a read-only modal over the screen.
+   Image on the left, gist on the right, Tier as a gauge on the right edge, notes below. */
 
 .peek { display: flex; flex-direction: column; gap: 16px; }
 
@@ -8,7 +8,7 @@
   grid-template-columns: 200px minmax(0, 1fr) auto;
 }
 
-/* кант — у самого кадра: обойма остаётся свободной под рустовую метку закрытого от стола */
+/* the border is on the image itself: the wrapper stays free for the rust hidden-from-table mark */
 .peek-shot > img, .peek-shot > .peek-stub { width: 100%; border: 1px solid var(--line); }
 .peek-shot > img { display: block; height: auto; background: #100f0d; }
 .peek-shot > .peek-stub { aspect-ratio: 3 / 4; }

@@ -6,9 +6,9 @@ import { useApp } from '../ctx'
 import '../styles.nav.css'
 
 type Group = {
-  root: string           // префикс раздела: по нему считаем активность
-  label: string          // ключ в словаре nav
-  to: string             // куда ведёт заголовок раздела
+  root: string           // section prefix: used to tell the active one
+  label: string          // key in the nav dictionary
+  to: string             // where the section heading leads
   items?: [string, string][]
 }
 
@@ -40,8 +40,8 @@ const GROUPS: Group[] = [
 
 const GM_GROUP: Group = {
   root: '/gm', label: 'gm', to: '/gm/accounts',
-  // все разделы ГМа живут здесь: своей полосы вкладок у страницы больше нет —
-  // она отнимала высоту у доски, дублируя это же меню
+  // all GM sections live here: the page no longer has its own tab strip;
+  // it took height from the board, duplicating this same menu
   items: [
     ['/gm/accounts', 'accounts'],
     ['/gm/boards', 'boards'],
@@ -63,7 +63,7 @@ export default function SideNav({ open, onClose }: { open?: boolean; onClose?: (
 
   const groups = isGM ? [...GROUPS, GM_GROUP] : GROUPS
 
-  // заказанные депеши пишутся в фоне: ГМ видит в меню, что черновики готовы
+  // ordered dispatches are written in the background: the GM sees in the menu that drafts are ready
   const [news, setNews] = useState<Dict | null>(null)
   useEffect(() => {
     if (!isGM || !campaign) return
@@ -78,7 +78,7 @@ export default function SideNav({ open, onClose }: { open?: boolean; onClose?: (
     : news.drafts > 0 ? <span className="nav-badge" title={t('drafts_wait')}>{news.drafts}</span>
       : news.pending > 0 ? <span className="nav-badge wait">{t('writing')}</span> : null
 
-  // на узком экране меню выезжает сбоку и закрывается после перехода
+  // on a narrow screen the menu slides in from the side and closes after navigating
   useEffect(() => { onClose?.() }, [pathname])
 
   return (

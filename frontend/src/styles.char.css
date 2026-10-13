@@ -1,9 +1,9 @@
-/* Бланк персонажа — тот же язык, что у бланка корабля (styles.ship.css),
-   плюс то, чего на корабле нет: повреждения, лечение, навыки, нагрузка, выбор бланка. */
+/* Character sheet — same look as the ship sheet (styles.ship.css),
+   plus what the ship lacks: harm, healing, actions, load, playbook choice. */
 
 .cs [data-sec] { scroll-margin-top: calc(var(--navbar-h, 0px) + 110px); }
 
-/* --- вкладки: бланк, настройка, досье --- */
+/* --- tabs: sheet, setup, dossier --- */
 .cs-tabs { display: inline-flex; border: 1px solid var(--line2); }
 .cs-tabs button {
   background: var(--surface2); border: 0; border-right: 1px solid var(--line2); color: var(--dim);
@@ -14,7 +14,7 @@
 .cs-tabs button.on { color: var(--amber); background: var(--surface3); }
 .cs-done { display: flex; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 10px; }
 
-/* --- GM space → «Бланки» --- */
+/* --- GM space → Sheets --- */
 .gs-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .gs-sep { width: 1px; align-self: stretch; background: var(--line2); margin: 2px 6px; }
 .gs-part {
@@ -26,7 +26,7 @@
 .gs-part.own::after { content: " ●"; color: var(--amber); font-size: 9px; }
 @media (max-width: 700px) { .gs-sep { display: none; } }
 
-/* --- шапка: имя антиквой, бланк, происхождение строкой; справа внешность --- */
+/* --- header: serif name, playbook, heritage on one line; look on the right --- */
 .cs-head {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
   gap: 10px 20px; align-items: start;
@@ -76,7 +76,7 @@ span.cs-stat { color: var(--st); border: 1px solid var(--st); padding: 1px 8px; 
 .cs-shot-img { display: block; width: 100%; height: auto; }
 .cs-shot-none { width: 100%; aspect-ratio: 4 / 5; }
 
-/* --- «Бланк»: слева колонка состояния, справа навыки, способности, снаряжение, опыт --- */
+/* --- Sheet: status column on the left; actions, abilities, items, xp on the right --- */
 .cs-play { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 14px; align-items: start; }
 .cs-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .cs-rail { background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
@@ -103,7 +103,7 @@ span.cs-stat { color: var(--st); border: 1px solid var(--st); padding: 1px 8px; 
 
 .cs-stress .ss-pips, .cs-trauma .ss-pips { display: flex; flex-wrap: nowrap; gap: 4px; }
 .cs-stress .ss-pip, .cs-trauma .ss-pip { width: 16px; height: 22px; }
-/* травмы: деления слева, названия колонкой справа — под деления не переносятся */
+/* trauma: boxes on the left, names in a column on the right — they don't wrap under the boxes */
 .cs-trauma { display: flex; align-items: center; gap: 12px; }
 .cs-trauma .ss-pips { flex: none; }
 .cs-trs { display: flex; flex-wrap: wrap; gap: 0 10px; min-width: 0; }
@@ -113,7 +113,7 @@ span.cs-stat { color: var(--st); border: 1px solid var(--st); padding: 1px 8px; 
   border: 1px solid #5c3327; background: #251712; color: #e08a70; font-size: 12px; padding: 5px 8px;
 }
 .cs-call button { margin-left: auto; font-weight: 400; }
-/* стресс на пределе: выбор травмы прямо под шкалой */
+/* stress maxed out: trauma choice right under the track */
 .cs-tmenu { margin-top: 8px; border: 1px solid #5c3327; background: #1f1511; }
 .cs-tmenu-hd { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 12px; color: #e08a70; border-bottom: 1px solid #5c3327; }
 .cs-tmenu-hd button { margin-left: auto; }
@@ -127,7 +127,7 @@ span.cs-stat { color: var(--st); border: 1px solid var(--st); padding: 1px 8px; 
 .ghost.rust { color: #e08a70; border-color: #5c3327; }
 .ghost.amber { color: var(--amber); border-color: var(--amber-dim); }
 
-/* раны: строка на степень, на 1-й и 2-й по два места, на 3-й одно; штраф справа */
+/* harm: one row per level, two slots on levels 1 and 2, one on level 3; penalty on the right */
 .cs-harm { display: flex; flex-direction: column; gap: 7px; }
 .cs-hrow { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
 .cs-hlv { font-family: var(--util); font-size: 12px; color: var(--dim2); padding-top: 3px; }
@@ -148,7 +148,7 @@ input.cs-hslot:focus { border-color: transparent; border-bottom: 1px solid var(-
 .cs-clock.edit path { cursor: pointer; }
 .cs-clock.edit path:hover { stroke: var(--amber); }
 
-/* защита и нагрузка — один вид: ряд отдельных плиток, отмеченная подсвечена янтарём */
+/* armor and load look alike: a row of separate tiles, the checked one lit amber */
 .cs-armor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
 .cs .cs-arm, .cs :is(.cs-rail, .cs-gload) .cs-seg button {
   display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; min-width: 0;
@@ -190,12 +190,12 @@ input.cs-hslot:focus { border-color: transparent; border-bottom: 1px solid var(-
 .cs-slv { margin-left: auto; font-size: 12px; color: #5b5346; }
 .cs-srow.on .cs-slv { color: var(--amber); }
 
-/* --- навыки: показатель рядом с названием, опыт делениями в заголовке --- */
+/* --- actions: rating next to the name, xp as boxes in the heading --- */
 .ss-lane.c3 .ss-lane-b { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ss-pip.gap { margin-left: 5px; }
-/* навыки — треугольники, как на бумажном бланке; первая колонка отчёркнута чертой во всю группу */
+/* actions are triangles, like on the paper sheet; the first column is ruled off for the whole group */
 .cs .cs-act .ss-pips { position: relative; align-self: stretch; align-items: center; flex-wrap: nowrap; gap: 10px; }
-/* черта чуть ближе к острию: у острия пусто, на глаз так она посередине */
+/* the rule sits slightly toward the tip: the tip is empty, so it looks centered */
 .cs .cs-act .ss-pips::before { content: ""; position: absolute; top: -4px; bottom: -5px; left: 16px; width: 1px; background: var(--line2); }
 .cs .cs-act .ss-pip { position: relative; width: 12px; height: 14px; background: none; border: 0; transform: none; }
 .cs .cs-act .ss-pip.gap { margin-left: 0; }
@@ -215,13 +215,13 @@ input.cs-hslot:focus { border-color: transparent; border-bottom: 1px solid var(-
 .cs-act-n { flex: 1; min-width: 0; font-size: 13.5px; color: var(--txt); }
 .cs-act.adv { background: #231d12; }
 .cs-act.adv .cs-act-n { color: var(--amber); }
-/* в развитии навык на максимуме не предлагается */
+/* a maxed-out action isn't offered on advance */
 .cs-act.adv.max { background: none; }
 .cs-act.adv.max .cs-act-n { color: var(--dim2); }
 .cs-act.adv.max button:disabled { opacity: .4; }
 .cs-adv { font-size: 12px; color: var(--amber); margin: 2px 0 6px; }
 
-/* --- способности: уникальная и взятые карточками, невзятые строкой --- */
+/* --- abilities: the unique one and taken ones as cards, untaken ones as a line --- */
 .cs-cards { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; }
 .cs-card { padding: 10px 12px 11px; display: flex; flex-direction: column; gap: 4px; }
 .cs-card.u { border-left: 2px solid var(--amber); }
@@ -240,7 +240,7 @@ input.cs-hslot:focus { border-color: transparent; border-bottom: 1px solid var(-
   font: inherit; color: var(--dim); text-transform: none; letter-spacing: 0; cursor: help;
 }
 .cs .cs-rest-b:hover, .cs .cs-rest-b.open { background: none; color: var(--txt); border-bottom-color: var(--amber); }
-/* карточка невзятой способности — под строкой, во всю её ширину, но не шире читаемого */
+/* an untaken ability's card sits under the line, at its full width but no wider than readable */
 .cs-pop {
   display: none; position: absolute; z-index: 20; left: 0; top: 100%; margin-top: 6px; width: min(560px, 100%);
   padding: 10px 12px; background: var(--surface2); border: 1px solid var(--line2); box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
@@ -251,7 +251,7 @@ input.cs-hslot:focus { border-color: transparent; border-bottom: 1px solid var(-
 .cs-rest-b.open .cs-pop, .cs-rest-b:focus-visible .cs-pop { display: block; }
 @media (hover: hover) { .cs-rest-b:hover .cs-pop { display: block; } }
 
-/* опыт бланка — в заголовке «Способностей» за названием */
+/* playbook xp — in the Special Abilities heading after the title */
 .cs-xph { display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; }
 .cs-xph .ss-track-n { margin-left: 0; }
 .cs .cs-xpq {
@@ -281,7 +281,7 @@ select.cs-vet {
 select.cs-vet:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--surface); }
 select.cs-vet option, select.cs-vet optgroup { font-size: 13px; color: var(--txt); }
 
-/* --- снаряжение: вещи бланка своей колонкой за линейкой, обычные — в две рядом --- */
+/* --- items: playbook items in their own column past a rule, standard ones in two columns beside --- */
 .ss-slots.over { color: #e08a70; }
 .cs-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .cs-items.cols { display: block; columns: 3; column-gap: 26px; }
@@ -309,7 +309,7 @@ select.cs-vet option, select.cs-vet optgroup { font-size: 13px; color: var(--txt
   border: 1px solid var(--amber-dim); padding: 0 5px; background: transparent; margin-top: 2px;
 }
 
-/* --- «Настройка»: происхождение, прошлое, страсть — три карточки; травмы --- */
+/* --- Setup: heritage, background, vice — three cards; trauma --- */
 .cs-idrow {
   display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 4px 10px;
   padding: 5px 0; border-bottom: 1px solid var(--line);
@@ -346,7 +346,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
 .cs-chip:disabled { opacity: .45; cursor: default; }
 .cs-traumas { margin-top: 2px; }
 
-/* --- выбор бланка и шаги создания --- */
+/* --- playbook choice and creation steps --- */
 .cs-pbgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
 .cs-pbcard {
   text-align: left; background: var(--surface); border: 1px solid var(--line); padding: 9px 10px;
@@ -368,7 +368,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
 .cs-step.ok::before { content: "✓ "; }
 .cs-step.over { color: #e08a70; border-color: #5c3327; }
 
-/* длинные поля досье: правятся по щелчку */
+/* long dossier fields: edited on click */
 .cs-dos .ss-cap { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
 .cs-dos.gm { border-left: 2px solid var(--rust); padding-left: 10px; }
 .cs-dos textarea { width: 100%; }
@@ -377,14 +377,14 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
 .cs-dos.lead textarea { font-size: 15px; }
 .cs-box { padding: 8px 10px; }
 
-/* --- памятка --- */
+/* --- reference --- */
 .cs-ref { background: var(--surface); border: 1px solid var(--line); }
 .cs-ref > summary {
   cursor: pointer; list-style: none; padding: 7px 11px;
   font-family: var(--display); font-size: 19px; font-weight: 600;
 }
 .cs-ref > summary::-webkit-details-marker { display: none; }
-/* телефон: панель бланка уезжает с прокруткой, у края остаются «назад» и «наверх» */
+/* phone: the sheet toolbar scrolls away, back and “Back to top” stay at the edge */
 .ss-tools.flow { position: relative; top: 0; }
 .cs-float { position: fixed; z-index: 30; top: calc(var(--navbar-h, 0px) + 6px); left: 8px; display: flex; gap: 6px; }
 .cs-float button.ghost {
@@ -394,15 +394,15 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
 .cs-ref-b { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 9px 11px 11px; border-top: 1px solid var(--line); }
 .cs-ref-b h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--amber); }
 .cs-ref-b ul { margin: 0; padding-left: 14px; font-size: 12.5px; color: var(--dim); }
-/* на широком экране памятка — в шапке «Бланка», где справа пусто; внешность встаёт под имя */
+/* on wide screens the reference sits in the Sheet header, where the right side is empty; look goes under the name */
 .cs-memo { display: none; }
 .cs-memo > div { break-inside: avoid; margin-bottom: 9px; }
 .cs-memo h4 { margin: 0 0 3px; font-size: 12.5px; font-weight: 600; color: var(--amber); }
 .cs-memo ul { margin: 0; padding-left: 14px; font-size: 12px; line-height: 1.45; color: var(--dim); }
-/* пояснение строки памятки — карточкой под строкой */
+/* a reference line's explanation — as a card under the line */
 .cs-memo li, .cs-ref-b li { position: relative; }
 .cs-memo .cs-pop, .cs-ref-b .cs-pop { width: 340px; max-width: 80vw; white-space: pre-line; }
-/* справка по клику: пунктир и курсор-вопрос, карточка под строкой (навыки, памятка) */
+/* help on click: dotted underline and help cursor, card under the line (actions, reference) */
 .cs .cs-help {
   background: none; border: 0; padding: 0; text-align: left; vertical-align: top;
   font: inherit; color: inherit; text-transform: none; letter-spacing: 0; cursor: help;
@@ -413,7 +413,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
 .cs-acts-box { display: contents; }
 .cs-act { position: relative; }
 .cs-act .cs-pop { left: 0; right: 0; width: auto; }
-/* памятка в шапке «Бланка»: колонки прижаты вправо, не влезают — прокрутка вбок */
+/* reference in the Sheet header: columns pushed right; if they don't fit, scroll sideways */
 @media (min-width: 761px) {
   .cs.tab-sheet .cs-head:has(> .cs-memo) {
     grid-template-columns: 92px fit-content(360px) minmax(0, 1fr);
@@ -435,7 +435,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
 
 @media (min-width: 1280px) {
   .cs.tab-sheet .cs-head:has(> .cs-memo) { grid-template-columns: 150px fit-content(440px) minmax(0, 1fr); }
-  /* шапка крупнее: место по высоте всё равно задаёт памятка */
+  /* a larger header: the reference sets the height anyway */
   .cs.tab-sheet .cs-head { padding: 16px 18px; gap: 10px 26px; }
   .cs.tab-sheet .cs-name { gap: 5px; }
   .cs.tab-sheet .cs-name h2, .cs.tab-sheet input.ss-name-in { font-size: 44px; }
@@ -459,7 +459,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
   .cs-ref-b { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* --- телефон: одна колонка в порядке игры, крупные цели касания ------------- */
+/* --- phone: one column in play order, large touch targets ------------------ */
 
 @media (max-width: 760px) {
   .cs { gap: 7px; }
@@ -468,7 +468,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
   .cs-play { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .cs-main { gap: 8px; }
 
-  /* шапка: миниатюра портрета слева, внешность строкой ниже */
+  /* header: portrait thumbnail on the left, look on the line below */
   .cs-head { grid-template-columns: 76px minmax(0, 1fr); padding: 9px; gap: 8px 10px; }
   .cs-thumb { display: block; }
   .cs-look { grid-column: 1 / -1; }
@@ -483,7 +483,7 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
   .cs-idrow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .cs-chip { font-size: 13px; padding: 5px 10px; }
 
-  /* деления стресса 16 × 22, навыков 18 × 24, квадраты 20, галочки 18 */
+  /* stress boxes 16 × 22, actions 18 × 24, squares 20, checkmarks 18 */
   .cs .ss-pip { width: 16px; height: 22px; }
   .cs .cs-stress .ss-pip, .cs .cs-trauma .ss-pip { width: 18px; height: 24px; }
   .cs .cs-act .ss-pip { width: 15px; height: 18px; }
@@ -512,8 +512,8 @@ button.cs-chip:hover { color: var(--txt); border-color: var(--dim2); }
   select.cs-vet { max-width: none; width: 100%; }
 }
 
-/* --- «Команда»: состояние персонажа ГМу на плитке галереи --- */
-/* тумблер у заголовка: показывать ли состояние на плитках */
+/* --- Team: character status for the GM on the gallery tile --- */
+/* toggle by the heading: whether to show status on tiles */
 button.crew-switch {
   display: inline-flex; align-items: center; gap: 8px; align-self: center; padding: 2px 4px;
   background: none; border: 0; color: var(--dim); font: 400 13px var(--ui); text-transform: none; letter-spacing: 0;
@@ -557,7 +557,7 @@ button.crew-switch[aria-checked="true"] .crew-switch-track::after { transform: t
 .crew-chip.bare { cursor: default; }
 .crew-chip:not(.bare):hover, .crew-chip.open { background: var(--surface3); border-color: var(--amber-dim); }
 .crew-chip em { font-style: normal; color: var(--dim2); }
-/* карточка таланта — во всю ширину плитки, сразу под чипом */
+/* special ability card — full tile width, right under the chip */
 .crew-pop {
   display: none; position: absolute; z-index: 20; left: 12px; right: 12px; margin-top: 6px;
   padding: 10px 12px; background: var(--surface2); border: 1px solid var(--line2); box-shadow: 0 8px 24px rgba(0, 0, 0, .5);

@@ -1,10 +1,10 @@
-"""Английские данные генератора имён — двойник names.py, логика остаётся там.
+"""English data for the name generator — a twin of names.py; the logic stays there.
 
-Сеттинговые имена, фамилии и прозвища корника — в написании английской книги (Scum and
-Villainy, стр. 62); придуманные — латиницей в том же духе. Мировая база — в принятом для
-культуры латинском написании: родные диакритики латинских алфавитов сохраняются (José,
-Dvořák, Björn), остальное — стандартная романизация без тонов и долгот (Zhang, Saito,
-Nguyen). FAMILY_F — женские формы фамилий там, где культура их требует.
+Setting first names, surnames and aliases from the core rulebook are spelled as in the English book
+(Scum and Villainy, p. 62); made-up ones are in Latin script in the same spirit. The world pool uses
+the accepted Latin spelling for each culture: native diacritics of Latin alphabets are kept (José,
+Dvořák, Björn), the rest is standard romanization without tones or long marks (Zhang, Saito,
+Nguyen). FAMILY_F holds female surname forms where the culture requires them.
 """
 
 __all__ = [

@@ -1,7 +1,8 @@
-"""Три языка. Экземпляра — один на сервер, выбирает админ в Admin space (server_settings).
-Ответа — из Accept-Language запроса, без него — язык экземпляра. Кампании — язык её материалов,
-заданный при создании: на нём пишется всё, что ложится в кампанию, — строки журнала, депеши, промпты.
-Тексты — app/locales/<язык>/<раздел>.json, ключ в коде — «раздел.ключ»: tr("errors.campaign_missing")."""
+"""Three languages. The instance one: one per server, chosen by the admin in Admin space (server_settings).
+The response one: from the request's Accept-Language, without it the instance language. The campaign one:
+the language of its content, set at creation; everything written into the campaign uses it — log rows,
+dispatches, prompts. Texts live in app/locales/<lang>/<section>.json, the key in code is "section.key":
+tr("errors.campaign_missing")."""
 from __future__ import annotations
 
 import contextvars
@@ -13,7 +14,7 @@ LANGS = ("ru", "en")
 DEFAULT = "en"
 
 _lang: contextvars.ContextVar[str] = contextvars.ContextVar("lang", default=DEFAULT)
-# язык кампании, к которой относится запрос или фоновая работа; пусто — язык экземпляра
+# language of the campaign the request or background work belongs to; empty means the instance language
 _content: contextvars.ContextVar[str] = contextvars.ContextVar("content", default="")
 _catalog: dict[str, dict[str, str]] = {}
 
@@ -40,8 +41,8 @@ _load()
 
 
 def pick(header: str | None) -> str:
-    """Первый поддерживаемый язык из Accept-Language, без учёта весов: фронт шлёт один.
-    Без заголовка — язык экземпляра."""
+    """First supported language from Accept-Language, ignoring weights: the frontend sends one.
+    Without the header — the instance language."""
     for part in (header or "").split(","):
         code = part.split(";")[0].strip().lower()[:2]
         if code in LANGS:
@@ -61,7 +62,7 @@ def reset(token: contextvars.Token) -> None:
     _lang.reset(token)
 
 
-# админ меняет язык редко, а читают его на каждый запрос: держим копию несколько секунд
+# the admin changes the language rarely, but it is read on every request: keep a copy for a few seconds
 _instance = {"lang": "", "at": 0.0}
 _TTL = 5.0
 
@@ -93,8 +94,8 @@ _campaign_langs: dict[str, str] = {}
 
 
 def campaign_lang(campaign_id: str | None) -> str:
-    """Язык материалов кампании. Он не меняется после создания, поэтому помнится насовсем;
-    у кампаний, заведённых до выбора языка, — язык экземпляра."""
+    """Language of the campaign's content. It never changes after creation, so it is cached for good;
+    campaigns created before languages were chosen use the instance language."""
     if not campaign_id:
         return instance_lang()
     if campaign_id not in _campaign_langs:
@@ -125,17 +126,17 @@ def content_lang() -> str:
 
 
 def twin_lang(module_name: str) -> str:
-    """Язык модуля-двойника (см. langpack): у английского в имени «__en»."""
+    """Language of a twin module (see langpack): the English one has "__en" in its name."""
     return "en" if "__en" in module_name else "ru"
 
 
 def tr(key: str, lang: str | None = None, **kw) -> str:
-    """Текст по ключу на языке запроса; нет перевода — английский, нет и его — сам ключ."""
+    """Text by key in the request language; no translation means English, and if that is missing too, the key."""
     lang = lang or _lang.get()
     text = _catalog.get(lang, {}).get(key) or _catalog[DEFAULT].get(key) or key
     return text.format(**kw) if kw else text
 
 
 def ctr(key: str, **kw) -> str:
-    """Текст, который ляжет в базу или в генерацию, — на языке кампании, не читателя."""
+    """Text that goes into the database or into generation — in the campaign language, not the reader's."""
     return tr(key, lang=content_lang(), **kw)

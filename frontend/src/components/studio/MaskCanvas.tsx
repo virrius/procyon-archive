@@ -10,8 +10,8 @@ export type MaskApi = {
   blob: () => Promise<Blob | null>
 }
 
-/** Холст маски поверх картинки. Держим его в натуральную величину картинки:
- *  маска уходит на сервер один в один (белое — перерисовать). */
+/** Mask canvas over the picture. Kept at the picture's natural size:
+ *  the mask goes to the server one to one (white: redraw). */
 const MaskCanvas = forwardRef<MaskApi, {
   src: string; brush: number; erase: boolean; locked?: boolean
   onPaint: (painted: boolean) => void
@@ -25,7 +25,7 @@ const MaskCanvas = forwardRef<MaskApi, {
   const hasPaint = () => {
     const cv = canvas.current
     if (!cv || !cv.width) return false
-    // по альфе уменьшенной копии: полный проход по мегапикселю на каждый штрих тормозит
+    // by the alpha of a scaled-down copy: a full megapixel pass on every stroke is slow
     const probe = document.createElement('canvas')
     probe.width = 96
     probe.height = 96

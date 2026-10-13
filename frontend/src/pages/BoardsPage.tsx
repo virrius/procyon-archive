@@ -17,9 +17,9 @@ import {
 } from '../ui'
 import '../styles.board.css'
 
-/* Доска квеста: холст ГМа. Карточки записей (миниатюра, подпись, ключевые
-   заметки), свободные стикеры и улики-кадры; между ними — нити, как на детективной
-   доске. Кухня ГМа: столу не отдаётся, поэтому видимости у карточек нет. */
+/* Story board: the GM's canvas. Entry cards (thumbnail, caption, key
+   notes), free sticky notes and frame clues; threads between them, like on a detective's
+   board. GM-only: never sent to the table, so cards have no visibility. */
 
 type V = { k: number; tx: number; ty: number }
 
@@ -27,36 +27,36 @@ const MIN_K = 0.1
 const MAX_K = 2.5
 const STEP = 1.15
 const CARD_W = { text: 230, entity: 520, image: 260, clock: 230, sketch: 420, name: 260 }
-/* две базы имён: колорит фронтира или мировая классика по странам */
+/* two name pools: frontier flavor or world classics by country */
 const NAME_POOLS: [string, string][] = [
   ['setting', 'pool.setting'], ['world', 'pool.world'],
 ]
-/* пол имени: ксеносам он безразличен, они приходят при любом выборе */
+/* name gender: xenos don't care, they come up with any choice */
 const NAME_GENDERS: [string, string][] = [
   ['any', 'gender.any'], ['m', 'gender.m'], ['f', 'gender.f'],
 ]
-/* огранка имени: как его выкликают на доске — одним словом, с фамилией, с прозвищем */
+/* name form: how it's called out on the board — one word, with surname, with alias */
 const NAME_SHAPES: [string, string][] = [
   ['mix', 'shape.mix'], ['mono', 'shape.mono'], ['full', 'shape.full'],
   ['alias', 'shape.alias'], ['aliasfull', 'shape.aliasfull'], ['xeno', 'shape.xeno'],
 ]
-/* набросок — единственная карточка со своей высотой: из содержимого её не вывести */
+/* the sketch is the only card with its own height: it can't be derived from the content */
 const SKETCH_H = 300
-/* толщина линии: от пометки волоском до жирной обводки поверх схемы */
+/* line width: from a hairline mark to a bold outline over a diagram */
 const INK_W: [number, string][] = [[1.5, 'ink.thin'], [3, 'ink.medium'], [7, 'ink.thick']]
-/* палитра наброска — палитра приборов плюс чёрный: на наброске он нужен как тень
-   и заливка, а счётчикам и отметкам карты чёрный цвет ни к чему */
+/* sketch palette = the shared palette plus black: a sketch needs it for shadow
+   and fill, while clocks and map markers have no use for black */
 const INK_COLORS = [...PALETTE, 'black']
-/* «чёрный» на тёмном поле — графит: настоящий чёрный на нём просто не виден */
+/* "black" on a dark field is graphite: true black is simply invisible on it */
 const INK_HEX: Dict = { ...PALETTE_HEX, black: '#3a332e' }
 const inkHex = (color?: string) => INK_HEX[color || ''] || INK_HEX.amber
-/* кегль подписи на наброске: ярлык у стрелки, имя узла, заголовок схемы */
+/* sketch label font size: a tag by an arrow, a node name, a diagram title */
 const INK_SZ: [number, string][] = [[14, 'S'], [22, 'M'], [40, 'L']]
 const INK_MODES: [string, string][] = [
   ['pen', 'ink.pen'], ['text', 'ink.text'], ['erase', 'ink.erase'],
 ]
-/* что заводится прямо с доски. Корабля и игрового персонажа тут нет: их место в
-   бланке экипажа, на доску они попадают готовыми */
+/* what can be created right from the board. No ship or player character here: they belong
+   on the crew sheet and arrive on the board ready-made */
 const NEW_KINDS: [string, string][] = [
   ['npc', 'kind.npc'],
   ['item', 'kind.item'],
@@ -64,8 +64,8 @@ const NEW_KINDS: [string, string][] = [
   ['location', 'kind.location'],
 ]
 const KIND_TITLE: Dict = Object.fromEntries(NEW_KINDS)
-/* разрез состава квеста: сперва живые лица, потом силы, места, вещи и корабли —
-   тот же порядок, в котором доску пересказывают вслух */
+/* story roster order: living people first, then powers, places, items and ships —
+   the same order in which the board is retold out loud */
 const ROSTER_KINDS: [string, string][] = [
   ['npc', 'roster.npc'],
   ['character', 'roster.character'],
@@ -76,22 +76,22 @@ const ROSTER_KINDS: [string, string][] = [
 ]
 const TABS: [string, string][] = [['canvas', 'tab.canvas'], ['roster', 'tab.roster']]
 const tabKey = () => `pa_board_tab:${store.campaign || ''}`
-/* кегль текстового поля: от пометки на полях до вывески во всю доску. Шаг крупный —
-   мелкие ступени на отдалённом холсте всё равно неразличимы */
+/* text field font size: from a margin note to a sign across the whole board. Big steps —
+   small ones are indistinguishable on a zoomed-out canvas anyway */
 const FONT_SIZES: [number, string][] = [
   [12, 'S'], [20, 'M'], [36, 'L'], [64, 'XL'], [110, 'XXL'], [180, '3XL'],
 ]
-/* правка уходит по её концу: уход с поля, снятие карточки, смена доски. Таймер —
-   только страховка на случай брошенной правки, поэтому он длинный */
+/* an edit goes out when it ends: leaving the field, deselecting the card, switching boards. The timer
+   is only a safety net for an abandoned edit, so it's long */
 const IDLE_SAVE = 4000
 const lastKey = () => `pa_board_last:${store.campaign || ''}`
 
 const hex = (color?: string) => PALETTE_HEX[color || ''] || PALETTE_HEX.amber
 
-/** Файл в кампанию: возвращает адрес, годный и для карточки, и для миниатюр. */
+/** File into the campaign: returns a URL usable both for the card and for thumbnails. */
 async function uploadImage(f: File, boardId: string): Promise<string> {
   const fd = new FormData()
-  // из буфера файл приходит без имени — расширение нужно хранилищу
+  // a clipboard file comes without a name — storage needs an extension
   fd.append('file', f, f.name || 'clipboard.png')
   fd.append('target_type', 'board')
   fd.append('target_id', boardId)
@@ -105,7 +105,7 @@ export default function BoardsPage() {
   const nav = useNavigate()
   const { t } = useTranslation('boards')
   const { pathname } = useLocation()
-  // доска живёт в адресе: /gm/boards/<id>. Ссылку на квест можно отдать соседнему ГМу
+  // the board lives in the URL: /gm/boards/<id>. A story link can be handed to a fellow GM
   const routeId = pathname.split('/').filter(Boolean)[2] || ''
   const [newBoard, setNewBoard] = useState<Dict | null>(null)
   const [renaming, setRenaming] = useState(false)
@@ -119,7 +119,7 @@ export default function BoardsPage() {
     return (last && list.find(b => b.id === last)) || list[0] || null
   }, [list, routeId])
 
-  // адрес без доски (или с чужой) подтягивается к открытой: назад по истории не швыряет
+  // a URL without a board (or with an unknown one) snaps to the open board: Back in history doesn't bounce
   useEffect(() => {
     if (!current) return
     localStorage.setItem(lastKey(), current.id)
@@ -210,9 +210,9 @@ export default function BoardsPage() {
 }
 
 
-/* --- окошки вместо системных alert/confirm/prompt --------------------------- */
+/* --- in-app dialogs instead of system alert/confirm/prompt ------------------ */
 
-/** Да/нет своим окном: системный confirm выбивается из вида и блокирует страницу. */
+/** Yes/no in our own dialog: the system confirm clashes with the look and blocks the page. */
 function Ask({ text, yes, onYes, onClose }: {
   text: string; yes?: string; onYes: () => void; onClose: () => void
 }) {
@@ -228,7 +228,7 @@ function Ask({ text, yes, onYes, onClose }: {
   )
 }
 
-/** Однострочный ввод своим окном — вместо prompt. */
+/** Single-line input in our own dialog — instead of prompt. */
 function AskText({ title, label, value, onSave, onClose }: {
   title: string; label: string; value: string
   onSave: (v: string) => void; onClose: () => void
@@ -251,7 +251,7 @@ function AskText({ title, label, value, onSave, onClose }: {
   )
 }
 
-/* --- холст одной доски ---------------------------------------------------- */
+/* --- canvas of a single board --------------------------------------------- */
 
 function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
   const { t } = useTranslation('boards')
@@ -278,24 +278,24 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
   const [labelFor, setLabelFor] = useState<Dict | null>(null)
   const [sel, setSel] = useState<string[]>([])
   const [pasting, setPasting] = useState(0)
-  // холст или состав: выбор держится между досками — привычка ГМа общая
+  // canvas or roster: the choice persists across boards — the GM's habit is the same
   const [tab, setTab] = useState(() => localStorage.getItem(tabKey()) || 'canvas')
   useEffect(() => { localStorage.setItem(tabKey(), tab) }, [tab])
 
   const viewRef = useRef<HTMLDivElement>(null)
   const skipClick = useRef(false)
-  /* щипок двумя пальцами: пока он идёт, тяга холста и карточек молчит */
+  /* two-finger pinch: while it lasts, canvas and card dragging stay idle */
   const pinch = useRef<Dict | null>(null)
   const viewNow = useRef<V>(view)
-  /* свежие карточки для правок вслепую: два поля записки правятся почти одновременно,
-     и вторая правка, собранная из пропсов, затирала бы первую */
+  /* fresh cards for blind edits: two note fields are edited almost at once,
+     and the second edit, built from props, would overwrite the first */
   const cardsRef = useRef<Dict[]>([])
-  // последняя точка указателя на холсте: туда ложится вставленное из буфера
+  // last pointer point on the canvas: pasted clipboard content lands there
   const lastPt = useRef<Dict | null>(null)
   const fitted = useRef('')
 
-  /* карточки прошлой доски не должны висеть на новой: пока грузим или если
-     запрос упал — холст пустой, а не чужой */
+  /* the previous board's cards must not linger on the new one: while loading or if
+     the request failed, the canvas is empty rather than showing another board */
   const list = cardsErr || cardsLoading ? [] : cards || []
   const threads = cardsErr || cardsLoading ? [] : edges || []
 
@@ -304,11 +304,11 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
   useEffect(() => { setDragPos(null) }, [cards])
   useEffect(() => {
     setLinkFrom(''); setGhost(null); setSelEdge(''); setSel([])
-    fitted.current = ''   // на новую доску заходим сведённым видом, а не чужим
+    fitted.current = ''   // enter a new board with the fitted view, not the previous one
   }, [board.id])
 
-  /* холст добирает всю высоту до низа окна: под ним живёт только строка подсказок,
-     а фиксированная высота оставляла полэкрана пустоты */
+  /* the canvas takes the full height down to the bottom of the window: below it is only the hint line,
+     and a fixed height left half the screen empty */
   useEffect(() => {
     const fit = () => {
       const el = viewRef.current
@@ -323,7 +323,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     return () => window.removeEventListener('resize', fit)
   }, [board.id, board.summary, oops, cardsErr, tab])
 
-  /* точка события в координатах доски */
+  /* event point in board coordinates */
   const at = (e: { clientX: number; clientY: number }): number[] => {
     const r = viewRef.current?.getBoundingClientRect()
     if (!r) return [0, 0]
@@ -342,7 +342,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     const r = viewRef.current?.getBoundingClientRect()
     if (r) zoomAt(r.width / 2, r.height / 2, f)
   }
-  /* свести всю доску в окно: карточки разъезжаются, искать их руками незачем */
+  /* fit the whole board in the window: cards drift apart, no need to hunt for them by hand */
   const fitView = () => {
     const r = viewRef.current?.getBoundingClientRect()
     const items = cardsRef.current
@@ -355,7 +355,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
       }
     }, { x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity })
     const pad = 40
-    // сводим только уменьшением: на одной карточке подгонка иначе раздувает её во весь холст
+    // fit only by shrinking: otherwise fitting a single card blows it up to the whole canvas
     const k = Math.max(MIN_K, Math.min(1,
       (r.width - pad * 2) / (box.x2 - box.x1 || 1),
       (r.height - pad * 2) / (box.y2 - box.y1 || 1)))
@@ -366,23 +366,23 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     })
   }
 
-  /* доска открывается сведённой: карточки разъезжаются далеко, и без этого ГМ
-     каждый раз начинает с пустого угла холста и ищет их руками. Один раз на доску —
-     дальше вид принадлежит тому, кто его сдвинул */
+  /* a board opens fitted: cards drift far apart, and without this the GM
+     starts every time from an empty corner of the canvas and hunts for them. Once per board —
+     after that the view belongs to whoever moved it */
   useEffect(() => {
-    // пока не пришли карточки этой доски, в руках набор прошлой — сводить по нему нельзя
+    // until this board's cards arrive, the previous board's set is in hand — can't fit by it
     const mine = !!cards && (!cards.length || cards[0].board_id === board.id)
     if (!mine || cardsLoading || fitted.current === board.id) return
-    // высота карточки известна только после обмера: до него рамка контента
-    // считается по заглушке и вид уезжает мимо
+    // card height is known only after measuring: before that the content frame
+    // is computed from the placeholder and the view drifts off
     if (list.some(cd => !sizes[cd.id])) return
     if (!viewRef.current?.getBoundingClientRect().width) return
     fitted.current = board.id
     fitView()
   }, [board.id, cards, cardsLoading, list, sizes])
 
-  /* масштаб двумя пальцами: на планшете и телефоне это единственный способ
-     отдалить доску — колеса там нет, а кнопки зума слишком мелкий шаг */
+  /* two-finger zoom: on a tablet or phone this is the only way
+     to zoom the board out — there is no wheel, and the zoom buttons step too finely */
   useEffect(() => {
     const el = viewRef.current
     if (!el) return
@@ -407,7 +407,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
       const s = k / p.k
       const r = el.getBoundingClientRect()
       const [cx, cy] = mid(e.touches, r)
-      // точка щипка держится под пальцами: середина заодно тянет холст
+      // the pinch point stays under the fingers: the midpoint also pans the canvas
       setView({ k, tx: cx - (p.cx - p.tx) * s, ty: cy - (p.cy - p.ty) * s })
     }
     const end = (e: TouchEvent) => { if (e.touches.length < 2) pinch.current = null }
@@ -448,7 +448,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     return () => window.removeEventListener('keydown', h)
   }, [linkFrom, selEdge])
 
-  /* Del по выделенным карточкам. Поля ввода не трогаем: там Del — обычная правка */
+  /* Del on selected cards. Input fields are left alone: Del there is a normal edit */
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key !== 'Delete' || !sel.length) return
@@ -461,8 +461,8 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     return () => window.removeEventListener('keydown', h)
   }, [sel, list])
 
-  /* Ctrl+V: картинка из буфера ложится на холст под указателем. Поля ввода не
-     трогаем — там вставка обычная; окна поверх доски тоже забирают буфер себе */
+  /* Ctrl+V: a clipboard image lands on the canvas under the pointer. Input fields are
+     left alone — pasting there is normal; dialogs over the board take the clipboard too */
   useEffect(() => {
     const h = async (e: ClipboardEvent) => {
       const tg = e.target as HTMLElement | null
@@ -475,7 +475,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
       if (!files.length) return
       e.preventDefault()
       const p = lastPt.current
-      // картинка встаёт серединой под указатель, а не углом
+      // the image is centered under the pointer, not placed by its corner
       const base = p ? { x: p.x - CARD_W.image / 2, y: p.y - CARD_W.image / 2 } : spot()
       setPasting(files.length)
       for (const [i, f] of files.entries()) {
@@ -491,7 +491,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     return () => window.removeEventListener('paste', h)
   }, [board.id, view, adding, killAsk, clockFor, entityId, labelFor])
 
-  /* размеры карточек меряем по факту: высота зависит от текста, а нити тянутся к центрам */
+  /* card sizes are measured as rendered: height depends on the text, and threads attach to centers */
   const measure = (id: string, el: HTMLElement | null) => {
     if (!el) return
     const w = el.offsetWidth, h = el.offsetHeight
@@ -513,8 +513,8 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     return [p.x + s.w / 2, p.y + s.h / 2]
   }
 
-  /* и панорама, и перенос карточки слушают окно: указатель уходит с элемента, под
-     которым начали, а pointer capture на масштабированном слое ведёт себя неровно */
+  /* both panning and card dragging listen on the window: the pointer leaves the element it
+     started on, and pointer capture on a scaled layer behaves unevenly */
   const stageDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
     setMenu(null)
@@ -536,8 +536,8 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
   }
-  /* Shift + рамка: всё, что она задела, идёт в выделение — дальше пачку тянут
-     и убирают целиком. Ctrl/Meta добавляет к уже выделенному */
+  /* Shift + box: everything it touches joins the selection — then the batch is dragged
+     and removed as one. Ctrl/Meta adds to the current selection */
   const bandDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const [sx, sy] = at(e)
     const keep = e.ctrlKey || e.metaKey
@@ -584,13 +584,13 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     e.stopPropagation()
     setMenu(null)
     if (linkFrom) return
-    /* взялись за карточку — она же и выделена: у безрамочных всё тело занимает
-       текстовое поле, и клика по «пустому месту» карточки там просто нет */
+    /* grabbing a card also selects it: borderless cards are all text field,
+       so there is no "empty spot" on the card to click */
     setSel(cur => (e.ctrlKey || e.metaKey || e.shiftKey
       ? (cur.includes(card.id) ? cur.filter(x => x !== card.id) : [...cur, card.id])
       : (cur.includes(card.id) ? cur : [card.id])))
     const [sx, sy] = at(e)
-    /* тянут за одну из выделенных — едет вся пачка, иначе только эта карточка */
+    /* dragging one of the selected cards moves the whole batch, otherwise only this card */
     const group = sel.includes(card.id) && sel.length > 1 ? [...sel] : [card.id]
     let moved = false
     let shift = { dx: 0, dy: 0 }
@@ -628,7 +628,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     try { await api.patch(`${c()}/board-cards/${card.id}`, { z: top + 1 }) } catch { /* noop */ }
   }
 
-  /* клик тянет нить, если она начата, иначе выделяет; Ctrl/Shift набирает пачку */
+  /* a click draws a thread if one is started, otherwise selects; Ctrl/Shift builds a batch */
   const clickCard = (card: Dict, add: boolean) => {
     if (linkFrom) {
       if (linkFrom === card.id) { setLinkFrom(''); setGhost(null); return }
@@ -652,7 +652,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     reloadEdges()
   }
 
-  /* куда лечь новой карточке: точка вызова меню, иначе центр видимой части холста */
+  /* where a new card goes: the menu point, otherwise the center of the visible canvas */
   const spot = (): Dict => {
     if (adding?.at) return adding.at
     if (menu && !menu.card) return { x: menu.bx, y: menu.by }
@@ -684,8 +684,8 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     setMenu({ sx: e.clientX - r.left, sy: e.clientY - r.top, bx, by, card, ...markTarget(e, card) })
   }
 
-  /* куда лягут жирный/курсив из меню: поле с выделением внутри карточки, а у
-     текстового поля — его текст целиком */
+  /* where bold/italic from the menu apply: the field with a selection inside the card, or for a
+     text field, its whole text */
   const markTarget = (e: React.MouseEvent, card?: Dict) => {
     const host = e.currentTarget as HTMLElement
     if (!card || !host?.querySelector) return {}
@@ -700,9 +700,9 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     return { markField: field, markRange: field === inSel ? range!.cloneRange() : null }
   }
 
-  /* Текст и записки правит сам ГМ и видит результат в поле: перечитывать за ними
-     доску незачем — держим свежий слепок в cardsRef и обходимся одним запросом.
-     Всё остальное (цвет, кегль, тик счётчика) меняет вид карточки — там перечитываем. */
+  /* Text and notes are edited by the GM, who sees the result in the field: no need to re-read
+     the board after them — keep a fresh snapshot in cardsRef and do with one request.
+     Everything else (color, font size, clock tick) changes the card's look — re-read there. */
   const saveCard = async (card: Dict, patch: Dict, refresh = true) => {
     if (!refresh) {
       cardsRef.current = cardsRef.current.map(
@@ -714,14 +714,14 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
   }
 
 
-  /* записки правим от последнего известного состояния, а не от снимка в пропсах */
+  /* notes are edited from the last known state, not from the props snapshot */
   const saveNotes = (card: Dict, fn: (notes: Dict[]) => Dict[], refresh = false) => {
     const cur = cardsRef.current.find(x => x.id === card.id)?.notes || []
     return saveCard(card, { notes: fn(cur) }, refresh)
   }
 
-  /* убрать спрашиваем всегда: пачку легко снести случайно. Сами записи, счётчики
-     и файлы остаются в кампании — пропадают только место на доске и нити к ним */
+  /* always ask before removing: a batch is easy to wipe by accident. Entries, clocks
+     and files stay in the campaign — only their spot on the board and their threads go */
   const askDropCards = (ids: string[]) => {
     if (!ids.length) return
     const one = ids.length === 1
@@ -744,8 +744,8 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
   }
   const dropCard = (card: Dict) => askDropCards([card.id])
 
-  /* счётчик на доске — тот же счётчик кампании: правка уходит в /clocks;
-     пока тик в пути, повторный клик по тому же счётчику не уходит */
+  /* a clock on the board is the same campaign clock: edits go to /clocks;
+     while a tick is in flight, a repeat click on the same clock isn't sent */
   const ticking = useRef(new Set<string>())
   const tickClock = async (clockId: string, delta: number, comment = '') => {
     if (ticking.current.has(clockId)) return
@@ -772,8 +772,8 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
     reloadEdges()
   }
 
-  /* навели на нить — на доске остаётся весь клубок, до которого она дотягивается:
-     связь читается вместе со своей цепочкой, а не двумя карточками из середины */
+  /* hovering a thread keeps the whole tangle it reaches on the board:
+     a link reads together with its chain, not as two cards from the middle */
   const web = useMemo(() => {
     const t0 = hotEdge ? threads.find(t => t.id === hotEdge) : null
     if (!t0) return null
@@ -833,7 +833,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
               const [x2, y2] = centerOf(b)
               const mx = (x1 + x2) / 2, my = (y1 + y2) / 2
               const on = selEdge === t.id
-              /* верёвка провисает под своим весом: чем длиннее, тем глубже дуга */
+              /* the string sags under its own weight: the longer it is, the deeper the arc */
               const sag = Math.min(60, Math.hypot(x2 - x1, y2 - y1) * 0.12)
               const d = `M ${x1} ${y1} Q ${mx} ${my + sag * 2} ${x2} ${y2}`
               return (
@@ -947,7 +947,7 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
             onOpenEntity={card => { setEntityId(card.entity.id); setMenu(null) }}
             onOpenClock={card => { setClockFor(card); setMenu(null) }}
             onNews={card => {
-              // выделено несколько карточек — новость обо всех записях и счётчиках в выделении
+              // several cards selected — news about all entries and clocks in the selection
               const cards = sel.includes(card.id) && sel.length > 1 ? sel.map(id => byId[id]).filter(Boolean) : [card]
               setNewsFor(cards.flatMap((cd: Dict) => (cd.kind === 'entity' && cd.entity ? [attachOfEntity(cd.entity)]
                 : cd.kind === 'clock' && cd.clock ? [attachOfClock(cd.clock)] : [])))
@@ -1056,11 +1056,11 @@ function Board({ board, onCards }: { board: Dict; onCards: () => void }) {
   )
 }
 
-/* --- состав квеста -------------------------------------------------------- */
+/* --- story roster --------------------------------------------------------- */
 
-/** Состав доски: те же карточки, но разрезом картотеки — сперва персонажи, потом
-    фракции, локации, счётчики. Холст отвечает на «кто с кем связан», состав — на
-    «кто вообще в этом квесте», и его читают не двигая ни одной карточки. */
+/** Board roster: the same cards, but sorted like a card index — characters first, then
+    factions, locations, clocks. The canvas answers "who is connected to whom", the roster
+    "who is in this story at all", and it is read without moving a single card. */
 function BoardRoster({ cards, onOpenEntity, onOpenClock, onTick }: {
   cards: Dict[]
   onOpenEntity: (id: string) => void
@@ -1076,12 +1076,12 @@ function BoardRoster({ cards, onOpenEntity, onOpenClock, onTick }: {
       const items = cards.filter(cd => cd.kind === 'entity' && cd.entity?.kind === kind)
       if (items.length) out.push({ key: kind, label, items })
       if (kind !== 'npc') continue
-      /* статисты идут сразу за персонажами, но своей полкой: их не переиспользуют
-         и с записями кампании путать нельзя */
+      /* extras come right after characters, but on their own shelf: they are not reused
+         and mustn't be confused with campaign entries */
       const names = cards.filter(cd => cd.kind === 'name')
       if (names.length) out.push({ key: 'name', label: 'roster.extras', items: names })
     }
-    // запись удалили из кампании, а карточка осталась — теряться ей на доске нельзя
+    // the entry was deleted from the campaign but the card stayed — it mustn't get lost on the board
     const orphans = cards.filter(cd => cd.kind === 'entity' && !cd.entity)
     if (orphans.length) out.push({ key: 'gone', label: 'roster.gone', items: orphans })
     const clocks = cards.filter(cd => cd.kind === 'clock')
@@ -1117,8 +1117,8 @@ function BoardRoster({ cards, onOpenEntity, onOpenClock, onTick }: {
   )
 }
 
-/** Плитка состава: запись — снимком и подписью, счётчик — циферблатом, заметка —
-    своим текстом или кадром. Записки с доски идут чипами: на квест они и заводились. */
+/** Roster tile: an entry as a snapshot with a caption, a clock as a dial, a note as
+    its text or frame. Board notes go as chips: they were created for the story. */
 function RosterTile({ card, L, onOpenEntity, onOpenClock, onTick }: {
   card: Dict
   L: (k?: string | null) => string
@@ -1248,7 +1248,7 @@ function RosterTile({ card, L, onOpenEntity, onOpenClock, onTick }: {
   )
 }
 
-/** Записки карточки в составе только читаются: правят их на холсте, где виден контекст. */
+/** Card notes in the roster are read-only: they are edited on the canvas, where the context is visible. */
 function RosterNotes({ notes }: { notes: Dict[] }) {
   if (!notes.length) return null
   return (
@@ -1262,7 +1262,7 @@ function RosterNotes({ notes }: { notes: Dict[] }) {
   )
 }
 
-/* --- контекстное меню ------------------------------------------------------ */
+/* --- context menu ---------------------------------------------------------- */
 
 function BoardMenu({
   menu, onClose, onCreate, onImport, onNote, onShot, onSketch, onName, onClock,
@@ -1360,7 +1360,7 @@ function BoardMenu({
   )
 }
 
-/* --- карточка ------------------------------------------------------------- */
+/* --- card ----------------------------------------------------------------- */
 
 function BoardCard({
   card, x, y, k, linking, threading, selected, faded, onMeasure, onPointerDown, onClick, onMenu,
@@ -1372,7 +1372,7 @@ function BoardCard({
   onPointerDown: (e: React.PointerEvent<Element>) => void
   onClick: (add: boolean) => void
   onMenu: (e: React.MouseEvent) => void
-  /* quiet — правка не меняет вид карточки (текст, записка): доску не перечитываем */
+  /* quiet — the edit doesn't change the card's look (text, note): don't re-read the board */
   onSave: (patch: Dict, quiet?: boolean) => void
   onOpenEntity: () => void
   onNotes: (fn: (notes: Dict[]) => Dict[], quiet?: boolean) => void
@@ -1397,7 +1397,7 @@ function BoardCard({
 
   const cl = card.clock
   const bare = card.kind === 'text' || card.kind === 'image'
-  /* в шапке — только пометка о роде карточки: имя записи живёт крупно в теле */
+  /* the header only marks the card kind: the entry name is shown large in the body */
   const head = card.kind === 'entity' ? L(e?.kind) || t('noun.entry')
     : card.kind === 'clock' ? t('noun.clock')
       : card.kind === 'image' ? (card.title || t('noun.frame'))
@@ -1413,7 +1413,7 @@ function BoardCard({
       onClick={ev => { ev.stopPropagation(); onClick(ev.ctrlKey || ev.metaKey || ev.shiftKey) }}
       onContextMenu={onMenu}>
       {bare
-        /* текст и картинка ложатся на доску как есть: тянутся за себя, убираются из ПКМ */
+        /* text and image sit on the board as is: dragged by themselves, removed via the right-click menu */
         ? <div className="bd-bare-grab" onPointerDown={onPointerDown}
             style={{ cursor: threading ? 'crosshair' : 'grab' }} />
         : (
@@ -1428,8 +1428,8 @@ function BoardCard({
 
       {card.kind === 'entity' && (
         <div className="bd-card-body">
-          {/* фото и описание — из самой записи: на доске они только показываются,
-              правка идёт в полном окне карточки (клик по ней) */}
+          {/* photo and description come from the entry itself: the board only shows them,
+              editing happens in the full card window (click it) */}
           <button type="button" className="bd-ent" title={t('open_entry')}
             onClick={ev => { ev.stopPropagation(); onOpenEntity() }}>
             {e?.image_url
@@ -1439,8 +1439,8 @@ function BoardCard({
               {e ? <>
                 <span className="bd-ent-name">
                   {e.name}
-                  {/* цифра идёт строкой, а не отдельной колонкой: колонка отъедала
-                      ширину у имени и рвала длинные названия по буквам */}
+                  {/* the number goes inline, not in its own column: the column took
+                      width from the name and broke long names letter by letter */}
                   {e.kind === 'faction' && rankRoman(e.rank) &&
                     <span className="bd-ent-rank" title={t('card.tier', { tier: rankRoman(e.rank) })}>
                       {rankRoman(e.rank)}
@@ -1463,8 +1463,8 @@ function BoardCard({
 
       {card.kind === 'name' && (
         <div className="bd-card-body">
-          {/* статист — это имя и одна строка о нём: больше ему не нужно, а
-              понадобится больше — из него заводят настоящую запись */}
+          {/* an extra is a name and one line about them: that is all they need, and if
+              more is needed, a real entry is created from them */}
           <CardText value={card.title} single placeholder={t('card.name_ph')} fontSize={17}
             onSave={v => onSave({ title: v }, true)} />
           <CardText value={card.body} placeholder={t('card.who_ph')}
@@ -1520,8 +1520,8 @@ function BoardCard({
           onSave={ink => onSave({ ink }, true)} />
       )}
 
-      {/* ширину тянут за вертикальные кромки — и вправо, и влево; левая заодно
-          сдвигает карточку, чтобы противоположный край стоял на месте */}
+      {/* width is dragged by the vertical edges — right or left; the left one also
+          shifts the card so the opposite edge stays put */}
       {([-1, 1] as const).map(side => (
         <div key={side} className={`bd-edge ${side < 0 ? 'left' : 'right'}`}
           title={t('card.width')}
@@ -1548,8 +1548,8 @@ function BoardCard({
           }} />
       ))}
 
-      {/* у наброска высота своя: тянут за нижнюю кромку, как ширину — за боковые,
-          а за уголок — обе сразу */}
+      {/* a sketch has its own height: drag the bottom edge, like the side edges for width,
+          and the corner for both at once */}
       {card.kind === 'sketch' && (
         <div className="bd-corner" title={t('card.size')}
           onPointerDown={ev => {
@@ -1607,13 +1607,13 @@ function BoardCard({
   )
 }
 
-/** Поле для рисования: ГМ чертит поверх доски от руки — схема налёта, план
-    палубы, стрелки по карте — и подписывает начерченное. Всё живёт в координатах
-    карточки, поэтому едет вместе с ней при переносе и зуме. Правка уезжает по
-    концу росчерка или подписи: пока ведут линию, запросов нет. */
-/* Кадр на холсте берёт миниатюру по тому, сколько экранных пикселей он занимает:
-   ширина карточки × зум × плотность экрана. Ступень только растёт — отдалил доску,
-   а резкость осталась; следующая подгружается заранее и подменяет текущую без мигания */
+/** Drawing pad: the GM sketches freehand over the board — a heist plan, a deck
+    layout, arrows on a map — and labels what is drawn. Everything lives in card
+    coordinates, so it moves with the card on drag and zoom. Edits go out at the
+    end of a stroke or label: no requests while a line is being drawn. */
+/* A frame on the canvas picks a thumbnail by how many screen pixels it covers:
+   card width × zoom × device pixel ratio. The step only grows — zoom the board out
+   and the sharpness stays; the next one is preloaded and swaps in without flicker */
 const SHOT_STEPS = [240, 480, 960] as const
 const shotStep = (px: number) => SHOT_STEPS.findIndex(w => px <= w)
 
@@ -1664,15 +1664,15 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
   const [width, setWidth] = useState(3)
   const [size, setSize] = useState(22)
   const [mode, setMode] = useState('pen')
-  /* подпись правится поверх поля обычным input: at — её место в списке, у новой -1 */
+  /* a label is edited over the pad with a plain input: at is its index in the list, -1 for a new one */
   const [edit, setEdit] = useState<Dict | null>(null)
   const box = useRef<SVGSVGElement>(null)
   const dirty = useRef(false)
 
-  /* чужую правку принимаем, пока своей не было: набросок правит тот же ГМ, что
-     на него смотрит, и перечитывать доску за каждым росчерком незачем */
+  /* accept outside edits until we have our own: the sketch is edited by the same GM
+     who looks at it, so no need to re-read the board after every stroke */
   useEffect(() => { if (!dirty.current) setMarks(ink) }, [ink])
-  // карточку сняли с выделения — приборы ушли, вместе с ними режим и недописанное
+  // the card was deselected — the tools are gone, and with them the mode and any unfinished label
   useEffect(() => { if (!tools) { setMode('pen'); setEdit(null) } }, [tools])
 
   const put = (next: Dict[]) => {
@@ -1681,7 +1681,7 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
     onSave(next)
   }
 
-  /* точка в координатах карточки: рамка на холсте уже масштабирована зумом */
+  /* point in card coordinates: the frame on the canvas is already scaled by zoom */
   const at = (e: PointerEvent | React.PointerEvent): number[] => {
     const r = box.current?.getBoundingClientRect()
     if (!r) return [0, 0]
@@ -1692,8 +1692,8 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
     ]
   }
 
-  /* ластик снимает росчерк или подпись целиком: половинки линии на доске читаются
-     хуже, чем перечёркнутая заново */
+  /* the eraser removes a whole stroke or label: half-lines read worse on the board
+     than a line drawn again */
   const rub = (all: Dict[], x: number, y: number): Dict[] => all.filter(m => {
     if (m.kind === 'text') {
       const reach = Math.max(14, (m.size || 16) * 0.8)
@@ -1726,7 +1726,7 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
     put(marks.map((m, i) => (i === cur.at ? { ...m, text: body } : m)))
   }
 
-  /* подпись тянут за неё саму: короткое движение — правка текста, длинное — перенос */
+  /* a label is dragged by itself: a short move edits the text, a long one moves it */
   const grabLabel = (e: React.PointerEvent, i: number) => {
     e.stopPropagation()
     e.preventDefault()
@@ -1761,8 +1761,8 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
   const down = (e: React.PointerEvent) => {
     if (e.button !== 0) return
     e.stopPropagation()
-    /* без этого браузер по нажатию уводит фокус на само поле — только что
-       появившийся input подписи сразу теряет его и закрывается пустым */
+    /* without this the browser moves focus to the pad itself on press — the label input
+       that just appeared immediately loses it and closes empty */
     e.preventDefault()
     if (edit) return
     const [x0, y0] = at(e)
@@ -1795,7 +1795,7 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
     const move = (m: PointerEvent) => {
       const [x, y] = at(m)
       const n = pts.length
-      // точки ближе полутора единиц друг к другу линию не меняют, а вес JSON растят
+      // points closer than 1.5 units apart don't change the line but bloat the JSON
       if (Math.hypot(x - pts[n - 2], y - pts[n - 1]) < 1.5) return
       pts.push(x, y)
       setLive([...pts])
@@ -1804,7 +1804,7 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
       setLive(null)
-      // тычок без движения — точка: короткая линия сама в себя
+      // a tap without movement is a dot: a short line into itself
       const line = pts.length >= 4 ? pts : [...pts, pts[0] + 0.6, pts[1] + 0.6]
       put([...marks, { color: pen, width, pts: line }])
     }
@@ -1888,9 +1888,9 @@ function SketchPad({ ink, h, k, color, tools, onSave }: {
   )
 }
 
-/** Статист на доску: npc-эпизодник — имя из генератора (списки корника плюс
-    расширение) и одна строка о том, кто это. В базу кампании такая карточка не
-    идёт: живёт ровно столько, сколько квест. */
+/** Extra onto the board: a one-scene NPC — a name from the generator (rulebook lists plus
+    an extension) and one line about who they are. Such a card doesn't go into the campaign
+    database: it lives exactly as long as the story. */
 function NameRoll({ onClose, onDone }: {
   onClose: () => void; onDone: (title: string, body: string) => void
 }) {
@@ -1927,7 +1927,7 @@ function NameRoll({ onClose, onDone }: {
           {NAME_POOLS.map(([k, lb]) => (
             <button key={k} className={`tiny ghost${pool === k ? ' on' : ''}`}
               onClick={() => {
-                /* ксенос живёт только в сеттинге: в мировой базе такой огранки нет */
+                /* xeno exists only in the setting pool: the world pool has no such name form */
                 const sh = k === 'world' && shape === 'xeno' ? 'mix' : shape
                 setPool(k); setShape(sh); spin(sh, k)
               }}>{t(lb)}</button>
@@ -1996,7 +1996,7 @@ function NameRoll({ onClose, onDone }: {
   )
 }
 
-/** Выбор картинки: кнопка вместо голого file input — по нему тяжело попасть. */
+/** Image picker: a button instead of a bare file input, which is hard to hit. */
 function PickImage({ value, boardId, onPick }: {
   value: string; boardId: string; onPick: (url: string) => void
 }) {
@@ -2030,7 +2030,7 @@ function PickImage({ value, boardId, onPick }: {
   )
 }
 
-/** Записки карточки: плюсик добавляет новую. В запись кампании уходят одним блоком. */
+/** Card notes: the plus adds a new one. They go into the campaign entry as one block. */
 function NoteStack({ notes, onChange }: {
   notes: Dict[]; onChange: (fn: (n: Dict[]) => Dict[], quiet?: boolean) => void
 }) {
@@ -2059,8 +2059,8 @@ function NoteStack({ notes, onChange }: {
   )
 }
 
-/* Выделение в тексте доски: **жирный**, *курсив*, __подчёркнутый__. Хранится
-   разметкой в той же строке — дамп для агента и записи кампании остаются текстом. */
+/* Formatting in board text: **bold**, *italic*, __underline__. Stored
+   as markup in the same string — the agent dump and campaign entries stay plain text. */
 const MARKS: [string, string, string][] = [
   ['bold', 'marks.bold', 'marks.bold_tip'], ['italic', 'marks.italic', 'marks.italic_tip'],
   ['underline', 'marks.underline', 'marks.underline_tip'],
@@ -2074,7 +2074,7 @@ function markHtml(src: string): string {
     .replace(/__(?!\s)(.+?)(?<!\s)__(?!_)/g, '<u>$1</u>')
     .replace(/(^|[^*])\*(?![\s*])([^*\n]*?[^\s*]|[^\s*])\*(?!\*)/gm, '$1<i>$2</i>')
     .replace(/\n/g, '<br>')
-  // хвостовой перенос в редактируемом поле виден только со вторым <br>
+  // a trailing line break in an editable field only shows with a second <br>
   return src.endsWith('\n') ? `${html}<br>` : html
 }
 
@@ -2103,12 +2103,12 @@ function markText(root: HTMLElement): string {
   return out
 }
 
-/** Текст с разметкой — только для чтения (состав доски). */
+/** Formatted text, read-only (board roster). */
 function Marked({ text, className }: { text: string; className?: string }) {
   return <span className={className} dangerouslySetInnerHTML={{ __html: markHtml(text) }} />
 }
 
-/** Выделение в поле под кареткой; без выделения — во всём поле. */
+/** Selection in the field under the caret; without a selection, the whole field. */
 function applyMark(el: HTMLElement, cmd: string, range?: Range | null) {
   el.focus()
   const s = window.getSelection()
@@ -2122,7 +2122,7 @@ function applyMark(el: HTMLElement, cmd: string, range?: Range | null) {
 
 const MARK_KEYS: Record<string, string> = { KeyB: 'bold', KeyI: 'italic', KeyU: 'underline' }
 
-/** Текст карточки правится прямо на доске; правка уезжает сама, с паузой. */
+/** Card text is edited right on the board; the edit goes out on its own, after a pause. */
 function CardText({ value, onSave, placeholder, single, fontSize }: {
   value: string; onSave: (v: string) => void; placeholder?: string; single?: boolean
   fontSize?: number
@@ -2130,8 +2130,8 @@ function CardText({ value, onSave, placeholder, single, fontSize }: {
   const area = useRef<HTMLDivElement>(null)
   const [text, setText] = useState(value || '')
   const dirty = useRef(false)
-  /* правку уносим по её концу, а не по ходу набора: свежий текст и свежий
-     обработчик держим в ref — иначе уход с поля сохранит то, что было в первом рендере */
+  /* the edit is sent when it ends, not while typing: the fresh text and fresh
+     handler are kept in a ref — otherwise leaving the field would save what was in the first render */
   const last = useRef(text)
   const save = useRef(onSave)
   last.current = text
@@ -2149,13 +2149,13 @@ function CardText({ value, onSave, placeholder, single, fontSize }: {
     const el = area.current
     if (el && markText(el) !== (value || '')) el.innerHTML = markHtml(value || '')
   }, [value])
-  /* страховка: правку бросили, не уходя из поля (ушли во вкладку, закрыли ноут) */
+  /* safety net: the edit was abandoned without leaving the field (switched tabs, closed the laptop) */
   useEffect(() => {
     if (!dirty.current || text === (value || '')) return
     const t = setTimeout(flush, IDLE_SAVE)
     return () => clearTimeout(t)
   }, [text])
-  // карточка ушла с доски или доску сменили — недописанное не теряем
+  // the card left the board or the board changed — don't lose the unfinished text
   useEffect(() => flush, [])
 
   const set = (v: string) => { dirty.current = true; setText(v) }
@@ -2165,7 +2165,7 @@ function CardText({ value, onSave, placeholder, single, fontSize }: {
     const el = area.current
     if (!el) return
     const v = markText(el)
-    // стёртое поле браузер оставляет с <br> — без очистки не покажется подсказка
+    // the browser leaves a cleared field with a <br> — without clearing it, the placeholder won't show
     if (!v) el.innerHTML = ''
     set(v)
   }
@@ -2175,7 +2175,7 @@ function CardText({ value, onSave, placeholder, single, fontSize }: {
       ev.preventDefault()
       document.execCommand(cmd)
     } else if (ev.key === 'Enter') {
-      // перенос строки, а не новый <div>: иначе разметка расползается по блокам
+      // a line break, not a new <div>: otherwise the markup spreads across blocks
       ev.preventDefault()
       document.execCommand('insertLineBreak')
     }
@@ -2196,10 +2196,10 @@ function CardText({ value, onSave, placeholder, single, fontSize }: {
         onBlur={flush} />
 }
 
-/* --- счётчик на доске ------------------------------------------------------ */
+/* --- clock on the board ---------------------------------------------------- */
 
-/** Записи и счётчики одним списком: на доске это одинаковые карточки, и делить
-    их выбор на две вкладки было лишним. */
+/** Entries and clocks in one list: on the board they are the same kind of card, and
+    splitting their picker into two tabs was unnecessary. */
 function BoardPick({ onPick }: { onPick: (item: Dict) => void }) {
   const { t } = useTranslation('boards')
   return (
@@ -2211,7 +2211,7 @@ function BoardPick({ onPick }: { onPick: (item: Dict) => void }) {
   )
 }
 
-/** Правка счётчика с доски — той же формой, что в базе кампании. */
+/** Clock editing from the board — the same form as in the campaign database. */
 function ClockEdit({ card, onClose, onDone }: {
   card: Dict; onClose: () => void; onDone: () => void
 }) {

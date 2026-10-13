@@ -5,8 +5,8 @@ import { useApp, useAsync } from '../ctx'
 import { Chip, ClockDial, VisChip } from '../ui'
 import { ClockMoves, useClockMoves } from './ClockMoves'
 
-/** Счётчики записи двигаются прямо с карточки, как в базе кампании;
- *  описание, история и правка — в базе. */
+/** An entry's clocks are moved right from the card, as in the campaign database;
+ *  description, history and editing are in the database. */
 export default function EntityClocks({ entityId }: { entityId: string }) {
   const { L, isGM } = useApp()
   const { t } = useTranslation('entity')

@@ -8,8 +8,8 @@ import '../../styles.ship.css'
 
 const POWER_MAX = 4
 
-/** Настройка корабля (GM space): свои строки поверх книги его типа. Пишет прямо в карточку
- *  корабля — `fields.custom`; сам тип выбирается на бланке корабля. */
+/** Ship setup (GM space): own rows on top of its type's book. Writes straight into the ship
+ *  card, `fields.custom`; the type itself is picked on the ship sheet. */
 export default function ShipSetup({ ship, onSaved }: { ship: Dict; onSaved: (e: Dict) => void }) {
   const { meta } = useApp()
   const { t } = useTranslation('ship')
@@ -19,7 +19,7 @@ export default function ShipSetup({ ship, onSaved }: { ship: Dict; onSaved: (e: 
   const [phase, setPhase] = useState<'' | 'busy' | 'ok'>('')
   const [err, setErr] = useState('')
 
-  /** Сброс пишется сразу, мимо автосейва. */
+  /** A reset is written at once, bypassing autosave. */
   const write = async (part: Dict) => {
     setPhase('busy'); setErr('')
     try {
@@ -66,7 +66,7 @@ export default function ShipSetup({ ship, onSaved }: { ship: Dict; onSaved: (e: 
   const ownSizes = Array.isArray(d.sizes)
   const sizes = ownSizes ? list(d.sizes) : book.sizes
 
-  /** Пустые строки, набранные и брошенные, в шаблон не уезжают. */
+  /** Empty rows, typed and abandoned, don't go into the template. */
   const clean = (): Dict => {
     const out: Dict = {}
     if (Object.keys(dict(d.slots)).length) out.slots = dict(d.slots)

@@ -15,17 +15,17 @@ export function Thumb({ e }: { e: Dict }) {
     : <Stub kind={e.kind} sub={e.fields?.job_type} className="lnk-thumb" />
 }
 
-/** Поиск для пикеров. Карточки ищет сервер и отдаёт лишь то, что видит смотрящий;
-    пустой запрос — свежие карточки. С `clocks` в тот же список встают счётчики
-    кампании, и всё вместе идёт свежим сверху; у находок тогда есть `type`. */
+/** Search for pickers. The server searches cards and returns only what the viewer can see;
+    an empty query gives the newest cards. With `clocks` the campaign clocks join the same list,
+    everything goes newest first, and the hits then carry `type`. */
 export function usePickHits({ q, on = true, kind, exclude, limit = 20, clocks }: {
   q: string
-  /** искать, только пока список на экране */
+  /** search only while the list is on screen */
   on?: boolean
   kind?: string
   exclude?: string | string[]
   limit?: number
-  /** счётчики в том же списке: только идущие или все */
+  /** clocks in the same list: running only or all */
   clocks?: 'active' | 'all'
 }) {
   const [ents, setEnts] = useState<Dict[]>([])
@@ -57,7 +57,7 @@ export function usePickHits({ q, on = true, kind, exclude, limit = 20, clocks }:
           if (!alive) return
           setEnts([]); setAsked(needle); setOops(e?.message || i18n.t('entity:picker.search_down'))
         })
-    }, needle ? 250 : 0)  // список по фокусу открываем сразу, набор — с паузой
+    }, needle ? 250 : 0)  // on focus open the list right away, typing waits for a pause
     return () => { alive = false; clearTimeout(t) }
   }, [needle, on, kind, limit])
 
@@ -75,8 +75,8 @@ export function usePickHits({ q, on = true, kind, exclude, limit = 20, clocks }:
   return { hits, ready: asked === needle, oops }
 }
 
-/** Выбор записи поиском. Пустая подпись — поле без своей подписи и отступа:
-    их вместе с уже выбранным рисует тот, кто встроил пикер. */
+/** Pick an entry by search. Empty label: a field without its own label and margin;
+    whoever embeds the picker draws those, along with what's already picked. */
 export default function EntityPicker({
   value, onChange, label: labelProp, placeholder: placeholderProp,
   kind, exclude, autoFocus, limit = 20, vis, clocks, listed, initialQ = '', onEmpty,
@@ -85,21 +85,21 @@ export default function EntityPicker({
   onChange: (e: Dict | null) => void
   label?: string
   placeholder?: string
-  /** сузить до одного или нескольких видов: `npc` или `npc,faction` */
+  /** narrow to one or more kinds: `npc` or `npc,faction` */
   kind?: string
-  /** id записей, которые нельзя выбрать: та, из которой выбираем, или уже выбранные */
+  /** ids of entries that can't be picked: the one we pick from, or ones already picked */
   exclude?: string | string[]
   autoFocus?: boolean
   limit?: number
-  /** видимость выбранной записи столу — глаз за подписью, как у полей карточки */
+  /** visibility of the picked entry to the table: an eye after the label, as on card fields */
   vis?: { hidden: boolean; onChange: (hide: boolean) => void }
-  /** и счётчики кампании тем же списком */
+  /** campaign clocks in the same list too */
   clocks?: 'active' | 'all'
-  /** список раскрыт всегда: выбор в своём окне, а не выпадашкой у поля */
+  /** the list is always open: picking happens in its own window, not a dropdown by the field */
   listed?: boolean
-  /** с чего начинается строка поиска — например, нынешний выбор */
+  /** what the search line starts with, e.g. the current pick */
   initialQ?: string
-  /** строку стёрли и подтвердили (Enter или уход из поля) — значит, выбор снят */
+  /** the line was cleared and confirmed (Enter or leaving the field): the pick is removed */
   onEmpty?: () => void
 }) {
   const { L } = useApp()
@@ -110,7 +110,7 @@ export default function EntityPicker({
   const [open, setOpen] = useState(false)
   const shown = (listed || open) && !value
   const { hits, ready, oops } = usePickHits({ q, on: shown, kind, exclude, limit, clocks })
-  // раскрытая выпадашка — верхний слой: Escape снимает её, следующий — окно под ней
+  // an open dropdown is the top layer: Escape closes it, the next one closes the window under it
   useLayer(open && !listed && !value, () => setOpen(false))
 
   const pick = (e: Dict) => { onChange(e); setQ(''); setOpen(false) }
@@ -160,7 +160,7 @@ export default function EntityPicker({
         <div className="lnk-hits" style={{ marginTop: 6 }}>
           {hits.map(h => {
             const clock = h.type === 'clock'
-            // у выпадашки mousedown, а не click: blur убрал бы список раньше клика; фокус остаётся в поле
+            // mousedown on the dropdown, not click: blur would hide the list first; focus stays in the field
             const take = listed
               ? { onClick: () => pick(h) }
               : { onMouseDown: (ev: React.MouseEvent) => { ev.preventDefault(); pick(h) } }

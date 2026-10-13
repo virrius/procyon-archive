@@ -24,11 +24,11 @@ export default function RulesPage() {
   const [at, setAt] = useState(0)
   const [busy, setBusy] = useState(false)
   const [oops, setOops] = useState('')
-  const [active, setActive] = useState('')      // куда падают Ctrl+V и выбор файла
-  const [pickFor, setPickFor] = useState('')    // раздел, для которого открыт комплект
-  const [noteFor, setNoteFor] = useState<Dict | null>(null)  // текстовая вырезка в правке
+  const [active, setActive] = useState('')      // where Ctrl+V and file picks land
+  const [pickFor, setPickFor] = useState('')    // section the book-page picker is open for
+  const [noteFor, setNoteFor] = useState<Dict | null>(null)  // text clipping being edited
   const filePick = useRef<HTMLInputElement | null>(null)
-  // ?open=<id> — приход из поиска: раздел раскрывается, вырезка подсвечена
+  // ?open=<id> — coming from search: the section expands, the clipping is highlighted
   const [params, setParams] = useSearchParams()
   const asked = params.get('open') || ''
   const [lit, setLit] = useState('')

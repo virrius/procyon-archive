@@ -18,56 +18,56 @@ export type GalleryField = {
   key: string
   label: string
   type?: 'text' | 'textarea' | 'select' | 'multi' | 'ref'
-  /** у ref — из каких видов карточек выбирать */
+  /** for ref: which entry kinds to pick from */
   kinds?: string
   options?: string[]
-  /** потолок выбора у поля-множества */
+  /** selection limit for a multi-value field */
   max?: number
-  /** подпись-полоска под именем — чем карточка является, а не что о ней известно */
+  /** tagline under the name: what the entry is, not what is known about it */
   badge?: boolean
-  /** строка у описания, а не тег описи: свободный текст, который читают целиком */
+  /** a line by the description, not a fact tag: free text read in full */
   note?: boolean
 }
 
 export type EntityGalleryProps = {
   kind: string
   title: string
-  /** куда ведёт карточка; по умолчанию — полная страница сущности */
+  /** where the card leads; defaults to the full entry page */
   linkTo?: (e: Dict) => string
-  /** карточка без списка полей: только снимок, имя, краткое описание */
+  /** card without the field list: just picture, name, short description */
   hideFacts?: boolean
-  /** поиск по имени и описанию и «N из M» — у больших галерей */
+  /** search by name and description plus "N of M", for large galleries */
   search?: boolean
-  /** ГМу — ряд «кто видит», когда в нём больше одной корзины */
+  /** for the GM: the "who can see" row, when it has more than one bucket */
   visRow?: boolean
-  /** постоянные заголовки по своему select-полю типа: категория у фракций, система у мест */
+  /** fixed headings by the type's own select field: category for factions, system for places */
   sectionBy?: string
-  /** порядок карточек; по умолчанию свежие сверху */
+  /** card order; newest first by default */
   sort?: (a: Dict, b: Dict) => number
-  /** итоговые статусы: такие карточки идут бледным хвостом в конце */
+  /** final statuses: such cards go as a faded tail at the end */
   closed?: string[]
-  /** ручка обновления списка для родителя: тихий refetch без перемонтажа галереи */
+  /** list refresh handle for the parent: silent refetch without remounting the gallery */
   reloadRef?: MutableRefObject<((silent?: boolean) => void) | null>
-  /** раскладка по группам от родителя: каждая группа — отдельный блок с заголовком;
-   *  пустые группы родителя тоже рисуются */
+  /** grouping from the parent: each group is a separate block with a heading;
+   *  the parent's empty groups are rendered too */
   groupBy?: (list: Dict[]) => Group[]
-  /** блок под плиткой, вне ссылки: своё у вида (состояние персонажа ГМу) */
+  /** block under the tile, outside the link: kind-specific (character state for the GM) */
   extra?: (e: Dict) => ReactNode
-  /** свои кнопки сразу за заголовком */
+  /** own buttons right after the heading */
   beside?: ReactNode
 }
 
-/** idle — группа бледная (никем не занята); add — в пустой группе своя кнопка добавления */
+/** idle: the group is faded (nobody in it); add: an empty group gets its own add button */
 export type Group = [key: string, label: string, items: Dict[], look?: { idle?: boolean; add?: boolean }]
 
 const NO_SECTION = ' nosection'
 
 const ru = (a: string, b: string) => String(a).localeCompare(String(b), 'ru')
 
-/** порядок ряда «кто видит»: сначала открытое столу */
+/** order of the "who can see" row: what's open to the table first */
 const VIS_ORDER = ['crew', 'some', 'gm']
 
-/** подписи ГМ-фильтра по видимости */
+/** labels of the GM visibility filter */
 const VIS_FILTER: Dict = {
   crew: 'gallery.vis_crew', some: 'gallery.vis_some', gm: 'gallery.vis_gm',
 }
@@ -76,7 +76,7 @@ const idsOf = (e: Dict, key: string): string[] =>
   Array.isArray(e[key]) ? e[key].filter(Boolean) : []
 
 
-const UNKNOWN = '?'  // ГМ закрыл поле: значение есть, стол его не знает
+const UNKNOWN = '?'  // the GM hid the field: the value exists, the table doesn't know it
 
 const orderOf = (value: any, order: string[]) => {
   const i = order.indexOf(String(value || ''))
@@ -96,7 +96,7 @@ export function EntityGallery({
   const { t } = useTranslation('entity')
   const [rows, loading, reload, loadErr] = useAsync<Dict[]>(
     () => api.get(`${c()}/entities?kind=${kind}`), [kind])
-  // архив нужен только ГМу: вернуть карточку можно с её страницы
+  // only the GM needs the archive: a card is restored from its own page
   const [archRows, , reloadArch] = useAsync<Dict[]>(
     () => (isGM ? api.get(`${c()}/entities?kind=${kind}&archived=true`) : Promise.resolve([])),
     [kind, isGM])
@@ -104,11 +104,11 @@ export function EntityGallery({
   const { byId: facById } = useKindIndex('faction')
   const { byId: locById } = useKindIndex('location')
   const [q, setQ] = useState('')
-  // ГМ-фильтр: что стол уже видит, а что лежит закрытым
+  // GM filter: what the table already sees and what stays hidden
   const [visF, setVisF] = useState<string[]>([])
   const [creating, setCreating] = useState(false)
-  // карточку открываем окном поверх галереи: поиск и фильтр остаются на месте
-  // открытая карточка живёт в адресе (?card=id): ссылкой можно поделиться, «назад» закрывает окно
+  // a card opens as a window over the gallery: search and filter stay in place
+  // the open card lives in the URL (?card=id): the link can be shared, "back" closes the window
   const [sp, setSp] = useSearchParams()
   const cardId = sp.get('card')
   const [freshId, setFreshId] = useState<string | null>(null)
@@ -121,7 +121,7 @@ export function EntityGallery({
     setSp(next)
   }
 
-  // «добавить» заводит пустую карточку и сразу открывает её окном — поля вписываются на месте
+  // "add" creates an empty card and opens it as a window right away; fields are filled in place
   const create = async () => {
     if (creating) return
     setCreating(true)
@@ -137,15 +137,15 @@ export function EntityGallery({
     } catch (ex: any) { alert(ex?.message || t('gallery.create_failed')) }
     setCreating(false)
   }
-  // новая карточка без имени не сохраняется: уходя, спрашиваем и убираем её
+  // a new card without a name is not kept: on leaving, ask and remove it
   const closeEnt = async () => {
     const was = openEnt
     if (was?.fresh) {
       let named = true
-      try { named = !!String((await api.get(`${c()}/entities/${was.id}`))?.name || '').trim() } catch { /* нет — закрываем */ }
+      try { named = !!String((await api.get(`${c()}/entities/${was.id}`))?.name || '').trim() } catch { /* gone: close */ }
       if (!named) {
         if (!confirm(t('gallery.unnamed_leave'))) return
-        try { await api.del(`${c()}/entities/${was.id}?discard=1`) } catch { /* осталась — не беда */ }
+        try { await api.del(`${c()}/entities/${was.id}?discard=1`) } catch { /* still there: no big deal */ }
       }
     }
     setOpenEnt(null)
@@ -165,15 +165,15 @@ export function EntityGallery({
   const canCreate = !readonly
   const def: Dict = meta?.kinds?.[kind] || {}
   const statuses: string[] = Array.isArray(def.statuses) ? def.statuses : []
-  // свои поля типа: их же показываем в форме создания.
-  // gm_-поля — рабочая кухня ГМа (внешность под генерацию), в галерее им не место
+  // the type's own fields: the same ones shown in the create form.
+  // gm_ fields are the GM's working notes (looks for generation); they don't belong in the gallery
   const extraFields: GalleryField[] = (def.fields || [])
     .filter((f: Dict) => !String(f.key).startsWith('gm_'))
   const archived = archRows || []
   const showArch = isGM && inArch
   const all = (showArch ? archived : rows) || []
 
-  // «скрыто» — карточка целиком у ГМа; «частично» — открыта только выбранным или владельцу
+  // "hidden": the whole card is GM-only; "partial": open only to selected members or the owner
   const visKey = (e: Dict) =>
     e.visibility === 'gm' ? 'gm' : e.visibility === 'crew' || !e.visibility ? 'crew' : 'some'
 
@@ -183,7 +183,7 @@ export function EntityGallery({
     for (const e of all) m.set(visKey(e), (m.get(visKey(e)) || 0) + 1)
     return VIS_ORDER.filter(k => m.has(k)).map(k => [k, m.get(k) as number])
   }, [all, isGM, visRow])
-  // ряд из одной корзины ничего не делит; спрятанный ряд и не фильтрует
+  // a single-bucket row splits nothing; a hidden row doesn't filter either
   const visShown = visCounts.length > 1
   const visOn = visShown ? visF : []
 
@@ -203,11 +203,11 @@ export function EntityGallery({
   }, [all, q, search, visOn.join('|'), sort, closed?.join('|')])
 
   const sectionDef = sectionBy ? extraFields.find(f => f.key === sectionBy) : undefined
-  // значение раздела уже стоит в заголовке группы — на карточке его не повторяем
+  // the section value is already in the group heading: don't repeat it on the card
   const cardFields = sectionBy ? extraFields.filter(f => f.key !== sectionBy) : extraFields
 
   const groups = useMemo<Group[]>(() => {
-    // пустые группы родителя рисуются — но не раньше, чем пришёл список
+    // the parent's empty groups are rendered, but not before the list arrives
     if (groupBy) return rows ? groupBy(list) : []
     if (!sectionBy && closed?.length) {
       const done = (e: Dict) => closed.includes(String(e.status || ''))
@@ -356,8 +356,8 @@ export function EntityGallery({
   )
 }
 
-/** Заведение записи вне галереи — с той же формой и теми же полями типа.
-    Схему типа берём из меты кампании, как это делает сама галерея. */
+/** Creating an entry outside the gallery, with the same form and the same type fields.
+    The type schema comes from the campaign meta, as the gallery itself does it. */
 export function NewEntityModal({ kind, onDone, onClose }: {
   kind: string; onDone: (id: string) => void; onClose: () => void
 }) {
@@ -374,7 +374,7 @@ export function NewEntityModal({ kind, onDone, onClose }: {
 
 export default EntityGallery
 
-/* --- карточка --------------------------------------------------------------- */
+/* --- card ------------------------------------------------------------------- */
 
 function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, href, onOpen, readonly, onVis, onOwner, hideFacts, faded, extra }: {
   e: Dict
@@ -382,15 +382,15 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
   isGM: boolean
   L: (k?: string | null) => string
   fieldDefs: GalleryField[]
-  /** обычное состояние вида («в деле»): его на плитке не пишем, читается только отличие */
+  /** the kind's usual status ("active"): not shown on the tile, only differences are */
   defaultStatus?: string
   facById: Map<string, Dict>
   locById: Map<string, Dict>
   href: string
   hideFacts?: boolean
-  /** дело закрыто: карточка бледнее открытых */
+  /** case closed: the card is paler than open ones */
   faded?: boolean
-  /** открыть карточку окном; ссылка остаётся рабочей для «в новой вкладке» */
+  /** open the card as a window; the link still works for "open in new tab" */
   onOpen?: () => void
   readonly: boolean
   onVis: (v: string, to: string[]) => void
@@ -401,7 +401,7 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
   const [open, setOpen] = useState(false)
   const hidden = new Set<string>((e.hidden_fields || []) as string[])
   const locWord = kind === 'faction' ? t('hq') : t('place')
-  // закрытое поле: ГМ читает значение с рустовой меткой, стол — только «?»
+  // hidden field: the GM reads the value with a rust mark, the table sees only "?"
   const shutKey = (key: string) => hidden.has(key)
   const seen = (key: string, values: string[]) =>
     (shutKey(key) && !isGM ? [UNKNOWN] : values)
@@ -411,7 +411,7 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
     const vals = seen(key, values)
     if (vals.length) facts.push([label, vals, key])
   }
-  // привязка на закрытую карточку: имя приходит с сервера, ссылки на неё нет
+  // link to a hidden card: the name comes from the server, there is no link to it
   const names = (ids: string[], by: Map<string, Dict>) =>
     ids.map(id => String(by.get(id)?.name || e.peer_names?.[id] || '')).filter(Boolean)
   if (kind !== 'faction') put('faction_ids', t('faction'), names(idsOf(e, 'faction_ids'), facById))
@@ -433,10 +433,10 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
   const tone = statusTone(status)
   const showStatus = !!status
   const statusWord = L(status) || status
-  // мёртвый, выбывший, чёрная метка — кадр выцветает: состояние видно без подписи
+  // dead, retired, black mark: the picture fades, so the state reads without a caption
   const gone = (tone === 'dead' || tone === 'end' || tone === 'black')
 
-  // роль — одна строка: класс персонажа, тип работёнки
+  // role is one line: character class, job type
   const badgeKey = fieldDefs.find(f => f.badge)?.key || ''
   const badgeRaw = String(e.fields?.[badgeKey] ?? '').trim()
   const roleKey = e.fields?.playbook || shutKey('playbook') ? 'playbook' : badgeKey
@@ -458,7 +458,7 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
   return (
     <article className={cls.join(' ')}>
       <Link to={href} className="tile-link" onClick={onOpen && (ev => {
-        // Ctrl/Cmd/Shift и средняя кнопка оставляем браузеру — карточка откроется отдельной страницей
+        // leave Ctrl/Cmd/Shift and middle click to the browser: the card opens as a separate page
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return
         ev.preventDefault(); onOpen()
       })}>
@@ -532,7 +532,7 @@ function Card({ e, kind, isGM, L, fieldDefs, defaultStatus, facById, locById, hr
   )
 }
 
-/* --- создание карточки: форма перед сохранением ----------------------------- */
+/* --- card creation: form before saving -------------------------------------- */
 
 export function CreateForm({ kind, label, statuses, createExtra, autoOwn, onClose, onDone }: {
   kind: string

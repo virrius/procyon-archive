@@ -20,7 +20,7 @@ import AdminSpace from './pages/AdminSpace'
 import EntityPage from './pages/EntityPage'
 import { DefaultPasswordGate } from './components/PasswordModal'
 
-/** Куда ведёт находка: сама цель, а не раздел, где её ещё искать */
+/** Where a search hit leads: the target itself, not the section to look in */
 function searchHref(r: Dict): string {
   const id = encodeURIComponent(String(r.target_id || ''))
   if (!id) return ''
@@ -144,8 +144,8 @@ function Shell() {
 
   if (!store.token) return <Navigate to="/login" replace />
   if (!store.campaign) return <Navigate to="/campaigns" replace />
-  /* кампания ещё летит с сервера: роли пока нет, и маршруты ГМа не смонтированы.
-     Показать сейчас Routes — значит выкинуть ГМа с его страницы на общий экран */
+  /* the campaign is still loading: no role yet, and the GM routes aren't mounted.
+     Rendering Routes now would kick the GM off their page to the shared screen */
   if (!campaign) {
     return (
       <div className="app">
@@ -228,7 +228,7 @@ function Shell() {
   )
 }
 
-/* старые ссылки на персонажа ведут в «Экипаж · Команда» */
+/* old character links lead to Crew · Team */
 function CharacterRedirect() {
   const { cid } = useParams()
   return <Navigate to={cid ? `/crew/team/${cid}` : '/crew/team'} replace />

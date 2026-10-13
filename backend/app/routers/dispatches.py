@@ -1,4 +1,4 @@
-"""Черновики новостей: событие сектора глазами одного из журналистов кампании."""
+"""News drafts: a sector event through the eyes of one of the campaign's journalists."""
 from __future__ import annotations
 
 import uuid
@@ -55,7 +55,7 @@ class DispatchOptionsOut(BaseModel):
 
 
 def valid_ids(ids: list[str]) -> list[str]:
-    """Только настоящие uuid, без повторов и в порядке выбора: кривой id ронял бы запрос в базу."""
+    """Only real uuids, no repeats, in the order picked: a malformed id would crash the database query."""
     out = []
     for raw in ids:
         try:
@@ -89,7 +89,7 @@ def dispatch_options(v: Viewer = Depends(gm_only), db: Session = Depends(get_db)
 
 
 def check_draft(db: Session, campaign_id: str, body: DraftIn) -> str:
-    """Заказ выполним: журналист есть, и есть о чём писать. Отдаёт ключ журналиста."""
+    """The order is doable: the journalist exists and there is something to write about. Returns the journalist key."""
     kit = campaign_kit(db.get(Campaign, campaign_id))
     journalist = D().pick_journalist(kit, body.journalist)
     if not journalist:
@@ -101,7 +101,7 @@ def check_draft(db: Session, campaign_id: str, body: DraftIn) -> str:
 
 
 def open_locations(db: Session, campaign_id: str) -> list[Entity]:
-    """Места, открытые столу: только из них журналист и жители берут планеты и станции."""
+    """Places open to the table: the journalist and the locals take planets and stations only from these."""
     return (db.query(Entity)
             .filter(Entity.campaign_id == campaign_id, Entity.kind == "location",
                     Entity.visibility == "crew", Entity.archived.is_(False))
@@ -109,7 +109,7 @@ def open_locations(db: Session, campaign_id: str) -> list[Entity]:
 
 
 def news_hub(camp: Campaign) -> dict:
-    """Чем пишутся депеши и отклики: хаб сервера с моделью новостей."""
+    """What writes dispatches and comments: the server hub with the news model."""
     return {**hub_conf(object_session(camp), "news"),
             "timeout": D().DISPATCH_TIMEOUT, "stop": D().DISPATCH_STOP,
             "attempts": D().DISPATCH_ATTEMPTS, "temperature": D().TEMPERATURE}
@@ -117,14 +117,14 @@ def news_hub(camp: Campaign) -> dict:
 
 def news_comments(camp: Campaign, kit: dict, locations: list, *, headline: str = "", lead: str = "",
                   body: str = "") -> list[dict]:
-    """Пять откликов жителей сети к новости."""
+    """Five comments from net locals on a story."""
     system, text = D().comments_prompt(kit, headline=headline, lead=lead, body=body, locations=locations)
     parsed = hub_call(camp, system, text, D().COMMENTS_SCHEMA, max_tokens=D().COMMENTS_MAX_TOKENS, **news_hub(camp))
     return D().clean_comments(parsed.get("comments"))
 
 
 def write_drafts(db: Session, campaign_id: str, body: DraftIn) -> dict:
-    """Три депеши о событии. Ничего не пишет в базу: что выйдет в эфир, решает ГМ."""
+    """Three dispatches about an event. Writes nothing to the database: the GM decides what goes on the air."""
     journalist = check_draft(db, campaign_id, body)
     camp = db.get(Campaign, campaign_id)
     kit = campaign_kit(camp)
@@ -132,7 +132,7 @@ def write_drafts(db: Session, campaign_id: str, body: DraftIn) -> dict:
 
     clocks = campaign_rows(db, Clock, campaign_id, body.clock_ids)
     entities = campaign_rows(db, Entity, campaign_id, body.entity_ids)
-    # чей замысел на счётчике — тоже причастный, даже если ГМ его не привязал
+    # whoever's plan is on the clock is involved too, even if the GM did not link them
     owners = campaign_rows(db, Entity, campaign_id,
                            [c.owner_id for c in clocks if c.owner_type == "entity" and c.owner_id])
     entities += [o for o in owners if o.id not in {e.id for e in entities}]
@@ -141,7 +141,7 @@ def write_drafts(db: Session, campaign_id: str, body: DraftIn) -> dict:
     goals = [(c, names.get(c.owner_id, "") if c.owner_type == "entity" else "") for c in clocks]
     known = []
     for e in entities:
-        # только открытое столу: закулисье модель не удерживает и пересказывает
+        # only what is open to the table: the model cannot keep backstage material secret and retells it
         blocks = (db.query(ContentBlock)
                   .filter_by(campaign_id=campaign_id, entity_type="entity",
                              entity_id=e.id, visibility="crew")
@@ -156,7 +156,7 @@ def write_drafts(db: Session, campaign_id: str, body: DraftIn) -> dict:
     items = [d for d in (parsed.get("dispatches") or []) if isinstance(d, dict)][:3]
     lead = D().clean(parsed.get("lead"))
     texts = D().compose(lead, items, str(staff.get("signature") or ""))
-    # отклики общие на три черновика — к сути, а не к одной из депеш; не написались — у черновика есть кнопка
+    # comments are shared by the three drafts — about the gist, not one dispatch; if they fail, the draft has a button
     try:
         comments = news_comments(camp, kit, locations, lead=lead)
     except HTTPException:

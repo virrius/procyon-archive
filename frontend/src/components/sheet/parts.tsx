@@ -7,8 +7,8 @@ import EntityPicker, { Thumb } from '../EntityPicker'
 import Stub from '../Stub'
 import '../../styles.ship.css'
 
-/* Общее у бланков корабля и персонажа: панели, деления, списки с отметками, знакомые,
-   строки конструктора. Подписи — в разделе sheet. */
+/* Shared by ship and character sheets: panels, segments, checklists, contacts,
+   builder rows. Labels are in the sheet namespace. */
 
 export type Entry = {
   key: string; name: string; text?: string; more?: string; cost?: number; role?: string
@@ -44,8 +44,8 @@ export const entries = (v: any): Entry[] =>
 
 export const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v ?? null)) as T
 
-/** На сервер уходят только ключи, тронутые на этом бланке; убранный ключ — null.
- *  Соседний бланк, открытый на другом устройстве, так не затирает чужую правку. */
+/** Only keys touched on this sheet go to the server; a removed key is null.
+ *  This way the same sheet open on another device doesn't overwrite someone else's edit. */
 export const changedKeys = (next: Dict, base: Dict): Dict => {
   const out: Dict = {}
   for (const k of new Set([...Object.keys(base), ...Object.keys(next)])) {
@@ -57,7 +57,7 @@ export const changedKeys = (next: Dict, base: Dict): Dict => {
 
 const PHONE = '(max-width: 760px)'
 
-/** Телефон: раскладка плотнее, длинные описания по умолчанию свёрнуты. */
+/** Phone: denser layout, long descriptions collapsed by default. */
 export function usePhone() {
   const [on, setOn] = useState(() =>
     typeof window !== 'undefined' && !!window.matchMedia?.(PHONE).matches)
@@ -85,11 +85,11 @@ export const readContacts = (v: any): ContactRef[] =>
 export const serContacts = (rows: ContactRef[]): Dict[] =>
   rows.map(r => ({ entity_id: r.entity_id, state: r.state }))
 
-/* --- свимлейн бланка ------------------------------------------------------- */
+/* --- sheet swimlane -------------------------------------------------------- */
 
-/** Полоса раздела: подпись с чертой, под ней панели в два столбца
-    (`one` — в один, когда внутри длинные описания). */
-/** `beside` — сразу за названием, до линейки; `head` — справа, после счётчика. */
+/** Section strip: label with a rule, panels under it in two columns
+    (`one`: in one column, when long descriptions are inside). */
+/** `beside`: right after the title, before the rule; `head`: on the right, after the counter. */
 export function Lane({ title, count, head, beside, one, cols, id, children }: {
   title?: string; count?: string; head?: ReactNode; beside?: ReactNode; one?: boolean; cols?: number; id?: string
   children: ReactNode
@@ -110,10 +110,10 @@ export function Lane({ title, count, head, beside, one, cols, id, children }: {
   )
 }
 
-/* --- панель бланка --------------------------------------------------------- */
+/* --- sheet panel ----------------------------------------------------------- */
 
-/** Разделы бланка не складываются: на телефоне мельче шрифт, вся картина остаётся на виду.
-    Справа в заголовке — счётчик отметок. */
+/** Sheet sections don't collapse: on a phone the font is smaller, the whole picture stays in view.
+    The mark counter is on the right of the heading. */
 export function Panel({ title, head, sub, count, children }: {
   title: string; head?: ReactNode; sub?: ReactNode; count?: string; children: ReactNode
 }) {
@@ -136,7 +136,7 @@ export function Panel({ title, head, sub, count, children }: {
   )
 }
 
-/* --- строка бланка --------------------------------------------------------- */
+/* --- sheet row ------------------------------------------------------------- */
 
 export function Line({ label, value, hint, edit, wide, area, onChange }: {
   label: string; value?: any; hint?: string; edit?: boolean
@@ -157,9 +157,9 @@ export function Line({ label, value, hint, edit, wide, area, onChange }: {
   )
 }
 
-/* --- деления показателя ---------------------------------------------------- */
+/* --- rating segments ------------------------------------------------------- */
 
-/** `split` — щель после первых делений (навык: первое деление даёт показатель характеристики). */
+/** `split`: a gap after the first segments (action: the first segment adds to the attribute rating). */
 export function Pips({ n, value, tone, split, onSet }: {
   n: number; value: number; tone?: string; split?: number; onSet?: (v: number) => void
 }) {
@@ -178,7 +178,7 @@ export function Pips({ n, value, tone, split, onSet }: {
   )
 }
 
-/* --- ряд квадратиков: креды, долг, пропуски -------------------------------- */
+/* --- row of boxes: cred, debt, skipped upkeeps ----------------------------- */
 
 export function Track({ label, n, value, tone, cls, onSet }: {
   label: string; n: number; value: number; tone?: string; cls?: string; onSet?: (v: number) => void
@@ -201,22 +201,22 @@ export function Track({ label, n, value, tone, cls, onSet }: {
   )
 }
 
-/* --- список с отметками: модули, таланты, улучшения ------------------------ */
+/* --- checklist: modules, abilities, upgrades ------------------------------- */
 
 export function Picks({ items, taken, edit, onToggle, cost, open, empty, compact, rest, tag, hot, lock }: {
   items: Entry[]; taken: string[]; edit?: boolean; onToggle?: (key: string) => void
   cost?: boolean; open?: boolean; empty?: string; compact?: boolean
-  /** вне правки — неотмеченное одной строкой под списком */
+  /** outside editing: unchecked items in one line under the list */
   rest?: boolean
-  /** метка справа от имени (источник ветеранского таланта) */
+  /** mark to the right of the name (source of a veteran ability) */
   tag?: (it: Entry) => ReactNode
-  /** подсветить строку — её сейчас предлагают выбрать */
+  /** highlight the row: it is being offered for selection now */
   hot?: (it: Entry) => boolean
-  /** отметку не снять и не поставить — галочка без кнопки */
+  /** the mark can't be cleared or set: a check without a button */
   lock?: (it: Entry) => boolean
 }) {
   const { t } = useTranslation('sheet')
-  // вне правки в списке остаётся только отмеченное — свободные строки не нужны
+  // outside editing only checked items stay in the list: free rows aren't needed
   if (items.length === 0) return compact ? null : <div className="ss-empty">{empty || '—'}</div>
   const shown = compact ? items.filter(it => taken.includes(it.key)) : items
   const left = compact && rest ? items.filter(it => !taken.includes(it.key)) : []
@@ -264,7 +264,7 @@ export function Picks({ items, taken, edit, onToggle, cost, open, empty, compact
   )
 }
 
-/** Описание с «подробнее ±» в его последней строке справа; подробности — под ним. */
+/** Description with "more ±" at the right of its last line; details go under it. */
 export function TextMore({ text, more }: { text: ReactNode; more?: string }) {
   const { t } = useTranslation('sheet')
   const [open, setOpen] = useState(false)
@@ -283,7 +283,7 @@ export function TextMore({ text, more }: { text: ReactNode; more?: string }) {
   )
 }
 
-/* --- знакомые -------------------------------------------------------------- */
+/* --- contacts -------------------------------------------------------------- */
 
 export function Flag({ state, onCycle }: { state: string; onCycle?: () => void }) {
   const { t } = useTranslation('sheet')
@@ -337,10 +337,10 @@ export function NpcPicker({ exclude, note, onPick, onClose }: {
   )
 }
 
-/* --- настройка бланков (GM space) ------------------------------------------ */
+/* --- sheet setup (GM space) ------------------------------------------------ */
 
-/** Настройка сохраняется сама: пауза в наборе, смена раздела, уход со страницы.
- *  `mark` — принять тело за уже сохранённое (после записи в обход автосейва). */
+/** Setup saves itself: a typing pause, a section change, leaving the page.
+ *  `mark`: treat the body as already saved (after a write that bypasses autosave). */
 export function useAutosave(body: Dict, put: (b: Dict) => Promise<unknown>, errText: string) {
   const json = JSON.stringify(body)
   const saved = useRef(json)
@@ -371,8 +371,8 @@ export function useAutosave(body: Dict, put: (b: Dict) => Promise<unknown>, errT
   return { phase: dirty && phase === 'ok' ? '' as const : phase, err, mark: (b: Dict) => { saved.current = JSON.stringify(b) } }
 }
 
-/** Раздел настройки всегда открыт для правки: первая правка делает его своим,
- *  «к книге» возвращает книжный. */
+/** A setup section is always editable: the first edit makes it custom,
+ *  "to the book" restores the book version. */
 export function Sect({ label, own, count, onReset, children }: {
   label: string; own: boolean; count?: number; onReset: () => void; children: ReactNode
 }) {
@@ -394,7 +394,7 @@ export function Sect({ label, own, count, onReset, children }: {
   )
 }
 
-/** Многострочное поле, растущее под текст. */
+/** Multiline field that grows with the text. */
 export function GrowText({ value, placeholder, onChange }: {
   value: string; placeholder?: string; onChange: (v: string) => void
 }) {
@@ -411,8 +411,8 @@ export function GrowText({ value, placeholder, onChange }: {
   )
 }
 
-/** Карточки «название · деления · описание». `num` — что считают деления:
- *  стоимость улучшения корабля или нагрузку предмета. */
+/** Cards "name · segments · description". `num` is what the segments count:
+ *  a ship upgrade's cost or an item's load. */
 export function EntryRows({ items, cost, num: numKey, onChange, onAdd }: {
   items: Entry[]; cost?: boolean; num?: { key: 'cost' | 'load'; label: string; min: number; max: number }
   onChange: (v: Entry[]) => void; onAdd?: () => void

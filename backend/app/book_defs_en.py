@@ -1,7 +1,7 @@
-"""Канон Scum and Villainy по английской книге — двойник book_defs той же формы.
+"""Scum and Villainy canon from the English book — a twin of book_defs with the same shape.
 
-Берётся через book_defs.book() на английском экземпляре: ключи, порядок и числа те же, имена и
-тексты — по английскому изданию (reference/scum_and_villainy_en.md).
+Used through book_defs.book() on an English instance: keys, order and numbers are the same, names and
+texts follow the English edition (reference/scum_and_villainy_en.md).
 """
 
 from __future__ import annotations

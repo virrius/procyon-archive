@@ -25,8 +25,8 @@ import EntityClocks from '../components/EntityClocks'
 import { RecordsPanel } from '../components/RecordsPanel'
 import CharacterSheet from '../components/charsheet/CharacterSheet'
 
-// маршрут ещё умеет /profile,/records,/links,/media — подвкладок больше нет,
-// весь контент рисуется одной страницей, редирект оставлен ради старых ссылок
+// the route still accepts /profile,/records,/links,/media — there are no subtabs anymore,
+// all content renders as one page; the redirect is kept for old links
 const SUBS: [string, string][] = [
   ['profile', ''], ['records', ''], ['links', ''], ['media', ''],
 ]
@@ -41,10 +41,10 @@ const BACK: Record<string, [string, string]> = {
   item: ['/crew/items', 'back.item'],
 }
 
-// портрет — главный знак карточки: кадр во всю ширину колонки, высота по самому кадру.
-// без заданных пропорций: любой кадр садится в поле впритык, без пустых полей по краям
+// the portrait is the card's main mark: a frame across the full column width, height from the frame itself.
+// no fixed aspect ratio: any frame fits the box snugly, with no empty margins at the edges
 const PHOTO: Dict = { width: '100%', height: 'auto', display: 'block' }
-// заглушки кадра нет — держим под неё вертикальное поле
+// there is no frame placeholder — keep a vertical box for it
 const NOIMG: Dict = {
   width: '100%', aspectRatio: '3 / 4', display: 'grid', placeItems: 'center',
   fontFamily: 'var(--util)', fontSize: 26, letterSpacing: '.12em', color: 'var(--dim2)',
@@ -53,7 +53,7 @@ const ERR: Dict = {
   color: '#e08a70', background: '#251712', border: '1px solid #5c3327', padding: '5px 8px',
 }
 
-// закрытое ГМом поле: значение есть, стол его не знает
+// field hidden by the GM: it has a value, but the table doesn't know it
 function Unknown() {
   const { t } = useTranslation('entity')
   return <span className="unknown" title={t('unknown_tip')}>?</span>
@@ -63,11 +63,11 @@ const UNKNOWN = <Unknown />
 const text = (v: any): string =>
   v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v)
 
-/** Карточка сущности: своим маршрутом /entity/:id и окном поверх галереи (id + onClose).
- *  В окне галерея остаётся смонтированной — поиск, фильтры и группировка не сбрасываются. */
+/** Entity card: its own route /entity/:id and a window over the gallery (id + onClose).
+ *  In the window the gallery stays mounted — search, filters and grouping are not reset. */
 export default function EntityPage({ id: idProp, onClose, fresh }: {
   id?: string; onClose?: () => void
-  /** только что заведённая карточка: сразу открыть имя на правку */
+  /** just-created card: open the name for editing right away */
   fresh?: boolean
 }) {
   const { pathname } = useLocation()
@@ -94,7 +94,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
   const [pickOpen, setPickOpen] = useState(false)
   const [cropOpen, setCropOpen] = useState(false)
   const [fullPhoto, setFullPhoto] = useState(false)
-  // досье правится на месте: клик по значению открывает одно поле, клик мимо или Esc — закрывает
+  // the dossier is edited in place: clicking a value opens that one field, clicking outside or Esc closes it
   const [act, setAct] = useState<string | null>(null)
   const [sumOpen, setSumOpen] = useState(false)
 
@@ -110,12 +110,12 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
       (document.activeElement as HTMLElement | null)?.blur()
       setAct(null)
     }
-    // клик, который открыл поле, ещё всплывает до документа — его не считаем
+    // the click that opened the field still bubbles up to the document — ignore it
     const since = performance.now()
     const away = (ev: MouseEvent) => {
       if (ev.timeStamp < since) return
       const t = ev.target as HTMLElement
-      // кнопка внутри поля могла уже исчезнуть после своего же клика — это не «мимо»
+      // a button inside the field may already be gone after its own click — that's not "outside"
       if (!t.isConnected) return
       if (t.closest(`[data-act="${act}"]`) || t.closest('.drop-pop') || t.closest('.lnk-hits')) return
       close()
@@ -129,11 +129,11 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
     }
   }, [act, !!e])
 
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // table view is read-only
 
-  // права на правку: ГМ — всегда; корабль/экипаж — общий ресурс, правит любой игрок;
-  // всё остальное — только владелец карточки (его назначает ГМ).
-  // Генерация меняет карточку, поэтому доступна на тех же правах — не только ГМу
+  // edit rights: the GM always; the ship/crew is a shared resource any player can edit;
+  // everything else only the card's owner (assigned by the GM).
+  // Generation changes the card, so it needs the same rights — not GM-only
   const isShared = e?.kind === 'ship'
   const isOpenEdit = e?.owner_member_id === ANY_PLAYER
   const myMemberId = campaign?.my_member_id
@@ -163,7 +163,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
     )
   }
   if (!e) return <div className="dim">{t('common:loading')}</div>
-  // персонажа ведёт его бланк: своей страницей в разделе команды, поверх доски — в том же окне
+  // a character is shown by its sheet: as its own page in the Team section, over a board in the same window
   if (e.kind === 'character') {
     return inModal ? <CharacterSheet id={id} onClose={onClose} /> : <Navigate to={`/crew/team/${id}`} replace />
   }
@@ -173,29 +173,29 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
   const [backTo, backLabel] = BACK[e.kind] || ['/database', 'back.database']
   const own: Dict = e.fields || {}
 
-  // своя принадлежность бессмысленна: локация не стоит в локации, фракция не входит в себя
+  // own membership makes no sense: a location isn't inside a location, a faction isn't part of itself
   const showLoc = e.kind !== 'location'
   const showFac = e.kind !== 'faction'
   const locLabel = e.kind === 'faction' ? t('hq') : t('place')
 
-  // поштучная видимость: ключ в hidden_fields = поле у ГМа есть, столу не отдаётся
+  // per-field visibility: a key in hidden_fields = the GM has the field, the table doesn't get it
   const hidden = new Set<string>((e.hidden_fields || []) as string[])
 
-  // ранг — общее поле всех типов, читается в шапке, поэтому из своих полей его убираем
+  // Tier is a field shared by all kinds and shown in the header, so it's removed from the kind's own fields
   const rankDef: Dict | undefined = (def.fields || []).find((f: Dict) => f.key === 'rank')
   const rankVal = text(own.rank)
-  // ранг — в шапке справа: у правящего всегда (пустой бледно), у стола — только заданный
+  // Tier sits on the right of the header: for editors always (dimmed when empty), for the table only when set
   const showRank = !!rankDef && (rankVal !== '' || hidden.has('rank') || (canEdit && (isGM || !hidden.has('rank'))))
 
   const showAlias = e.kind === 'npc'
   const hasStatuses = (def.statuses || []).length > 0
 
 
-  // ключ на gm_ сервер вообще не отдаёт столу (strip_gm_fields) — и подписи ему не рисуем
+  // the server never sends gm_ keys to the table (strip_gm_fields) — so no label is drawn for them
   const defs: Dict[] = (def.fields || [])
     .filter((f: Dict) => f.key !== 'rank')
     .filter((f: Dict) => isGM || !String(f.key).startsWith('gm_'))
-  // пустой список text() отдаёт как «[]» — множество меряем длиной
+  // text() renders an empty list as "[]" — so multi fields are checked by length
   const filled = (f: Dict) => (f.type === 'multi' ? asList(own[f.key]).length > 0
     : f.type === 'ref' ? !!e.peer_names?.[text(own[f.key])]
     : text(own[f.key]) !== '')
@@ -204,7 +204,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
 
   const showVis = canEdit || (isGM && !!e.visibility)
 
-  // в режиме чтения пустое поле — сиротливая подпись, поэтому показываем только заполненное
+  // in read mode an empty field is an orphaned label, so only filled ones are shown
   const showFacField = showFac && (act === 'faction_ids' || hidden.has('faction_ids') || (e.faction_ids || []).length > 0)
   const showLocField = showLoc && (act === 'location_ids' || hidden.has('location_ids') || (e.location_ids || []).length > 0)
   const showAff = showFacField || showLocField
@@ -221,16 +221,16 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
     }
     setBusy(false)
   }
-  // уходит один ключ: поля, которые в это время правит кто-то другой, не затираются
+  // only one key is sent: fields someone else is editing at the same time aren't overwritten
   const setOwn = (key: string, v: any) => push({ fields: { [key]: v } })
 
-  // рустовая метка «закрыто» — рабочий сигнал ГМа, в режиме отображения её нет
+  // the rust "hidden" mark is a GM working signal; display mode has none
   const shut = (key: string) => (isGM && hidden.has(key) ? ' shut' : '')
-  // закрытое поле игрок не правит: значение у него пустое, и сервер такую правку не примет
+  // a player can't edit a hidden field: their value is empty, and the server would reject the edit
   const locked = (key: string) => !isGM && hidden.has(key)
-  // поле открыто для правки на месте
+  // field is open for in-place editing
   const on = (key: string) => canEdit && act === key && !locked(key)
-  // значение, по которому можно щёлкнуть, чтобы править
+  // a value you can click to edit
   const able = (key: string) => (canEdit && !locked(key)
     ? { className: 'ed-able', title: t('page.click_to_edit'), onClick: () => setAct(key) }
     : {})
@@ -240,17 +240,17 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
     else next.delete(key)
     push({ hidden_fields: [...next] })
   }
-  // gm_-поле столу не уходит никогда — глазок «закрыть» тут нечего переключать
+  // a gm_ field never goes to the table — there is no "hide" eye to toggle
   const eye = (key: string) => isGM && !key.startsWith('gm_')
     && !(e.kind === 'faction' && key === 'stance') && (
     <FieldEye hidden={hidden.has(key)} onChange={hide => setHidden(key, hide)} />
   )
-  // подпись поля: глаз сразу за словом, у закрытого поля подпись рустовая
+  // field label: the eye right after the word; a hidden field's label is rust-colored
   const fieldLabel = (key: string, label: string) => (
     <div className={`fld-lbl${shut(key) ? ' off' : ''}`}>{label}{eye(key)}</div>
   )
 
-  // обычное состояние («активен») не пишем — метка появляется, только когда есть отличие
+  // the normal status ("active") isn't shown — the mark appears only when it differs
   const statusWord = locked('status') ? '?' : L(e.status) || e.status || ''
   const canStamp = canEdit && !locked('status')
 
@@ -297,7 +297,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
     }
     if (f.type === 'textarea') return <Area value={text(v)} rows={4} onSave={x => setOwn(f.key, x)} />
     if (f.type === 'ref') {
-      // сразу поиск с нынешним именем: выбор заменяет, стёртая строка (Enter или уход) — очищает
+      // start with a search for the current name: picking replaces it, a cleared line (Enter or blur) clears it
       const was = e.peer_names?.[text(v)] || ''
       return (
         <EntityPicker label="" kind={f.kinds} exclude={e.id} listed
@@ -327,7 +327,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
         : <div {...able(f.key)}><div className="dos-val">{readVal(f) || <span className="dim2">—</span>}</div></div>}
     </div>
   )
-  // пустые поля в чтении не видны — добавить их можно отсюда, поле откроется на месте
+  // empty fields are hidden in read mode — they can be added from here, the field opens in place
   const blanks: [string, string][] = [
     ...(showFac && !showFacField ? [['faction_ids', t('factions')] as [string, string]] : []),
     ...(showLoc && !showLocField ? [['location_ids', locLabel] as [string, string]] : []),
@@ -336,7 +336,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
   const short = shown.filter(f => f.type !== 'textarea')
   const long = shown.filter(f => f.type === 'textarea')
   const summaryLocked = locked('summary')
-  // длинное описание читается свёрнутым — разворачивается по кнопке
+  // a long description reads collapsed and expands with a button
   const longSum = !summaryLocked && String(e.summary || '').length > 320
 
   const acts = (canEdit || isGM) && <>
@@ -353,7 +353,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
 
   return (
     <div className="col dos-page">
-      {/* Ctrl+V прямо на карточке — вставленный снимок становится портретом */}
+      {/* Ctrl+V right on the card — the pasted image becomes the portrait */}
       <PasteImage enabled={canEdit && !locked('image_url')}
         question={e.image_url
           ? t('page.paste_replace', { name: e.name })
@@ -579,7 +579,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
             </div>
           )}
 
-          {/* обвязка стоит той же колонкой, что и разбор — портрету остаётся весь левый край */}
+          {/* side panels share the dossier's column — the portrait keeps the whole left edge */}
           <div className="ent-aside">
             <div className="ent-aside-col">
               <div className="ent-sub col">
@@ -646,7 +646,7 @@ export default function EntityPage({ id: idProp, onClose, fresh }: {
   )
 }
 
-/* --- правка на месте: сохраняем по уходу из поля ---------------------------- */
+/* --- in-place editing: save on leaving the field ---------------------------- */
 
 function Line({ value, onSave, placeholder, big, mono }: {
   value?: string; onSave: (v: string) => void; placeholder?: string
@@ -668,7 +668,7 @@ function Area({ value, rows, placeholder, onSave }: {
 }) {
   const [v, setV] = useState(value || '')
   useEffect(() => { setV(value || '') }, [value])
-  // поле растёт под текст: правка не сжимает описание до трёх строк со скроллом
+  // the field grows with the text: editing doesn't squeeze the description into three scrolling lines
   const box = useRef<HTMLTextAreaElement>(null)
   useEffect(() => {
     const el = box.current

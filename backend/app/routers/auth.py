@@ -62,7 +62,7 @@ class MeOut(BaseModel):
 
 @router.get("/session", include_in_schema=False)
 def check_session(_: User = Depends(session_user)) -> Response:
-    """Для nginx: картинки книги правил отдаются только вошедшим (auth_request)."""
+    """For nginx: rulebook images are served only to signed-in users (auth_request)."""
     return Response(status_code=204)
 
 
@@ -99,7 +99,7 @@ def change_password(
     body: PasswordIn, user: User = Depends(session_user), db: Session = Depends(get_db)
 ):
     """400 — too short or the default password; 403 — the old password is wrong. Every token issued before the change, this one included, stops working; use the one returned."""
-    # пароль по умолчанию известен всем — старый у такой учётки не спрашиваем
+    # the default password is known to everyone, so such an account is not asked for the old one
     if not user.password_default and not verify_password(body.old_password, user.password_hash):
         raise HTTPException(403, tr("auth.wrong_password"))
     if len(body.new_password) < 4:

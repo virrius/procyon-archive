@@ -57,8 +57,8 @@ router = APIRouter(prefix="/api/campaigns/{campaign_id}", responses=AUTH_ERRORS)
 PLAYER_SCOPES = ("owner", "selected", "crew")
 ALIAS_KINDS = ("character", "npc")
 LABEL_LEN = 120
-AFFILIATION_MAX = 24  # фракций/мест на сущность
-HIDDEN_MAX = 40  # закрытых полей на карточку
+AFFILIATION_MAX = 24  # factions/places per entity
+HIDDEN_MAX = 40  # hidden fields per card
 
 Kind = Literal["character", "npc", "faction", "ship", "location", "job", "item"]
 BlockType = Literal["text", "image", "attachment", "quote", "rumor", "secret", "warning", "map note"]
@@ -142,8 +142,8 @@ class OkDiscard(Ok):
 
 
 def normalize_affiliation(db: Session, v: Viewer, raw, kind: str, keep=()) -> list[str]:
-    """Дедуп + проверка, что каждый id — видимая сущность нужного типа в этой кампании.
-    `keep` — то, что уже стоит на карточке: игрок его не видит, но и снять не должен."""
+    """Dedup + check that every id is a visible entity of the right kind in this campaign.
+    `keep` — what is already on the card: the player cannot see it, but must not remove it either."""
     out: list[str] = []
     seen: set[str] = set()
     for item in raw or []:
@@ -160,7 +160,7 @@ def normalize_affiliation(db: Session, v: Viewer, raw, kind: str, keep=()) -> li
 
 
 def visible_refs(db: Session, v: Viewer, kind: str, fields: dict, before: dict | None = None) -> dict:
-    """Ссылка от игрока — только на видимую ему карточку: иначе по id он узнаёт имя закрытой."""
+    """A player may link only to a card they can see: otherwise the id would reveal a hidden card's name."""
     if v.is_gm:
         return fields
     out = dict(fields)
@@ -186,8 +186,8 @@ def normalize_hidden(raw) -> list[str]:
 
 
 def normalize_fields(kind: str, fields: dict) -> dict:
-    """Поле-множество — список строк без повторов, не длиннее max из описания поля.
-    Старое значение-строку не трогаем: фронт читает его списком из одного."""
+    """A multi-value field is a list of strings without repeats, no longer than max from the field definition.
+    An old string value is left alone: the frontend reads it as a list of one."""
     out = dict(fields)
     for fd in KINDS.get(kind, {}).get("fields", []):
         val = out.get(fd["key"])
@@ -203,7 +203,7 @@ def normalize_fields(kind: str, fields: dict) -> dict:
 
 
 def writable(v: Viewer) -> bool:
-    """Наблюдатель не пишет; ГМ «глазами игрока» пишет в правах этого игрока."""
+    """An observer does not write; the GM in "player's eyes" mode writes with that player's rights."""
     return v.role in ("gm", "player")
 
 
@@ -214,7 +214,7 @@ def get_visible_entity(db: Session, v: Viewer, entity_id: str) -> Entity:
     return e
 
 
-# к чему привязаны записи, заметки и вложения: скрытый от зрителя родитель прячет и их
+# what blocks, notes and attachments are attached to: a parent hidden from the viewer hides them too
 PARENTS = {"entity": Entity, "clock": Clock, "marker": MapMarker, "map": MapNode}
 
 
@@ -245,8 +245,8 @@ def ref_ids(e) -> list[str]:
 
 
 def peer_names(db: Session, campaign_id: str, rows) -> dict[str, str]:
-    """Имена привязанных карточек одним запросом: связь читается и тогда,
-    когда сама карточка закрыта от стола."""
+    """Names of linked cards in one query: the link is readable even
+    when the card itself is hidden from the table."""
     ids: set[str] = set()
     for e in rows:
         for key in AFFILIATION_KEYS:
@@ -315,10 +315,10 @@ def create_entity(body: EntityIn, v: Viewer = Depends(editor), db: Session = Dep
     if not v.is_gm and body.visibility in ("gm",):
         raise HTTPException(403, tr("entities.player_no_gm_vis"))
     data = body.model_dump()
-    # карточка ГМа заводится закрытой: стол увидит её, когда ГМ сам откроет.
-    # Явно присланная видимость сильнее умолчания — форма и скиллы её шлют
+    # a GM's card is created hidden: the table sees it when the GM opens it.
+    # Explicitly sent visibility beats the default — the form and skills send it
     data["visibility"] = default_visibility(v, body.visibility)
-    # прозвище живёт у людей стола — своих и чужих; у прочих типов роль читается из описания
+    # an alias belongs to people of the table — crew and others; for other kinds the role is read from the description
     if body.kind not in ALIAS_KINDS:
         data["alias"] = ""
     if not data["status"] or not KINDS[body.kind].get("statuses"):
@@ -330,9 +330,9 @@ def create_entity(body: EntityIn, v: Viewer = Depends(editor), db: Session = Dep
         f["key"] for f in KINDS[body.kind].get("fields", []) if f.get("secret")
     ]
     if not v.is_gm:
-        # автор карточки — её владелец, иначе сам не сможет её потом править
+        # the card's author is its owner, otherwise they could not edit it later
         data["owner_member_id"] = v.member_id
-        # что закрыто от стола — решает только ГМ
+        # only the GM decides what is hidden from the table
         data["hidden_fields"] = []
     e = Entity(campaign_id=v.campaign_id, **data)
     db.add(e)
@@ -371,7 +371,7 @@ def patch_entity(
             raise HTTPException(403, tr("entities.owner_gm_only"))
         if "hidden_fields" in patch:
             raise HTTPException(403, tr("entities.hidden_gm_only"))
-        # закрытое поле игрок получил пустым: его правку по нему не принимаем, иначе затрёт
+        # a player got a hidden field empty: their edit of it is not accepted, otherwise it would overwrite it
         for key in HIDEABLE:
             if key in hidden:
                 patch.pop(key, None)
@@ -383,11 +383,11 @@ def patch_entity(
         if key in patch:
             patch[key] = normalize_affiliation(db, v, patch[key], kind, keep=getattr(e, key) or [])
     if "fields" in patch:
-        # приходят только изменённые ключи: сливаем с текущими, null убирает ключ.
-        # Чужая правка соседнего поля так не затирается, полный словарь даёт тот же итог
+        # only changed keys arrive: merge with the current ones, null removes a key.
+        # That way someone else's edit of a neighboring field is not overwritten; a full dict gives the same result
         incoming = patch["fields"] or {}
         if not v.is_gm:
-            # закрытые ключи игрок не видел — их значения остаются как есть
+            # the player never saw hidden keys — their values stay as they are
             incoming = {k: val for k, val in strip_gm_fields(incoming, v).items()
                         if k not in hidden}
             incoming = visible_refs(db, v, e.kind, incoming, e.fields or {})
@@ -409,10 +409,10 @@ def patch_entity(
     return public_entity(e, v, peer_names(db, v.campaign_id, [e]))
 
 
-# --- отношения экипажа с организациями ----------------------------------------
-# Дашборд отношений правит стол, а не только владелец карточки: уровень отношений и
-# список дел — это журнал самого экипажа. Поэтому отдельная ручка на два ключа
-# вместо общего PATCH: остальная карточка организации игроку по-прежнему закрыта.
+# --- crew's faction status -------------------------------------------------------
+# The table edits the faction status dashboard, not only the card owner: the status level and
+# the list of deeds are the crew's own log. Hence a separate endpoint for the two keys
+# instead of the general PATCH: the rest of the faction card stays closed to the player.
 
 DEEDS_MAX = 60
 DEED_LEN = 160
@@ -429,7 +429,7 @@ class StandingIn(BaseModel):
 
 
 def normalize_deeds(raw, v: Viewer, before: list) -> list[dict]:
-    """Дела приходят списком целиком; автор и время у старых записей сохраняются."""
+    """Deeds arrive as a whole list; the author and time of existing entries are kept."""
     known = {str(d.get("id")): d for d in before or [] if isinstance(d, dict)}
     out: list[dict] = []
     for item in raw or []:
@@ -499,7 +499,7 @@ def archive_entity(
     e = get_visible_entity(db, v, entity_id)
     if not v.is_gm and not entity_editable(e, v):
         raise HTTPException(403, tr("entities.archive_denied"))
-    # брошенная пустая карточка — её завели кнопкой «добавить» и закрыли, ничего не вписав
+    # an abandoned empty card — created with the "+ add" button and closed without filling anything in
     if discard and not (e.name or e.alias or e.summary or e.image_url) and not any(
         db.query(m).filter(*cond).first() for m, cond in (
             (Attachment, (Attachment.target_type == "entity", Attachment.target_id == e.id)),
@@ -613,7 +613,7 @@ class LinkSaved(Ok):
 
 
 def link_title(db: Session, link: EntityLink) -> str:
-    """Заголовок для журнала: «А — Б», имена берём на момент события."""
+    """Log title: "A — B", names taken as of the event."""
     names = []
     for eid in (link.from_id, link.to_id):
         e = db.get(Entity, eid)
@@ -622,7 +622,7 @@ def link_title(db: Session, link: EntityLink) -> str:
 
 
 def link_visible(link: EntityLink, v: Viewer) -> bool:
-    """Автор связи — её владелец для видимости `owner`."""
+    """The link's author is its owner for `owner` visibility."""
     return can_see(link, v, owner_member_id=link.created_by)
 
 
@@ -631,8 +631,8 @@ def link_mine(link: EntityLink, v: Viewer) -> bool:
 
 
 def link_editable(db: Session, link: EntityLink, v: Viewer) -> bool:
-    """Связь правит ГМ, её автор — и тот, кому открыта любая из двух карточек:
-    сцепка принадлежит карточкам, а не тому, кто первым её завёл."""
+    """A link can be edited by the GM, its author, and anyone who can see either of the two cards:
+    the link belongs to the cards, not to whoever created it first."""
     if not writable(v):
         return False
     if v.is_gm or link_mine(link, v):
@@ -652,7 +652,7 @@ def get_visible_link(db: Session, v: Viewer, link_id: str) -> EntityLink:
 
 
 def peer_brief(e: Entity, v: Viewer) -> dict:
-    """Витрина соседа по связи — та же поштучная видимость, что и в самой карточке."""
+    """The linked neighbor's card view — the same per-field visibility as in the card itself."""
     hidden: set[str] = set() if v.is_gm else hidden_keys(e)
     return {
         "id": e.id,
@@ -758,7 +758,7 @@ def create_link(body: LinkIn, v: Viewer = Depends(editor), db: Session = Depends
     journal.log(db, v, "link", "create", target_id=link.id, title=link_title(db, link),
                 entity_id=link.from_id, detail=label, visibility=link.visibility)
     db.commit()
-    # оба конца только что проверены на видимость — сторона есть всегда
+    # both ends were just checked for visibility — the side always exists
     return link_side(db, v, link, link.from_id)
 
 
@@ -859,7 +859,7 @@ def block_by_gm(b: ContentBlock) -> bool:
 
 
 def block_visible(b: ContentBlock, v: Viewer, parent_owner: str | None = None) -> bool:
-    """Для видимости `owner` владельцем считается автор записи или владелец сущности."""
+    """For `owner` visibility the owner is the block's author or the entity's owner."""
     if v.is_gm:
         return True
     if b.visibility == "owner":
@@ -890,7 +890,7 @@ def get_visible_block(db: Session, v: Viewer, block_id: str) -> ContentBlock:
 
 
 def link_names(db: Session, v: Viewer, blocks) -> dict[str, str]:
-    """Имена карточек, с которыми связаны записи, — только тех, что смотрящий видит."""
+    """Names of the cards the blocks are linked to — only those the viewer can see."""
     ids = {x for b in blocks for x in (getattr(b, "links", None) or [])
            if isinstance(x, str) and UUID_RE.fullmatch(x)}
     if not ids:
@@ -901,8 +901,8 @@ def link_names(db: Session, v: Viewer, blocks) -> dict[str, str]:
 
 
 def block_links(db: Session, v: Viewer, raw, kept=()) -> list[str]:
-    """Только id карточек этой кампании: мусорный id роняет панель записей у всего стола.
-    `kept` — прежние ссылки, которых автор не видит: его правка их не снимает."""
+    """Only ids of cards in this campaign: a junk id crashes the block panel for the whole table.
+    `kept` — earlier links the author cannot see: their edit does not remove them."""
     ids = list(dict.fromkeys(x for x in raw or [] if isinstance(x, str) and UUID_RE.fullmatch(x)))
     found = {eid for (eid,) in db.query(Entity.id).filter(
         Entity.campaign_id == v.campaign_id, Entity.id.in_(ids))} if ids else set()
@@ -943,7 +943,7 @@ def block_item(b: ContentBlock, v: Viewer, names: dict[str, str],
 
 
 def block_label(b: ContentBlock) -> str:
-    """Заголовок записи для журнала: своего может не быть — берём начало текста."""
+    """Block title for the log: it may have none — then the start of the text is used."""
     return (b.title or "").strip() or re.sub(r"\s+", " ", b.content or "").strip()[:80]
 
 

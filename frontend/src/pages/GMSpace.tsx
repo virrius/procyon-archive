@@ -10,8 +10,8 @@ import LooksPage from './LooksPage'
 import RulesPage from './RulesPage'
 import SheetsSetup from './SheetsSetup'
 
-// разделы ГМа: полоса вкладок снята, переключает их левое меню — здесь остался
-// только список допустимых адресов
+// GM sections: the tab strip is gone, the left menu switches them — only
+// the list of allowed paths remains here
 const SUBS = ['accounts', 'boards', 'sheets', 'history', 'rules', 'looks']
 
 const ROLE_LABEL: Dict = { gm: 'role.gm', player: 'role.player', observer: 'role.observer' }

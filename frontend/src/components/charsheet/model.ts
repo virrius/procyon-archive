@@ -20,7 +20,7 @@ export type Book = {
   xp_trigger: string; start: Dict
 }
 
-/** Бланк по значению `fields.playbook`: там подпись (как в книге кампании), реже — ключ. */
+/** Playbook by the `fields.playbook` value: a label there (as in the campaign book), less often a key. */
 export function playbookKey(meta: Dict | null, value: any): string {
   const v = String(value || '').trim()
   if (!v) return ''
@@ -40,8 +40,8 @@ export function bookOf(meta: Dict | null, key: string): Book | null {
   }
 }
 
-/** Таланты, предметы и пределы бланка: книга, поверх неё — настройка ГМа на кампанию
- *  (`campaign.sheet_setup`, правится в GM space). */
+/** Playbook abilities, items and limits: the book, with the GM's campaign setup on top
+ *  (`campaign.sheet_setup`, edited in GM space). */
 export function effective(book: Book | null, sheet: Dict, setup: Dict) {
   const own = dict(dict(setup.playbooks)[book?.key || ''])
   return {
@@ -55,7 +55,7 @@ export function effective(book: Book | null, sheet: Dict, setup: Dict) {
 
 export const STRESS_TOP = 12
 
-/** Настройка экипажа в том виде, в каком уходит на сервер: без брошенных пустых строк. */
+/** Crew setup in the form it goes to the server: without abandoned empty rows. */
 export function cleanSetup(all: Dict): Dict {
   const rows = (v: any) => entries(v).filter(x => x.name.trim())
   const out: Dict = {}
@@ -74,7 +74,7 @@ export function cleanSetup(all: Dict): Dict {
 
 export const talentKey = (pb: string, key: string) => `${pb || 'own'}:${key}`
 
-/** Ветеранский или прежний талант — ищем по всем бланкам, с настройкой кампании. */
+/** A veteran or former ability: search across all playbooks, with the campaign setup. */
 export function talentOf(meta: Dict | null, setup: Dict, key: string): (Entry & { pb: string; pbLabel: string }) | null {
   const [pk, tk] = key.split(':')
   const book = bookOf(meta, pk)

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import i18n, { locale } from '../../i18n'
 
-/** речь пишется браузером (Web Speech API) — в Chrome/Edge есть, в Firefox нет */
+/** speech is transcribed by the browser (Web Speech API): Chrome/Edge have it, Firefox doesn't */
 const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 export const canDictate = !!SR
 
@@ -12,8 +12,8 @@ const isTyping = (el: EventTarget | null) => {
   return t === 'input' || t === 'textarea' || t === 'select' || t === 'button' || n.isContentEditable
 }
 
-/** Диктовка в поле: готовые фразы уходят в onFinal, промежуточные видны в interim.
- *  space — пробел вне полей ввода включает и выключает микрофон. */
+/** Dictation into a field: finished phrases go to onFinal, intermediate ones show in interim.
+ *  space: the Space key outside input fields toggles the microphone. */
 export function useDictation(onFinal: (text: string) => void, onError: (msg: string) => void,
                              space = false) {
   const [listening, setListening] = useState(false)
@@ -52,7 +52,7 @@ export function useDictation(onFinal: (text: string) => void, onError: (msg: str
     }
     r.onend = () => {
       setInterim('')
-      // Chrome закрывает сессию сам после паузы — поднимаем заново, пока не выключили
+      // Chrome closes the session itself after a pause: restart it until turned off
       if (want.current) { try { r.start() } catch { /* noop */ } }
       else setListening(false)
     }

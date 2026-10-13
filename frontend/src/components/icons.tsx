@@ -1,4 +1,4 @@
-/* Единый набор иконок приборной панели: 16×16, currentColor, штрих 1.5. */
+/* Unified dashboard icon set: 16×16, currentColor, stroke 1.5. */
 
 import type { ReactNode, SVGProps } from 'react'
 import '../styles.vis.css'
@@ -170,7 +170,7 @@ export function IconChevron(p: IconProps) {
   return <Glyph {...p}><path d="M3.8 6.2L8 10.3l4.2-4.1" /></Glyph>
 }
 
-/* Квадратная кнопка без подписи: смысл несёт title + aria-label. */
+/* Square button without a label: title + aria-label carry the meaning. */
 export function IconButton({ icon, title, onClick, danger, disabled }: {
   icon: ReactNode
   title: string

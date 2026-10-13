@@ -1,4 +1,4 @@
-"""Admin space: настройки сервера и кампании целиком. Только для is_admin."""
+"""Admin space: server settings and whole campaigns. is_admin only."""
 from __future__ import annotations
 
 import json
@@ -176,12 +176,12 @@ def patch_hub(body: HubIn, db: Session = Depends(get_db)):
         s.draw_model = body.draw_model.strip()
     if body.draw_base_url is not None:
         s.draw_base_url = body.draw_base_url.strip()
-        # свой ключ живёт только при своём адресе: без адреса рисование берёт ключ текста
+        # a separate key lives only with a separate address: with no address, drawing uses the text key
         if not s.draw_base_url:
             s.draw_api_key = ""
     if body.draw_api_key and body.draw_api_key.strip():
         s.draw_api_key = body.draw_api_key.strip()
-    # пустой ключ не стирает заданный: ключ только заменяют
+    # an empty key does not erase the stored one: a key can only be replaced
     if body.api_key and body.api_key.strip():
         s.hub_api_key = body.api_key.strip()
     db.commit()
@@ -208,7 +208,7 @@ def patch_lang(body: LangIn, db: Session = Depends(get_db)):
 class HubCheck(BaseModel):
     base_url: str | None = Field(None, description="Address to test; empty → the stored one.")
     api_key: str | None = Field(None, description="Key to test; empty → the stored one.")
-    # draw — адрес и ключ рисования, пустые берутся от текста
+    # draw — the drawing address and key; empty ones fall back to the text ones
     target: Literal["text", "draw"] = Field("text", description="Which stored settings to fall back on: the text hub or the drawing service.")
 
 

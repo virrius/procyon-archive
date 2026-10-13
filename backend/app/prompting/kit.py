@@ -1,7 +1,7 @@
-"""Промпт-кит: дефолты из кода плюс правки админа.
+"""Prompt kit: defaults from code plus admin edits.
 
-Сервер хранит только отличия от дефолта, поэтому обновления кода доезжают сами.
-Гардероб — находки конкретного стола, он живёт у кампании.
+The server stores only the differences from the defaults, so code updates arrive on their own.
+The wardrobe is what a particular table found, so it lives with the campaign.
 """
 from __future__ import annotations
 
@@ -25,12 +25,12 @@ from .lore import (
 
 KIT_SECTIONS = ("views", "registers", "anchors", "wardrobe", "news_templates", "dispatch_journalists",
                 "dispatch_lenses", "comment_manners", "comment_lengths", "comment_writing")
-# секции депеш журналиста к рисующей модели отношения не имеют
+# journalist dispatch sections have nothing to do with the drawing model
 NEWS_SECTIONS = ("news_templates", "dispatch_journalists", "dispatch_lenses",
                  "comment_manners", "comment_lengths", "comment_writing")
 
-# Части, которые наряд подменяет целиком. Всё остальное в кадре остаётся от
-# описания: наряд отвечает за то, во что одет субъект, и ни за что больше
+# Parts a look replaces whole. Everything else in the frame comes from the
+# description: a look covers what the subject wears and nothing more
 WARDROBE_SLOTS = ("wear",)
 
 
@@ -43,8 +43,8 @@ def default_kit() -> dict:
                           "vocab_ship": v.get("vocab_ship", "")}
                       for k, v in REGISTERS.items()},
         "anchors": {f"frame:{k}": dict(v) for k, v in FRAME_ANCHORS.items()},
-        # гардероб пуст в коде: наряды — не свойство мира вообще, а находки
-        # конкретного стола, и заводятся из удачной генерации
+        # the wardrobe is empty in code: looks are not a property of the world, they are
+        # what a particular table found, and are created from a good generation
         "wardrobe": {},
         "news_templates": dict(NEWS_TEMPLATES),
         "dispatch_journalists": {k: dict(v) for k, v in DISPATCH_JOURNALISTS.items()},
@@ -56,8 +56,8 @@ def default_kit() -> dict:
 
 
 def outfit_slots(kit: dict, key: str) -> dict:
-    """Одежда наряда: удачная одежда повторяется дословно, а хаб на каждом прогоне
-    переписывает её заново — так десять колец и превращались в «несколько колец»."""
+    """A look's clothing: good clothing is repeated word for word, while the hub rewrites it
+    on every run — that is how ten rings turned into "several rings"."""
     item = (kit.get("wardrobe") or {}).get(key)
     if not isinstance(item, dict):
         return {}
@@ -70,8 +70,8 @@ def outfit_slots(kit: dict, key: str) -> dict:
 
 
 def merge_kit(base: dict, over: dict | None, keep_nulls: bool = False) -> dict:
-    """Наложить правки на дефолт. Словари сливаются по ключам, всё остальное
-    заменяется целиком. null в правке — запись удалена, в том числе пришедшая из кода."""
+    """Apply edits over the defaults. Dicts are merged by key, everything else
+    is replaced whole. null in an edit means the entry is deleted, including one that came from code."""
     if not over:
         return base
     out = dict(base)
@@ -86,7 +86,7 @@ def merge_kit(base: dict, over: dict | None, keep_nulls: bool = False) -> dict:
 
 
 def strip_defaults(over: dict, base: dict | None) -> dict:
-    """Хранить только отличия от кода: запись, совпавшая с дефолтом, иначе застынет на старом тексте."""
+    """Store only the differences from code: an entry equal to the default would otherwise freeze on the old text."""
     out = {}
     for key, value in over.items():
         known = isinstance(base, dict) and key in base
@@ -101,7 +101,7 @@ def strip_defaults(over: dict, base: dict | None) -> dict:
 
 
 def prune_nulls(over: dict, base: dict | None) -> dict:
-    """null храним только там, где он гасит запись кода; удалённое добавленное просто исчезает."""
+    """Store null only where it hides an entry from code; a deleted added entry just disappears."""
     out = {}
     for key, value in over.items():
         known = isinstance(base, dict) and key in base

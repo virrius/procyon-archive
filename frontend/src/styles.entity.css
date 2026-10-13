@@ -1,7 +1,7 @@
-/* Теги и связи сущности — приборная планка и список сцепок.
-   Сплошные поверхности, 1px канты, без сеток, прозрачностей и свечения. */
+/* Entry tags and links — an instrument strip and a list of connections.
+   Solid surfaces, 1px borders, no grids, translucency or glow. */
 
-/* --- ввод тегов ----------------------------------------------------------- */
+/* --- tag input ------------------------------------------------------------- */
 
 .tagbox {
   display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
@@ -40,7 +40,7 @@ a.t:hover { color: var(--amber); }
 .tag-entry > input:focus { border: none; }
 .tag-entry > input:focus-visible { outline: none; }
 
-/* подсказка живёт в портале на body: fixed — иначе её режут прокрутка колонки и карточки */
+/* the suggestion list lives in a portal on body: fixed — otherwise column and card scrolling clip it */
 .tag-pop {
   position: fixed; min-width: 200px;
   max-width: 320px; max-height: 236px; overflow-y: auto; z-index: 320;
@@ -62,8 +62,8 @@ a.t:hover { color: var(--amber); }
 
 .tag-note { font-family: var(--util); font-size: 11px; color: var(--dim2); margin-top: 4px; }
 
-/* --- досье: портрет слева, справа — имя, суть и факты ------------------------
-   По умолчанию карточка читается; поля ввода появляются только в правке */
+/* --- dossier: portrait on the left, name, gist and facts on the right --------
+   The card is read-only by default; inputs appear only in edit mode */
 
 .dos-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 30px; }
 .dos-busy { font-family: var(--util); font-size: 11px; color: var(--dim2); }
@@ -74,12 +74,12 @@ a.t:hover { color: var(--amber); }
   background: var(--surface); border: 1px solid var(--line);
   padding: 22px 24px 24px;
 }
-/* правка — та же вёрстка, рамка досье становится янтарной */
+/* edit mode — same layout, the dossier frame turns amber */
 .dos.editing { border-color: var(--amber-dim); }
 
-/* портрет стоит на месте, пока читают длинное досье */
+/* the portrait stays in place while a long dossier is read */
 .dos-shot { position: sticky; top: 12px; min-width: 0; }
-/* поле снимка — по самому снимку: кадр во всю ширину колонки, высота по кадру */
+/* the image area follows the image: full column width, height from the image */
 .ent-photo { position: relative; width: 100%; background: #100f0d; border: 1px solid var(--line); }
 .ent-photo > .avatar { max-width: 100%; border: none; }
 
@@ -107,7 +107,7 @@ a.t:hover { color: var(--amber); }
 }
 .dos-nameedit { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; width: 100%; }
 .ent-namebox { flex: 1 1 100%; min-width: 0; }
-/* имя правится тем же кеглем, что и читается: строка не скачет */
+/* the name is edited at the same size it is read: the line doesn't jump */
 input.dos-name-in {
   font-family: var(--ui); font-size: 38px; font-weight: 600; line-height: 1.1;
   padding: 0 6px; height: auto; background: var(--surface2);
@@ -117,10 +117,10 @@ input.dos-name-in {
 .ent-aliasbox { flex: 0 1 240px; min-width: 140px; }
 .ent-namebox input, .ent-aliasbox input { width: 100%; margin: 0; }
 
-/* --- печать статуса: оттиск на кадре, а не строка под ним --------------------- */
+/* --- status stamp: an imprint on the image, not a line below it ------------- */
 
-/* обойма не повёрнута: список вариантов и глаз стоят ровно, кренится только сам штамп */
-/* оттиск в левом нижнем углу кадра — середина остаётся чистой */
+/* the wrapper isn't rotated: the option list and eye stay level, only the stamp tilts */
+/* the stamp sits in the lower-left corner of the image — the center stays clear */
 .ent-stamp-wrap {
   position: absolute; left: 9px; bottom: 9px; z-index: 3;
   display: flex; align-items: flex-start; gap: 5px; max-width: calc(100% - 18px);
@@ -141,23 +141,23 @@ input.dos-name-in {
 }
 .ent-stamp.t-ok   { --st: var(--olive); }
 .ent-stamp.t-warn { --st: var(--amber); }
-/* мёртв и уничтожен — красная печать, самый громкий оттиск карточки */
+/* dead and destroyed — a red stamp, the loudest one on the card */
 .ent-stamp.t-dead { --st: #d4462c; --ink: #1b0c08; }
-/* заблокирован и захвачен — чёрная метка: графит на угольной подложке */
+/* blocked and captured — a black mark: graphite on charcoal */
 .ent-stamp.t-black { --st: #4f4842; --ink: #0b0a09; }
 .ent-stamp.t-black .t { color: #9a9086; }
-/* выбыл из дела: оттиск выцвел — цвета у него больше нет */
+/* out of play: the stamp has faded — it has no color anymore */
 .ent-stamp.t-end  { --st: #7d6f66; }
 .ent-stamp.t-none { --st: var(--dim2); }
 .ent-stamp.t-fresh { --st: #a9d37f; }
 .ent-stamp.t-work  { --st: #e3c93a; }
 .ent-stamp.t-win   { --st: #3f9a45; }
 .ent-stamp.t-grey  { --st: #8a8a8a; }
-/* штампа ещё нет — пустое место под оттиск */
+/* no stamp yet — an empty slot for one */
 .ent-stamp.blank { --st: var(--dim2); border-style: dashed; outline-style: dashed; }
 
-/* правка: список лежит поверх штампа целиком — клик по оттиску открывает варианты */
-/* поле выбора само по себе места не занимает — оттиск не должен жаться под него */
+/* edit mode: the list covers the whole stamp — clicking the stamp opens the options */
+/* the select takes no space of its own — the stamp shouldn't squeeze under it */
 .ent-stamp-wrap.edit .ent-stamp-pick { position: static; flex: 0 0 0; width: 0; }
 .ent-stamp-wrap.edit .ent-stamp-pick .drop-btn {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -168,7 +168,7 @@ input.dos-name-in {
 .ent-stamp-wrap.edit:hover .ent-stamp .t { color: var(--amber); }
 .ent-stamp-wrap:focus-within .ent-stamp { outline-color: var(--amber); }
 
-/* суть — вводный абзац досье, антиквой и крупнее основного текста */
+/* gist — the dossier's lead paragraph, serif and larger than body text */
 .dos-summary {
   max-width: 62ch; white-space: pre-wrap;
   font-family: var(--ui); font-size: 17px; font-weight: 400; line-height: 1.5;
@@ -178,7 +178,7 @@ input.dos-name-in {
 .dos-summary-edit { max-width: 72ch; }
 .dos-summary-edit textarea { margin-bottom: 0; }
 
-/* группы фактов: заголовок — курсив антиквой и тонкий кант до края */
+/* fact groups: italic serif heading and a thin rule to the edge */
 .dos-sec { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .dos-sec-t {
   display: flex; align-items: center; gap: 12px; margin: 0;
@@ -202,7 +202,7 @@ input.dos-name-in {
 .dos-val { font-size: 15.5px; line-height: 1.4; color: #cdc5b6; overflow-wrap: break-word; }
 .dos-fact .field { margin-bottom: 0; }
 
-/* длинный свободный текст (прошлое, внешность) — абзацем, а не полем */
+/* long free text (background, look) — as a paragraph, not a field */
 .dos-prose p {
   margin: 0; max-width: 68ch; white-space: pre-wrap;
   font-size: 14.5px; line-height: 1.62; color: var(--txt);
@@ -213,7 +213,7 @@ input.dos-name-in {
 }
 .dos-prose textarea { max-width: 72ch; margin-bottom: 0; }
 
-/* ранг — латунная табличка с римской цифрой */
+/* Tier — a brass plate with a roman numeral */
 .rank-gauge {
   display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 auto;
   min-width: 92px; padding: 8px 14px 6px;
@@ -231,7 +231,7 @@ input.dos-name-in {
 }
 .rank-gauge.shut .rg-read .rg-mark { color: #e79a83; }
 .rg-read .rg-mark.none { color: var(--dim2); }
-/* правка ранга: настоящий список лежит поверх цифры — клик по табличке открывает его */
+/* Tier editing: the real select lies over the numeral — clicking the plate opens it */
 .rg-read.edit { cursor: pointer; }
 .rg-read.edit:hover .rg-mark { color: #f0bd6a; }
 .rg-read .rg-pick { position: static; }
@@ -242,21 +242,21 @@ input.dos-name-in {
 .drop-pop.rg-pick { min-width: 92px; }
 .rg-read:focus-within { outline: 2px solid var(--amber); outline-offset: 3px; }
 
-/* значение есть, но стол его не знает */
+/* the value is set, but the table doesn't know it */
 .unknown { font-family: var(--util); font-size: 13px; color: var(--dim2); cursor: help; }
 
-/* закрыто от стола — тот же язык, что у записи ГМа: рустовый кант и тёплая подложка.
-   Отрицательные поля выносят рамку за габарит, чтобы поля в сетке не съезжали. */
+/* hidden from the table — same look as a GM note: rust border and warm background.
+   Negative margins push the frame outside the box so fields in the grid don't shift. */
 .shut {
   border-left: 3px solid var(--rust); background: #1f1512;
   margin: -5px -8px -5px -9px; padding: 5px 8px 5px 6px;
 }
 
-/* --- обвязка: связи, счётчики, вложения одной полосой ------------------------ */
+/* --- trim: links, clocks, attachments as one strip --------------------------- */
 
-/* связи, под ними счётчики, затем вложения — каждая полоса во всю ширину */
+/* links, clocks below them, then attachments — each strip at full width */
 .ent-aside, .ent-aside-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-/* внутри карточки обвязка — подсекция, а не своя панель: кант сверху вместо рамки */
+/* inside a card the trim is a subsection, not its own panel: top border instead of a frame */
 .ent-sub {
   display: flex; flex-direction: column; gap: 8px; min-width: 0;
   padding-top: 10px; border-top: 1px solid var(--line);
@@ -281,11 +281,11 @@ input.dos-name-in {
   .rank-gauge { min-width: 64px; padding: 5px 10px 4px; }
   .rg-read .rg-mark { font-size: 30px; }
   .ent-namebox, .ent-aliasbox { flex: 1 1 150px; }
-  /* закрытое поле не выносит рустовый кант за габарит панели */
+  /* a hidden field doesn't push its rust border outside the panel */
   .dos .shut { margin-left: 0; margin-right: 0; padding-left: 6px; }
 }
 
-/* --- вложения: миниатюры плиткой ------------------------------------------- */
+/* --- attachments: thumbnail tiles ------------------------------------------- */
 
 .att-grid {
   display: grid; gap: 8px;
@@ -294,7 +294,7 @@ input.dos-name-in {
 .att { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .att-box { display: block; }
 
-/* сама миниатюра — квадрат: пятнадцать снимков читаются одной сеткой */
+/* the thumbnail itself is square: fifteen images read as one grid */
 .att-shot {
   display: block; width: 100%; aspect-ratio: 1 / 1; padding: 0; overflow: hidden;
   background: #100f0d; border: 1px solid var(--line); cursor: zoom-in;
@@ -304,7 +304,7 @@ button.att-shot { cursor: pointer; }
 .att-shot.att-current { border-color: var(--amber); }
 .att-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
-/* не картинка — плитка с расширением файла, клик открывает файл как раньше */
+/* not an image — a tile with the file extension; click opens the file as before */
 a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-decoration: none; }
 .att-file .att-ext {
   font-family: var(--util); font-size: 11px; letter-spacing: .12em;
@@ -316,18 +316,18 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* закрытое вложение помечено тем же рустовым кантом, что и закрытое поле */
+/* a hidden attachment gets the same rust border as a hidden field */
 .att-shut .att-shot { border-color: var(--rust); }
 .att-shut .att-cap { color: #e79a83; }
 
-/* --- связи ---------------------------------------------------------------- */
+/* --- links ---------------------------------------------------------------- */
 
 .lnk-list { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-/* счётчики сущности — плитка: строк меньше, каждая компактнее */
+/* entry clocks as tiles: fewer rows, each more compact */
 .lnk-list.clocks-list {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
-/* циферблат — своей колонкой, имя и счёт с тиками — справа; метки уходят под имя */
+/* dial in its own column, name and count with ticks on the right; tags go under the name */
 .clocks-list .lnk > .lnk-main > * { grid-column: 2; }
 .clocks-list .lnk-head { flex-wrap: wrap; }
 
@@ -346,12 +346,12 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
 .lnk-kind {
   font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim2);
 }
-/* справа: видимость всегда, правка и удаление — по наведению */
+/* right side: visibility always, edit and delete on hover */
 .lnk-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .lnk-head { flex-wrap: nowrap; align-items: flex-start; }
 .lnk-side { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; margin-left: auto; }
 .lnk-side { position: relative; }
-/* правка и удаление всплывают поверх имени, вёрстка под ними не двигается */
+/* edit and delete pop up over the name, the layout beneath doesn't move */
 .lnk-side .lnk-acts {
   display: none; position: absolute; top: 0; right: calc(100% + 4px); z-index: 3;
   padding-left: 6px; background: var(--surface); box-shadow: -10px 0 10px var(--surface);
@@ -362,10 +362,10 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
 .lnk-name:hover { color: var(--amber); text-decoration: none; }
 .lnk-lbl { font-family: var(--util); font-size: 11.5px; color: var(--amber); }
 .lnk-sub { font-family: var(--util); font-size: 11px; color: var(--dim2); line-height: 1.35; }
-/* как подпись прочтётся на карточке: подлежащее и дополнение по направлению связи */
+/* how the label reads on the card: subject and object follow the link direction */
 .lnk-hint { font-family: var(--util); font-size: 11px; color: var(--dim2); margin-top: 4px; }
 .lnk-hint b { color: var(--amber); font-weight: 600; }
-/* описание в списке связей — подпись, а не абзац: две строки и обрез */
+/* a description in the link list is a caption, not a paragraph: two lines, then truncated */
 .lnk-main .lnk-sub, .lnk-main .lnk-lbl {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
@@ -399,14 +399,14 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
   .lnk-acts { flex-direction: column; }
 }
 
-/* правка на месте: значение подсвечивается под курсором, клик открывает поле */
+/* inline edit: the value highlights on hover, click opens the field */
 .ed-able { cursor: text; border-radius: 2px; transition: background .08s linear; }
 .ed-able:hover { background: var(--surface2); box-shadow: 0 0 0 4px var(--surface2); }
 .dos-add { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .dos-add .btn-ico { color: var(--dim2); border-style: dashed; }
 .dos-add .btn-ico:hover { color: var(--amber); }
 
-/* «добавить» стоит в сетке вложений на месте следующего снимка */
+/* “add” sits in the attachment grid where the next image would go */
 .att-add {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; aspect-ratio: 1 / 1; padding: 0; margin: 0;
@@ -417,7 +417,7 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
 .att-add:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
 .att-add > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-/* загрузка портрета — явной кнопкой под снимком */
+/* portrait upload — an explicit button under the image */
 .dos-shot-acts { display: flex; gap: 6px; margin-top: 8px; }
 .dos-upload {
   position: relative; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -427,11 +427,11 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
 .dos-upload:hover { color: var(--amber); border-color: var(--amber-dim); background: var(--surface2); }
 .dos-upload:focus-within { outline: 2px solid var(--amber); outline-offset: 1px; }
 .dos-upload > input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-/* ранг не задан: место под него видно только правящему, бледно */
+/* no Tier set: its slot is shown only to the editor, dimmed */
 .dos-rank.blank { opacity: .4; }
 .dos-rank.blank:hover { opacity: 1; }
 
-/* длинное слово без пробелов переносится, а не вылезает за окно */
+/* a long word without spaces wraps instead of overflowing the modal */
 .dos-main, .dos-summary, .dos-val, .dos-prose p, .dos-name { overflow-wrap: anywhere; min-width: 0; }
 .dos-clamp {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
@@ -443,19 +443,19 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
 .dos-more:hover { color: var(--amber); background: none; }
 .dos-summary-edit textarea { max-height: 60vh; resize: vertical; }
 
-/* при наведении подписи связи раскрываются целиком */
+/* on hover, link labels expand in full */
 .lnk:hover .lnk-main .lnk-sub, .lnk:hover .lnk-main .lnk-lbl { -webkit-line-clamp: unset; line-clamp: unset; }
-/* плитка связи: снимок и шапка в первой строке, подписи — во всю ширину под ними */
+/* link tile: image and header on the first row, labels full width below */
 .lnk { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 3px; align-items: start; }
 .lnk > .lnk-main { display: contents; }
 .lnk > .lnk-main > .lnk-lbl, .lnk > .lnk-main > .lnk-sub { grid-column: 1 / -1; }
 .lnk.gm-only .lnk-side .lnk-acts { background: #1f1512; box-shadow: -10px 0 10px #1f1512; }
-/* кнопки связи одного роста с плашкой видимости, верх по одной линии */
+/* link buttons match the visibility badge height, tops aligned */
 .lnk-side, .lnk-side .lnk-acts { align-items: stretch; gap: 4px; }
 .lnk-side .vis-chip, .lnk-side .ibtn { height: 26px; min-height: 26px; box-sizing: border-box; }
 .lnk-side .ibtn { width: 26px; padding: 0; display: grid; place-items: center; }
 
-/* архив и удаление: на широком экране кнопками в строке, на телефоне — в меню «⋯» */
+/* archive and delete: inline buttons on wide screens, in the “⋯” menu on phones */
 .dos-acts-row { display: contents; }
 .dos-acts { display: none; }
 @media (max-width: 700px) {
@@ -474,7 +474,7 @@ a.att-shot.att-file { display: grid; place-items: center; cursor: pointer; text-
     background: var(--surface); border: 1px solid var(--line2); box-shadow: 0 8px 24px rgba(0,0,0,.5);
   }
   .dos-acts-list > button { width: 100%; justify-content: flex-start; }
-  /* снимок не съедает экран: имя видно сразу */
+  /* the image doesn't eat the screen: the name is visible right away */
   .dos-shot { max-width: none; }
   .ent-photo { display: flex; justify-content: center; }
   .ent-photo > .avatar { width: auto; max-height: 45vh; }

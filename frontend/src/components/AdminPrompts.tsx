@@ -5,7 +5,7 @@ import { useAsync } from '../ctx'
 import { PromptDoc } from './PromptDoc'
 import { SaveBar, type SavePhase } from './SaveBar'
 
-/** Несохранённое в Admin space: меню спрашивает перед уходом. */
+/** Unsaved changes in Admin space: the menu asks before leaving. */
 export const adminDirty = { current: false }
 
 type Doc = { id: string; group: string; title: string; doc?: string; section?: string; key?: string }
@@ -39,13 +39,13 @@ const SECTION_TITLES: Dict = {
   comment_writing: 'prompts.sec.comment_writing',
 }
 
-// секции, где админ добавляет и убирает записи, в том числе пришедшие из кода; «сбросить к коду» их возвращает
+// sections where the admin adds and removes items, including ones from the code; "reset to code" brings them back
 const GROWS: Dict = {
   registers: 'prompts.new.register', anchors: 'prompts.new.anchor', dispatch_journalists: 'prompts.new.journalist',
   dispatch_lenses: 'prompts.new.lens', comment_manners: 'prompts.new.manner', comment_lengths: 'prompts.new.length',
   comment_writing: 'prompts.new.writing',
 }
-// поля регистра: подписи для ГМа, облик кадра и строка, по которой хаб сам выбирает угол
+// register fields: labels for the GM, frame look, and the line by which the hub picks the corner itself
 const REG_FIELDS: [string, string, number][] = [
   ['hint', 'prompts.reg.hint', 1],
   ['look', 'prompts.reg.look', 2],

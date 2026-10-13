@@ -1,5 +1,5 @@
-/* Журнал кампании: телеграфная лента — время слева, кто, что, над чем.
-   Строка одна, подробности разворачиваются под ней. */
+/* Campaign log: a ticker tape — time on the left, who, what, on what.
+   One line each, details expand below it. */
 
 .hist-filters {
   display: flex; flex-direction: column; gap: 8px;

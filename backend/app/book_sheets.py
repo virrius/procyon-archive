@@ -1,4 +1,4 @@
-"""Бланки персонажей «Изгоев галактики»: структура, названия и числа. Тексты правил книги в публичную версию не входят."""
+"""Scum and Villainy character sheets: structure, names and numbers. Book rules text is not in the public version."""
 
 from __future__ import annotations
 

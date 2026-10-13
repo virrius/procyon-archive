@@ -1,6 +1,6 @@
-/* Заглушка вместо снимка: тёмный силуэт по виду записи под виньеткой и зерном.
-   Фигура кадрируется по нижнему краю, как обрезанное фото; знаки стоят по центру.
-   Сами обводки — в stubShapes.ts. */
+/* Placeholder instead of a picture: a dark silhouette by entry kind under a vignette and grain.
+   The figure is framed on the bottom edge, like a cropped photo; signs sit in the center.
+   The tracings themselves are in stubShapes.ts. */
 
 import type { CSSProperties } from 'react'
 import {
@@ -14,7 +14,7 @@ const SHAPES: Record<string, StubShape> = {
   faction: SIGIL, job: CONTRACT,
 }
 
-/** у работёнки два лица: слух — перехваченный шёпот, работа — контракт */
+/** a job has two faces: a rumor is an intercepted whisper, a job is a contract */
 const SUB_SHAPES: Record<string, StubShape> = {
   'job:rumor': WHISPER,
 }
@@ -37,14 +37,14 @@ function Silhouette({ shape }: { shape: StubShape }) {
   )
 }
 
-/** Заглушка на месте снимка. Размер и пропорции даёт класс места
+/** Placeholder in place of a picture. Size and proportions come from the slot's class
     (`eg-photo`, `lnk-thumb`, `avatar`, `ch-noshot`). */
 export default function Stub({ kind, sub, className = '', caption, style }: {
   kind?: string | null
-  /** уточнение вида: своё лицо у слуха и у работы */
+  /** kind detail: rumors and jobs get their own face */
   sub?: string | null
   className?: string
-  /** подпись поверх кадра — только там, где место позволяет */
+  /** caption over the frame, only where there is room */
   caption?: string
   style?: CSSProperties
 }) {

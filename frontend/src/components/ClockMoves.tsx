@@ -7,8 +7,8 @@ import { IconButton, IconCheck, IconMinus, IconPlus } from './icons'
 
 type Oops = { id: string; text: string } | null
 
-/** Тик, завершение и возврат счётчика — одна механика в разделе и на карточке записи.
- *  Пока запрос идёт, кнопки счётчика заняты; сдвиг виден сразу и откатывается при ошибке. */
+/** Tick, completion and reopening of a clock: one mechanic in the section and on the entry card.
+ *  While the request is running, the clock buttons are busy; the move shows at once and rolls back on error. */
 export function useClockMoves(rows: Dict[] | null, reload: () => void) {
   const { t } = useTranslation('clocks')
   const [busy, setBusy] = useState<Record<string, boolean>>({})
@@ -16,7 +16,7 @@ export function useClockMoves(rows: Dict[] | null, reload: () => void) {
   const [oops, setOops] = useState<Oops>(null)
   const going = useRef(new Set<string>())
 
-  // пришёл новый список — свои снимки больше не нужны, кроме тех, что ещё в пути
+  // a new list arrived: own snapshots aren't needed anymore, except those still in flight
   useEffect(() => {
     setFresh(cur => {
       const keep = Object.fromEntries(Object.entries(cur).filter(([id]) => going.current.has(id)))
@@ -57,7 +57,7 @@ export function useClockMoves(rows: Dict[] | null, reload: () => void) {
   const reopen = (cl: Dict) =>
     run(cl, { status: 'active' }, () => api.post(`${c()}/clocks/${cl.id}/reopen`, {}))
 
-  /** Прочие правки счётчика (права, видимость, отмена): ошибку показываем там же. */
+  /** Other clock edits (rights, visibility, abandon): the error is shown in the same place. */
   const act = async (cl: Dict, call: () => Promise<any>): Promise<boolean> => {
     setOops(null)
     let ok = true
@@ -77,15 +77,15 @@ export function useClockMoves(rows: Dict[] | null, reload: () => void) {
 
 export type ClockMovesApi = ReturnType<typeof useClockMoves>
 
-/** Право двигать счётчик отдаёт сервер: ГМ, «все игроки» или назначенный игрок. */
+/** The server grants the right to move a clock: the GM, "all players" or an assigned player. */
 export function useClockMay() {
   const { campaign } = useApp()
   const canEdit = !isPublicView() && campaign?.my_role !== 'observer'
   return (cl: Dict) => canEdit && cl.can_edit !== false
 }
 
-/** Кнопки плитки: «−» и «+» на своих местах, «завершить» — отдельной кнопкой с вопросом,
- *  у закрытого счётчика — «вернуть». Отменённый возвращает только ГМ. */
+/** Tile buttons: "−" and "+" in their places, "complete" as a separate button with a confirm,
+ *  "reopen" on a closed clock. Only the GM reopens an abandoned one. */
 export function ClockMoves({ cl, moves }: { cl: Dict; moves: ClockMovesApi }) {
   const { isGM } = useApp()
   const { t } = useTranslation('clocks')

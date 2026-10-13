@@ -12,9 +12,9 @@ from .models import Campaign, CampaignMember, User
 from .security import read_token
 from .visibility import Viewer
 
-PUBLIC_VIEW = "crew"  # X-View-As: витрина «как видят игроки», без конкретного участника
+PUBLIC_VIEW = "crew"  # X-View-As: public view "as players see it", without a specific member
 
-# три способа предъявить токен — все попадают в securitySchemes и в кнопку Authorize
+# three ways to present a token — all of them go into securitySchemes and the Authorize button
 bearer_scheme = HTTPBearer(
     auto_error=False, scheme_name="bearer",
     description="`Authorization: Bearer <token>` — the token from `POST /api/auth/login`. The way for API clients.",
@@ -30,8 +30,8 @@ cookie_scheme = APIKeyCookie(
 
 
 def _own_ports(request: Request) -> set[int]:
-    """Порт, на котором браузер открыл этот экземпляр. Прокси перед API срезает его из Host,
-    поэтому смотрим и Origin/Referer."""
+    """Port the browser opened this instance on. The proxy in front of the API strips it from Host,
+    so we also look at Origin/Referer."""
     ports = set()
     host = request.headers.get("host", "")
     for raw in (f"//{host}", request.headers.get("origin", ""), request.headers.get("referer", "")):
@@ -57,7 +57,7 @@ def session_user(
     elif token:
         raws = [token]
     else:
-        # куки не различают порты: рядом лежат токены соседнего экземпляра на том же хосте — свой первым
+        # cookies don't separate ports: tokens of a neighbor instance on the same host sit alongside — ours first
         own = {f"pa_token_{p}" for p in _own_ports(request)}
         jar = [(k, v) for k, v in request.cookies.items() if k == "pa_token" or k.startswith("pa_token_")]
         raws = [v for k, v in sorted(jar, key=lambda kv: kv[0] not in own)]
@@ -75,7 +75,7 @@ def session_user(
 
 
 def current_user(user: User = Depends(session_user)) -> User:
-    """Пока пароль по умолчанию не сменён, учётке открыты только `/auth/me` и `/auth/password`."""
+    """Until the default password is changed, the account can only reach `/auth/me` and `/auth/password`."""
     if user.password_default:
         raise HTTPException(403, tr("auth.password_default"))
     return user
@@ -113,7 +113,7 @@ def viewer(
     me = _membership(campaign_id, user, db)
     role, member_id, acting_as = me.role, me.id, None
     if x_view_as == PUBLIC_VIEW and me.role == "gm":
-        # витрина для стола: видно только то, что открыто всему экипажу
+        # public view for the table: only what is open to the whole crew is visible
         role, member_id, acting_as = "player", "", PUBLIC_VIEW
     elif x_view_as and me.role == "gm":
         target = db.get(CampaignMember, x_view_as)
@@ -136,7 +136,7 @@ def gm_only(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ) -> Viewer:
-    """X-View-As здесь не действует: операция ГМа идёт от него самого."""
+    """X-View-As has no effect here: a GM operation is done as the GM."""
     me = _membership(campaign_id, user, db)
     if me.role != "gm":
         raise HTTPException(403, tr("auth.gm_only"))
@@ -144,7 +144,7 @@ def gm_only(
 
 
 def editor(v: Viewer = Depends(viewer)) -> Viewer:
-    """Право записи. ГМ «глазами игрока» пишет от лица этого игрока и в его правах."""
+    """Write access. A GM in "View as" mode writes as that player, with that player's rights."""
     if v.acting_as == PUBLIC_VIEW:
         raise HTTPException(409, tr("auth.public_read_only"))
     if v.role == "observer":

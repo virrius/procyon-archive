@@ -1,4 +1,4 @@
-/* Дашборд отношений — разворот «Организации» из бланка: три колонки, плотные строки. */
+/* Faction status dashboard — the factions spread from the sheet: three columns, dense rows. */
 
 .rel-cols {
   display: grid; gap: 12px;
@@ -25,20 +25,20 @@
 }
 .rel-tab td { padding: 3px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .rel-tab tr:last-child td { border-bottom: none; }
-/* организация закрыта от стола — ГМ видит её строку бледной */
+/* a faction hidden from the table — the GM sees its row dimmed */
 .rel-tab tr.off > td { opacity: .5; }
 
-/* служебные колонки — по содержимому, остальное отдаём названию */
+/* service columns fit their content, the rest goes to the name */
 .rel-th-rank, .rel-th-stance, .rel-th-deeds { width: 1%; }
 
-/* длинное название переносится внутри слова, а не выталкивает таблицу за колонку */
+/* a long name wraps mid-word instead of pushing the table out of the column */
 .rel-name { overflow-wrap: anywhere; }
 .rel-name a { font-weight: 600; }
 .rel-name .chip { margin-left: 6px; }
 .rel-rank { color: var(--dim); text-align: center; }
 .rel-rank, .rel-stance, .rel-deeds { white-space: nowrap; }
 
-/* --- шкала -3…+3: клетка — кнопка во всю высоту, брусок рисуется внутри --- */
+/* --- -3…+3 scale: each cell is a full-height button, the bar is drawn inside --- */
 .rel-bar { display: inline-flex; align-items: center; }
 .rel-cell {
   display: flex; align-items: center; justify-content: center; flex: none;
@@ -56,7 +56,7 @@ button.rel-cell:hover { background: none; }
 button.rel-cell:hover::before { background: var(--surface3); border-color: var(--amber-dim); }
 button.rel-cell.on:hover::before { border-color: var(--amber); }
 button.rel-cell:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
-/* палец: клетка не меньше 24×34 */
+/* touch: a cell is at least 24×34 */
 @media (pointer: coarse) {
   .rel-cell { width: 24px; height: 34px; }
   .rel-cell::before { width: 14px; height: 20px; }
@@ -71,7 +71,7 @@ button.rel-cell:focus-visible { outline: 2px solid var(--amber); outline-offset:
 .rel-val.green { color: var(--olive); }
 .rel-val.red { color: var(--rust); }
 
-/* --- дела --- */
+/* --- jobs --- */
 button.rel-tally {
   background: transparent; border: 1px solid transparent; padding: 2px 4px;
   display: inline-flex; align-items: center; gap: 4px; min-width: 34px;
@@ -81,7 +81,7 @@ button.rel-tally:hover { border-color: var(--line2); background: var(--surface2)
 .rel-marks i {
   display: block; width: 5px; height: 12px; background: var(--amber); transform: skewX(-14deg);
 }
-/* дело с подписью читается ярче голой отметки */
+/* a job with a note reads brighter than a bare mark */
 .rel-marks i.note { background: var(--steel); }
 
 .rel-deedlist .rel-deed { gap: 8px; }
@@ -95,7 +95,7 @@ button.rel-tally:hover { border-color: var(--line2); background: var(--surface2)
   color: #e08a70; background: #251712; border: 1px solid #5c3327; padding: 5px 8px;
 }
 
-/* --- розыск по системам: подозрения и уровень розыска на каждую систему --- */
+/* --- wanted levels by system: heat and wanted level for each system --- */
 .heat h3 { margin: 0; }
 
 .heat-grid {
