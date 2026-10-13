@@ -11,7 +11,7 @@ flowchart LR
 
 | | |
 |---|---|
-| All in Docker | `docker compose up -d --build` → http://localhost:7726 |
+| All in Docker | `docker compose up -d --build` in a clone → http://localhost:7726 |
 | Backend | `cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload`, `PA_DATABASE_URL` → your PostgreSQL |
 | Frontend | `cd frontend && npm install && npm run dev` → http://localhost:5173, `/api` goes to localhost:8000 |
 | API docs | `/api/docs` |
@@ -24,7 +24,7 @@ Backend settings, prefix `PA_`: `DATABASE_URL`, `JWT_SECRET`, `JWT_TTL_HOURS`, `
 |---|---|
 | Entity fields | `backend/app/schema_defs.py`: the frontend renders forms from it, `gm_*` keys are GM-only |
 | Visibility | `backend/app/visibility.py`: per record (crew · chosen players · owner · GM), filtered on the server, hidden → 404 |
-| Story boards for agents | [docs/boards_api.md](docs/boards_api.md) |
+| Story boards for agents | [boards_api.md](boards_api.md) |
 
 ## Rulebook text
 

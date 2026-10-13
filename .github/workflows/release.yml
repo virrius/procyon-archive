@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           mkdir procyon-archive
-          cp release/docker-compose.yml INSTALL.md samples/demo-silence-over-brekk.zip procyon-archive/
+          cp release/docker-compose.yml samples/demo-silence-over-brekk.zip procyon-archive/
           zip -r procyon-archive.zip procyon-archive
       - env:
           GH_TOKEN: ${{ github.token }}
