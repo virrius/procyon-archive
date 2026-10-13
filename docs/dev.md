@@ -16,7 +16,7 @@ flowchart LR
 | Frontend | `cd frontend && npm install && npm run dev` → http://localhost:5173, `/api` goes to localhost:8000 |
 | API docs | `/api/docs` |
 
-Backend settings, prefix `PA_`: `DATABASE_URL`, `JWT_SECRET`, `JWT_TTL_HOURS`, `UPLOAD_DIR`, `WORKER_TOKEN`, `BOOK_DIR`.
+Backend settings, prefix `PA_`: `DATABASE_URL`, `JWT_SECRET`, `JWT_TTL_HOURS`, `UPLOAD_DIR`, `WORKER_TOKEN`, `BOOK_DIR`, `ADMIN_PASSWORD` (first admin on an empty database).
 
 ## Where things are
 
