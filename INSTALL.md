@@ -28,7 +28,12 @@ The first start downloads about 250 MB. After that Procyon Archive starts with D
 | GM space → Accounts | **+ grant access**: a login per player |
 | Admin space → Language | English / Russian |
 
-Players on your network open `http://<your computer's IP>:7726`.
+Players on your home network open `http://<your computer's IP>:7726`. Players elsewhere:
+
+| | |
+|---|---|
+| ngrok | install [ngrok](https://ngrok.com/download), run `ngrok http 7726`, send players the `https://…` address it prints. Works while your computer is on |
+| Server | the same steps on a VPS with Docker, open port 7726; players open `http://<server IP>:7726`. Set the admin password right after the first start |
 
 ## Optional: pictures and news
 

@@ -14,7 +14,13 @@ Needs [Docker Desktop](https://www.docker.com/products/docker-desktop/): Windows
 4. Optional, pictures and news: add an external model key in Admin space → LLM and Images,
    or draw on your own NVIDIA GPU with the [local image worker](worker/README.md).
 
-Players on your network open `http://<your computer's IP>:7726`.
+Players on your home network open `http://<your computer's IP>:7726`. Players elsewhere:
+
+| | |
+|---|---|
+| ngrok | install [ngrok](https://ngrok.com/download), run `ngrok http 7726`, send players the `https://…` address it prints. Works while your computer is on |
+| Server | the same steps on a VPS with Docker, open port 7726; players open `http://<server IP>:7726`. Set the admin password right after the first start |
+
 Stopping, updating, pictures and news: [INSTALL.md](INSTALL.md).
 
 ## Structure
