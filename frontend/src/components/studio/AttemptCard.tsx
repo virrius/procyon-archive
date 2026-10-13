@@ -51,7 +51,6 @@ export default function AttemptCard({
   const [over, setOver] = useState<Change | null>(null)
   const [editLine, setEditLine] = useState(false)
   const [remembered, setRemembered] = useState('')
-  const [picked, setPicked] = useState('')
   const [keepSrc, setKeepSrc] = useState(false)
   const sig = useRef('')
 
@@ -264,9 +263,9 @@ export default function AttemptCard({
               {ready
                 ? att.candidates.map(cd => (
                     <figure key={cd.id}
-                      className={`st-cand${picked === cd.id ? ' on' : ''}${kept?.id === cd.id ? ' kept' : ''}`}>
-                      <div className="st-cand-shot" style={{ aspectRatio: ratio }}
-                        onClick={() => setPicked(picked === cd.id ? '' : cd.id)}>
+                      className={`st-cand${kept?.id === cd.id ? ' kept' : ''}`}>
+                      <div className="st-cand-shot" style={{ aspectRatio: ratio }} title={t('zoom')}
+                        onClick={() => onZoom(cd.url)}>
                         <img src={thumbFull(cd.url, n === 1 ? 960 : 480)} alt={t('candidate_alt')} loading="lazy" />
                       </div>
                       <div className="st-cand-bar">{candBar(cd)}</div>
@@ -276,7 +275,8 @@ export default function AttemptCard({
                     const cd = att.candidates[i]
                     return (
                       <figure key={cd?.id || i} className="st-cand">
-                        <div className="st-cand-shot" style={{ aspectRatio: ratio }}>
+                        <div className="st-cand-shot" style={{ aspectRatio: ratio }}
+                          onClick={cd ? () => onZoom(cd.url) : undefined}>
                           {cd
                             ? <img src={thumbFull(cd.url, n === 1 ? 960 : 480)} alt={t('candidate_alt')} />
                             : <span className="wait">{t(`status.${att.status}`)}</span>}
