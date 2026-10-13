@@ -1,6 +1,6 @@
 <p align="center"><img src="docs/banner.webp" alt="Procyon Archive"></p>
 
-**[Overview and screenshots](https://virrius.github.io/procyon-archive-promo/)**
+**[Overview highlights and screenshots](https://virrius.github.io/procyon-archive-promo/)**
 
 ![Procyon Archive with the sector map open](docs/screenshot.webp)
 
