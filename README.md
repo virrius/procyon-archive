@@ -21,7 +21,7 @@ The first start downloads about 250 MB. After that Procyon Archive starts with D
 
 | Where | What |
 |---|---|
-| Admin space → Campaigns | create a campaign, or **import from archive** → `demo-silence-over-brekk.zip` |
+| Admin space → Campaigns | create a campaign, or **import from archive** → `DEMO_CAMPAIGN.zip` |
 | GM space → Accounts | **+ grant access**: a login per player |
 | Admin space → Language | English / Russian |
 
@@ -52,7 +52,6 @@ backend/     API: FastAPI, PostgreSQL
 frontend/    web app: React, nginx
 worker/      image worker for your own GPU (optional)
 assets/      rules clippings, sector map
-release/     docker-compose.yml for installing from images
 samples/     demo campaign
-docs/        development and deploy, story boards API for agents
+docs/        development and deploy
 ```

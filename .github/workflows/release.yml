@@ -55,9 +55,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
+      - env:
+          API_IMAGE: ghcr.io/${{ github.repository }}-api:${PA_VERSION:-latest}
+          WEB_IMAGE: ghcr.io/${{ github.repository }}-web:${PA_VERSION:-latest}
+        run: |
           mkdir procyon-archive
-          cp release/docker-compose.yml samples/demo-silence-over-brekk.zip procyon-archive/
+          docker run --rm -i -e API_IMAGE -e WEB_IMAGE mikefarah/yq:4.44.3 \
+            'del(.services[].build) | .services[].restart = "unless-stopped"
+             | .services.api = {"image": strenv(API_IMAGE)} + .services.api
+             | .services.web = {"image": strenv(WEB_IMAGE)} + .services.web' \
+            < docker-compose.yml > procyon-archive/docker-compose.yml
+          cp samples/DEMO_CAMPAIGN.zip procyon-archive/
           zip -r procyon-archive.zip procyon-archive
       - env:
           GH_TOKEN: ${{ github.token }}

@@ -24,7 +24,6 @@ Backend settings, prefix `PA_`: `DATABASE_URL`, `JWT_SECRET`, `JWT_TTL_HOURS`, `
 |---|---|
 | Entity fields | `backend/app/schema_defs.py`: the frontend renders forms from it, `gm_*` keys are GM-only |
 | Visibility | `backend/app/visibility.py`: per record (crew · chosen players · owner · GM), filtered on the server, hidden → 404 |
-| Story boards for agents | [boards_api.md](boards_api.md) |
 
 ## Rulebook text
 
