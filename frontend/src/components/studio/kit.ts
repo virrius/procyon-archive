@@ -95,7 +95,9 @@ export const STRENGTH: [string, number][] = [
 ]
 export const strengthTitle = (d: number) => i18n.t(`studio:strength.${d >= 0.99 ? STRENGTH[0][0] : STRENGTH[1][0]}`)
 
-export type Outfit = { key: string; title: string; wear: string[]; image?: string }
+export type Outfit = { key: string; title: string; wear: string[]; image?: string; visibility?: string }
+/** a look is either open to every player in the workshop or kept for the GM */
+export const LOOK_SCOPES = ['crew', 'gm']
 
 /** Where the picked candidate of an attempt goes */
 export type Dest = 'entity' | 'scene' | 'replace'

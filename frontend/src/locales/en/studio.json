@@ -168,6 +168,7 @@
     "no_wear": "The model didn't write out any clothing for this frame — nothing to save.",
     "look_save_failed": "couldn't save the look",
     "rename_failed": "couldn't rename",
+    "look_vis_failed": "couldn't change who sees the look",
     "forget_failed": "couldn't forget the look",
     "no_ask": "Write what should appear in the painted area.",
     "no_paint": "Paint over the area that needs redrawing.",

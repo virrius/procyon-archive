@@ -91,6 +91,12 @@ def campaign_kit(camp: Campaign) -> dict:
     return kit
 
 
+def wardrobe_for(camp: Campaign, gm: bool) -> dict:
+    """The campaign wardrobe as a viewer may use it: players get only the looks open to them."""
+    ward = parse_kit(camp.img_prompt_kit).get("wardrobe") or {}
+    return ward if gm else {k: o for k, o in ward.items() if o.get("visibility") != "gm"}
+
+
 def doc_default(key: str) -> str:
     """Document text when there is no override. For the frame, {view} stays a placeholder."""
     if key == "inpaint":

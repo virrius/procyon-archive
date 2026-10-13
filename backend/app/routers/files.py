@@ -16,7 +16,8 @@ from ..config import settings
 from ..db import get_db
 from ..deps import editor, viewer
 from ..i18n import tr
-from ..models import Attachment, Entity, Message
+from ..models import Attachment, Campaign, Entity, Message
+from ..server_cfg import wardrobe_for
 from ..visibility import Viewer, apply_scope, can_see, entity_editable, hidden_keys
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["files"], responses=AUTH_ERRORS)
@@ -227,8 +228,7 @@ def get_file(
     """Binary answer, not JSON. Visibility of the attachment applies. Accepts `?token=` for
     `<img src>`. `Cache-Control: no-cache` so an edited crop box shows at once."""
     a = db.get(Attachment, attachment_id)
-    # a look thumbnail is a GM-only candidate frame, but the wardrobe is open to every player in the workshop
-    if not a or a.campaign_id != v.campaign_id or not (can_see(a, v) or a.target_type == "outfit"):
+    if not a or a.campaign_id != v.campaign_id or not (can_see(a, v) or look_open(db, a, v)):
         raise HTTPException(404, tr("files.not_found"))
     if not v.is_gm and a.target_type == "entity" and a.target_id:
         e = db.get(Entity, a.target_id)
@@ -248,6 +248,11 @@ def get_file(
             return FileResponse(small, media_type="image/webp", filename=a.filename,
                                 headers=head)
     return FileResponse(path, media_type=a.mime, filename=a.filename, headers=head)
+
+
+def look_open(db: Session, a: Attachment, v: Viewer) -> bool:
+    """A look thumbnail is a GM-only candidate frame: it goes out together with its look."""
+    return a.target_type == "outfit" and a.target_id in wardrobe_for(db.get(Campaign, a.campaign_id), v.is_gm)
 
 
 def hidden_portrait(e: Entity, a: Attachment) -> bool:
