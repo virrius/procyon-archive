@@ -38,7 +38,7 @@ class SearchHit(BaseModel):
 
 
 def block_shown(db: Session, v: Viewer, b: ContentBlock) -> bool:
-    """Та же проверка, что у записей на странице карточки: сперва карточка, потом запись."""
+    """Same check as for blocks on a card page: the card first, then the block."""
     if not parent_visible(db, v, b.entity_type, b.entity_id):
         return False
     parent = db.get(Entity, b.entity_id) if b.entity_type == "entity" else None
@@ -46,14 +46,14 @@ def block_shown(db: Session, v: Viewer, b: ContentBlock) -> bool:
 
 
 def block_target(db: Session, v: Viewer, b: ContentBlock) -> tuple[str, dict] | None:
-    """Чьё имя стоит у записи в выдаче и куда она ведёт. None — вести некуда."""
+    """Whose name the block shows in results and where it leads. None means it leads nowhere."""
     if b.entity_type in ("entity", "clock"):
         parent = db.get(Entity if b.entity_type == "entity" else Clock, b.entity_id)
         if parent is None or parent.campaign_id != v.campaign_id or not can_see(parent, v):
             return None
         return parent.name, {"target_type": b.entity_type, "target_id": parent.id}
     if b.entity_type == "rules" and b.block_type != "seed":
-        # вырезка ведёт к себе самой, раздел — к себе; имя раздела — у вырезки
+        # a clipping leads to itself, a section to itself; the section name comes from the clipping
         section = db.get(ContentBlock, b.entity_id) if b.entity_id else None
         return (section.title if section else ""), {"target_type": "rule", "target_id": b.id}
     return None

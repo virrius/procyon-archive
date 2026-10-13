@@ -1,4 +1,4 @@
-/* Кому отдана правка карточки — тот же чип с меню, что и «кто это видит». */
+/* Who the card's editing is given to: the same chip with a menu as "who can see this". */
 
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -103,7 +103,7 @@ export function OwnerMenu({ value, onChange, disabled, compact }: {
   }
 
   const chip = `vis-chip own-chip ${ownerTone(cur)}${compact ? ' compact' : ''}`
-  // карандаш на лице чипа: рядом с глазом видимости сразу читается «это про правку»
+  // pencil on the chip face: next to the visibility eye it reads at once as "this is about editing"
   const face = <><IconEdit size={12} />{!compact && <span className="vis-w">{word}</span>}</>
 
   if (disabled) {

@@ -1,15 +1,15 @@
-"""Сборка промпта прозой: хаб пишет части видимого, код склеивает их и ставит стиль, рамку и якорь.
+"""Prompt assembly as prose: the hub writes the visible parts, code joins them and adds style, frame and anchor.
 
-Z-Image читает текст энкодером Qwen3-4B, обученным на подписях-абзацах, а не на
-тегах. Стенд `train/bench/light` (10.10.2026, 19 кейсов × 2 сида) показал: короткая
-инструкция на ~3 тыс. знаков и абзац на 90–150 слов держат сеттинг не хуже
-прежних 15 слотов по инструкции в 10–13 тыс. знаков, а текст ГМа — точнее.
+Z-Image reads text with a Qwen3-4B encoder trained on paragraph captions, not on
+tags. The `train/bench/light` bench (10.10.2026, 19 cases × 2 seeds) showed: a short
+instruction of ~3k characters and a paragraph of 90–150 words hold the setting no worse than
+the old 15 slots with an instruction of 10–13k characters, and the GM's text more precisely.
 
-Что держит код, а не хаб:
-- голова стиля и рамка кадра — постоянны для направления;
-- якорь класса у кадра: хаб выбирает пункт из закрытого списка, фраза встаёт первой;
-- подмена земных слов (`suit`, `bike`, `alien`);
-- регистр — словарь места и людей, дописанный к инструкции; он перебивает общий мир.
+What code holds, not the hub:
+- the style head and the frame border — fixed per direction;
+- the class anchor of a frame: the hub picks an item from a closed list, the phrase goes first;
+- replacing Earth words (`suit`, `bike`, `alien`);
+- the register — a vocabulary of place and people appended to the instruction; it overrides the general world.
 """
 from __future__ import annotations
 
@@ -57,11 +57,11 @@ _OUTPUT = ("Write one paragraph of 90 to 150 words describing exactly what is vi
            "around it and what is far behind, then where the light comes from. Plain concrete visual "
            "language: no story, no feelings, no names, no camera or photography words, no art-style words.")
 
-# Инструкция хабу по направлению — то, что ГМ видит и правит в Admin space.
-# {view} у кадра — место закона подтипа, его ставит код
+# The hub instruction per direction — what the GM sees and edits in Admin space.
+# {view} in a frame is where the subtype law goes, code inserts it
 DOCS = {kind: "\n\n".join((_TASK[kind], _WORLD, _RULES, _OUTPUT)) for kind in _TASK}
 
-# стойка корабля: без неё припаркованный борт выходит грузовиком на колёсах или висит в пустоте
+# ship stance: without it a parked hull comes out as a truck on wheels or hangs in the void
 SHIP_STANCE = (" A parked craft stands on extended landing gear on a landing pad or in a bay; a craft in "
                "motion has its engines lit with open space or sky around it.")
 
@@ -69,9 +69,9 @@ STYLE = ("Painterly sci-fi concept art with visible brush strokes, a detailed en
          "exotic clothes and devices.")
 CLOSE = "Painted in visible brush strokes as sci-fi concept art."
 
-# Облик регистра — голова стиля со своей палитрой и светом. Словарь регистра в
-# инструкции меняет только то, что хаб назовёт; общая голова тянула любой угол
-# мира к одному ржавому полумраку
+# The register look is a style head with its own palette and light. The register vocabulary in
+# the instruction changes only what the hub names; a shared head pulled every corner
+# of the world into the same rusty gloom
 LOOKS = {
     "derelict": ("Painterly sci-fi concept art with visible brush strokes, a decaying palette of rust brown, corroded "
                  "orange and grimy grey with peeling faded paint, cold shafts of dead light cutting through dust and "
@@ -94,8 +94,8 @@ LOOKS = {
                   "cyan glow in the incised patterns, shafts of light through broken masses, vast scale, dust and "
                   "atmospheric depth."),
 }
-# если ГМ угол не выбрал, хаб выбирает его сам по словам ГМа — иначе всё
-# скатывается в общий облик мира
+# if the GM did not pick a corner, the hub picks it from the GM's words — otherwise everything
+# slides into the general look of the world
 CORNERS = {
     "derelict": "abandoned and decaying places nobody keeps up",
     "junk": "scrapyards, rust and salvage, slums and junk markets, scavengers living off broken things",
@@ -117,8 +117,8 @@ FRAMING = {
     "action": "A wide dynamic action scene with figures in motion, the scene filling all four edges.",
 }
 
-# Лишнюю пару рук Z-Image не рисует ни по счёту, ни по образу многорукой статуи
-# (та даёт шесть-восемь): держит только анатомия плеч, дописанная после абзаца
+# Z-Image does not draw an extra pair of arms either by count or by the image of a many-armed statue
+# (that gives six to eight): only shoulder anatomy appended after the paragraph holds
 FOUR_ARMS = re.compile(r"(?<![\w-])four[- ]arm(?:ed|s)(?!\w)", re.I)
 FOUR_ARMS_BODY = ("Four arms in total: two shoulders on each side, an upper pair of arms and a lower pair "
                   "of arms, each pair holding something different.")
@@ -127,8 +127,8 @@ GM_FOUR_ARMS = re.compile(r"четыр[её]хрук|четыре\s+рук|four[
 XENO_KIN = ("a lizard", "a toad", "a heron", "an owl", "a big cat", "a hound", "a badger", "a boar",
             "an ox", "a goat", "a seal", "an octopus", "a catfish", "a beetle", "a moth", "a bat",
             "a hare", "a tortoise", "a crocodile", "a mole")
-# Облик ксеноса — человекоподобное тело и несколько ярких черт из разных групп, как у
-# мемцев из рульника; родство с животным — лишь один из исходов кубика
+# A xenos look is a humanlike body and a few striking traits from different groups, like
+# the Memish from the rulebook; kinship with an animal is just one of the dice outcomes
 XENO_TRAITS = {
     "skin": ("fine overlapping scales", "glossy segmented chitin plates", "smooth hairless hide",
              "short dense fur", "translucent skin with faint veins showing beneath", "thick wrinkled hide",
@@ -143,7 +143,7 @@ XENO_TRAITS = {
               "lean and wiry", "massive, with a thick neck and shoulders", "slight and narrow-shouldered"),
 }
 ANIMAL_SHARE = 3
-# канонические народы сектора: ГМ назвал народ — облик из рульника, кубик молчит
+# canonical peoples of the sector: if the GM named a people, the look comes from the rulebook and the dice stay silent
 PEOPLES = {
     re.compile(r"мем(?:ец|ц[аыеуо]|ка|ки|ск)", re.I):
         "a Memian: a humanoid xenos with jet-black eyes, scaled skin in some shade of blue, violet or green, "
@@ -161,10 +161,10 @@ XENO_HUES = ("ochre", "rust red", "olive green", "deep blue", "violet", "teal", 
              "coal black", "mottled orange and brown", "pale pink", "moss green with dark spots",
              "striped grey and white", "copper", "bone white with blue veins")
 
-# Сборка частями: хаб пишет именованные части, код склеивает их в абзац в постоянном
-# порядке. Общие части одни на все дубли — персонаж один, разные только кадры.
-# Z-Image-Turbo почти не меняет кадр от сида к сиду: разных кандидатов дают только
-# разные дубли, поэтому их столько же, сколько кандидатов в заявке
+# Assembly by parts: the hub writes named parts, code joins them into a paragraph in a fixed
+# order. Shared parts are one for all takes — the character is the same, only the frames differ.
+# Z-Image-Turbo barely changes the frame from seed to seed: different candidates come only from
+# different takes, so there are as many of them as candidates in the job
 PARTS = {
     "person": (("look", 0), ("face", 1), ("outfit", 0), ("pose", 1), ("place", 0), ("light", 1)),
     "frame": (("subject", 0), ("people", 0), ("place", 0), ("angle", 1), ("light", 1)),
@@ -201,7 +201,7 @@ DESERTED = "The place is deserted."
 
 
 def own_parts(kind: str, people: str = "") -> list[tuple[str, int]]:
-    """Части кадра. Людей нет — нет и их части: маркер «none» уходил в строку буквально."""
+    """Frame parts. No people means no people part: the "none" marker went into the line literally."""
     return [(k, t) for k, t in PARTS[kind] if not (k == "people" and people == "none")]
 
 
@@ -221,7 +221,7 @@ def part_rule(kind: str, people: str = "", takes: int = 4) -> str:
 
 
 def xeno_look(rng: random.Random) -> str:
-    """Черты ксеноса: окрас и ещё три из разных групп, иногда родство с животным."""
+    """Xenos traits: a coloring and three more from different groups, sometimes kinship with an animal."""
     hue = rng.choice(XENO_HUES)
     if rng.randrange(ANIMAL_SHARE) == 0:
         rest = [f"kin to {rng.choice(XENO_KIN)} in the face and skin",
@@ -237,8 +237,8 @@ def named_people(text: str) -> str:
 
 
 def cast_rule(who: str = "", sex: str = "", seed_key: str = "", text: str = "") -> str:
-    """Кто на портрете — по развилкам ГМа. Черты ксеноса того же персонажа всегда одни:
-    кубик сеется ключом карточки. Что ГМ описал сам, кубик не трогает."""
+    """Who is in the portrait — by the GM's choices. A xenos character's traits are always the same:
+    the dice are seeded with the card key. What the GM described themselves, the dice leave alone."""
     rng = random.Random(seed_key) if seed_key else random.Random()
     out = []
     people = named_people(text)
@@ -263,7 +263,7 @@ def _sentence(text: str) -> str:
 
 
 def fold_time(slots: dict) -> dict:
-    """Время суток ГМа хаб выписывает отдельным полем, а код вклеивает в общее место: так оно в каждом дубле."""
+    """The hub writes the GM's time of day as a separate field; code puts it in a shared spot, so every take has it."""
     hour = _sentence(slots.pop("time", ""))
     if hour and hour.strip(" .").lower() not in BLANKS and "place" in slots:
         slots["place"] = f"{_sentence(slots['place'])} {hour}".strip()
@@ -281,8 +281,8 @@ def picture_of(kind: str, slots: dict, take: int = 0) -> str:
     return " ".join(x for x in parts if x)
 
 
-# планету с орбиты модель тянет к Земле, а при cfg 1 «no oceans or continents»
-# вносит в кадр именно океаны и материки: такие фразы выкидываются целиком
+# the model pulls a planet seen from orbit toward Earth, and at cfg 1 "no oceans or continents"
+# brings exactly oceans and continents into the frame: such phrases are dropped whole
 PLANET_DENIAL = re.compile(r"\b(?:no|not|without|devoid|lacking|absent)\b[^.]*"
                            r"\b(?:oceans?|seas?|continents?|landmass(?:es)?|water)\b", re.I)
 PLANET_WORDS = {r"\bterrestrial\b": "rocky", r"\blandmass(?:es)?\b": "regions", r"\bEarth\b": "a living world"}
@@ -297,7 +297,7 @@ def _planet(picture: str) -> str:
 
 
 def live_registers(kit: dict | None) -> dict:
-    """Регистры кита в его порядке. Регистр без словаря выключен."""
+    """Kit registers in the kit's order. A register without a vocabulary is switched off."""
     table = (kit or {}).get("registers")
     table = REGISTERS if table is None else table
     return {k: r for k, r in table.items() if isinstance(r, dict) and str(r.get("vocab") or "").strip()}
@@ -321,21 +321,21 @@ def _anchors(kit: dict, view: str) -> dict:
 
 
 def xeno_seed(rng: random.Random | None = None) -> str:
-    """Кубик облика ксеноса: на низкой температуре хаб каждый раз писал одного и того же
-    серого широкоплечего — разнообразие народов даёт только случайная подсказка."""
+    """Xenos look dice: at low temperature the hub wrote the same gray broad-shouldered one
+    every time — only a random hint gives variety of peoples."""
     rng = rng or random.Random()
     return (f"If the picture has a xenos, then where the GM's words leave its body open it has {xeno_look(rng)}; "
             f"whatever the GM described of its body wins over these.")
 
 
 def gm_four_arms(text: str) -> bool:
-    """Четыре руки ГМ назвал сам. Иначе хаб их выдумал, и анатомию плеч код не дописывает."""
+    """The GM named four arms themselves. Otherwise the hub made them up, and code does not add shoulder anatomy."""
     return bool(GM_FOUR_ARMS.search(text or ""))
 
 
 def system_prompt(doc: str, kit: dict, kind: str, register: str, view: str = "interior",
                   outfit: dict | None = None, xeno: str = "", people: str = "", takes: int = 4) -> str:
-    """Инструкция ГМа плюс то, что задают развилки окна: закон подтипа, регистр, якоря, наряд."""
+    """The GM instruction plus what the window's choices set: the subtype law, register, anchors, look."""
     law = ((kit.get("views") or {}).get(view) or {}).get("law") or VIEW_LAWS.get(view, "")
     if view == "ship":
         law += SHIP_STANCE
@@ -372,7 +372,7 @@ def system_prompt(doc: str, kit: dict, kind: str, register: str, view: str = "in
 
 
 def _picks_corner(register: str, kind: str, view: str) -> bool:
-    """Угол выбирает хаб, когда ГМ его не назвал. Планете угол не нужен — она целиком."""
+    """The hub picks the corner when the GM did not name one. A planet needs no corner — it is shown whole."""
     return not register and not (kind == "frame" and view == "planet")
 
 
@@ -398,8 +398,8 @@ def schema(kind: str, view: str = "interior", kit: dict | None = None, register:
 
 def build(kind: str, slots: dict, view: str = "interior", kit: dict | None = None, register: str = "",
           take: int = 0) -> str:
-    """Облик угла, рамка, якорь класса, абзац хаба с подменой земных слов, стиль ещё раз.
-    Кириллицу, если хаб перенёс слово ГМа как есть, модель не читает — она уходит латиницей."""
+    """Corner look, frame border, class anchor, the hub paragraph with Earth words replaced, the style once more.
+    If the hub carried the GM's word over in Cyrillic, the model cannot read it, so it goes out transliterated."""
     key = view if kind == "frame" else kind
     planet = kind == "frame" and view == "planet"
     style = STYLE if planet else _look(kit, register or str(slots.get("corner", "")))
@@ -415,5 +415,5 @@ def build(kind: str, slots: dict, view: str = "interior", kit: dict | None = Non
 
 def prompts(kind: str, slots: dict, view: str = "interior", kit: dict | None = None,
             register: str = "") -> list[str]:
-    """Строка на каждый дубль хаба."""
+    """A line for each hub take."""
     return [build(kind, slots, view, kit, register, i) for i in range(len(slots.get("takes") or [{}]))]

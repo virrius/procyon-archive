@@ -4,7 +4,7 @@ import { api, store } from '../api'
 import { useApp } from '../ctx'
 import { Input, Modal } from '../ui'
 
-/** Смена своего пароля. forced — вход с паролем по умолчанию: старый не спрашиваем, закрыть нельзя. */
+/** Change own password. forced: login with the default password; the old one isn't asked, can't be closed. */
 export default function PasswordModal({ forced, onClose }: { forced?: boolean; onClose?: () => void }) {
   const { t } = useTranslation('auth')
   const { reload } = useApp()
@@ -18,7 +18,7 @@ export default function PasswordModal({ forced, onClose }: { forced?: boolean; o
     try {
       const r = await api.post('/api/auth/password', { old_password: f.old, new_password: f.next })
       store.token = r.token
-      // до смены пароля сервер отвечал 403 на всё, кроме /auth/me: страницы под воротами перечитываем
+      // before the password change the server answered 403 to everything except /auth/me: reload gated pages
       if (forced) { location.reload(); return }
       reload()
       onClose?.()
@@ -42,7 +42,7 @@ export default function PasswordModal({ forced, onClose }: { forced?: boolean; o
   )
 }
 
-/** Учётка с паролем по умолчанию дальше не пускается, пока не задаст свой. */
+/** An account with the default password isn't let further until it sets its own. */
 export function DefaultPasswordGate() {
   const { me } = useApp()
   return me?.password_default ? <PasswordModal forced /> : null

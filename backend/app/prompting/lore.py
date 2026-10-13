@@ -1,6 +1,6 @@
-"""Мир для рисующей стороны: подтипы кадра, регистры, якоря и подмена земных слов.
+"""The world for the drawing side: frame subtypes, registers, anchors and replacing Earth words.
 
-Сборка инструкции хабу и строки промпта — в prose.py.
+Assembling the hub instruction and the prompt line lives in prose.py.
 """
 from __future__ import annotations
 
@@ -8,20 +8,20 @@ import re
 
 from ..i18n import twin_lang
 
-# английский экземпляр: инструкции рисующей стороне и так английские, меняется
-# только то, что видит ГМ, и оговорка о русском описании
+# English instance: the instructions for the drawing side are in English anyway; only what the GM
+# sees changes, plus the note about the Russian description
 EN = twin_lang(__name__) == "en"
 
 KINDS = ("person", "frame", "action")
-# подтип кадра выбирает ГМ: раньше вид съёмки и масштаб классифицировала модель
-# и путалась — станция выходила кораблём, работа снаружи рисовалась внутри
+# the GM picks the frame subtype: earlier the model classified shot type and scale itself
+# and got confused — a station came out as a ship, work outside was drawn inside
 VIEWS = ("ship", "handheld", "structure", "planet", "landscape", "interior")
-# пункт «ничего из списка» в закрытом перечне якорей: якоря не даёт, а ГМ видит его в ките
+# the "none of the above" item in the closed list of anchors: gives no anchor, but the GM sees it in the kit
 OTHER = "other" if EN else "прочее"
 
-# ── подтипы кадра ────────────────────────────────────────────────────────────
-# Закон подтипа дописывается к инструкции кадра: камера и дистанция заданы выбором
-# ГМа, хабу остаётся содержание
+# ── frame subtypes ───────────────────────────────────────────────────────────
+# The subtype law is appended to the frame instruction: camera and distance are set by the GM's
+# choice, the hub is left with the content
 VIEW_LAWS = {
     "ship": ("The thing is a craft or a vehicle, whole in frame, three-quarter view. "
              "Open form with its stance and mass — what it rests on, what shape the "
@@ -68,21 +68,21 @@ if EN:
         "interior": "interior",
     }
 
-# ── визуальные регистры ──────────────────────────────────────────────────────
-# vocab уходит в инструкцию хабу; vocab_person — одежда людей угла, vocab_ship — облик корпуса
+# ── visual registers ─────────────────────────────────────────────────────────
+# vocab goes into the hub instruction; vocab_person — clothing of the corner's people, vocab_ship — hull look
 REGISTERS: dict[str, dict] = {
     "derelict": {
         "title": "заброшка",
-        # одежда регистра — только для живого субъекта: на вещи «швы и перчатки»
-        # уезжали в приметы предмета
+        # register clothing is only for a living subject: on things, "seams and gloves"
+        # drifted into the object's features
         "vocab_person": ("whoever the GM named came into this place from outside and is dressed "
                          "for it: a sealed working garment closed to the throat, patched at the "
                          "knees and elbows where it goes down on them, a harness of straps over "
                          "it carrying what must stay to hand, a lamp clipped at the chest, "
                          "breathing gear hanging at the neck, heavy gloves and boots, and the "
                          "dust of the place worked into every fold"),
-        # Не постапокалипсис и не руины Предтеч: это человеческое, брошенное
-        # недавно по меркам мира и с тех пор не чиненное
+        # Not post-apocalypse and not Precursor ruins: this is human-made, abandoned
+        # recently by the world's standards and never repaired since
         "vocab": ("nothing here has been kept up for decades and the frame says so first of "
                   "all: panels hang from a single remaining fastening, cable looms pulled out of "
                   "their trunking and left swinging, floors under fallen ceiling plate, debris and "
@@ -106,8 +106,8 @@ REGISTERS: dict[str, dict] = {
                       "since"),
     },
     "junk": {
-        # Бывший фронтир: латаное железо, лом и ржавчина ушли сюда, чтобы
-        # обычный рабочий космос перестал быть свалкой по умолчанию
+        # The former frontier: patched metal, scrap and rust moved here so that
+        # ordinary working space would stop being a junkyard by default
         "title": "свалка",
         "vocab_person": ("clothing here is coarse fabric and hide worn soft and layered one "
                          "over another: a long outer garment open down the front, a closed work "
@@ -129,8 +129,8 @@ REGISTERS: dict[str, dict] = {
                   "soft, layered, stitched and patched, cut for work and shaped by the body in it. "
                   "Light is harsh sun through drifting dust, or fires in drums, work lamps and the "
                   "spark of a cutting torch at night"),
-        # «stitched patches» модель рисует буквальными декоративными крестиками
-        # на ткани — комикс-заплатка, а не потёртость; «mended» того не делает
+        # the model draws "stitched patches" as literal decorative crosses
+        # on the fabric — a comic-book patch, not wear; "mended" does not do that
         "vocab_ship": ("whatever hull the GM named was built to be fixed by the people who fly "
                       "it, not by a yard: a manufactured frame under a skin of salvaged and "
                       "mismatched plate, patch welds and rivet rows where a hole was closed in a "
@@ -140,9 +140,9 @@ REGISTERS: dict[str, dict] = {
                       "anything else, and every mismatch marks a repair that kept it flying"),
     },
     "frontier": {
-        # Обжитой космос — люди здесь живут и сделали угол своим. Словарь —
-        # качества, а не опись: перечисленные шлюзы, лифты и трафареты хаб
-        # переносил в любое место, и кантина выходила ангаром
+        # Lived-in space — people live here and made the corner their own. The vocabulary is
+        # qualities, not an inventory: airlocks, lifts and stencils listed here were carried by the hub
+        # to any place, and a cantina came out as a hangar
         "title": "обжитой космос",
         "vocab_person": ("clothing here is practical working gear made to last: a short jacket "
                          "or vest over a work shirt, utility trousers tucked into boots, belts, "
@@ -178,8 +178,8 @@ REGISTERS: dict[str, dict] = {
                          "the cut: the garment falls to the calf or to the ankle, and a short jacket "
                          "worn over trousers is the two-piece of our own century, which this corner of "
                          "the world does not wear"),
-        # Регистр — качества, а не гардероб: перечисленная здесь одежда уезжала в
-        # слоты дословно, и любой персонаж хай-тека выходил техником в скафандре
+        # A register is qualities, not a wardrobe: clothing listed here went into
+        # the slots word for word, and every high-tech character came out as a technician in a spacesuit
         "vocab": ("things here are designed and machined rather than assembled and mended: "
                   "continuous curves and tapered masses, composite and light alloy in large "
                   "pieces with the joins hidden, seamless welds, surfaces finished so evenly that "
@@ -200,8 +200,8 @@ REGISTERS: dict[str, dict] = {
                       "hold, and its aggression is in the geometry, not in wear"),
     },
     "hegemony": {
-        # Власть Гегемонии и её домов: порядок, ранги, масштаб. Хай-тек — это
-        # гильдии и корпорации, светлое и вылизанное; здесь тёмное и давящее
+        # The power of the Hegemony and its houses: order, ranks, scale. High-tech is
+        # the Guilds and corporations, bright and polished; this one is dark and oppressive
         "title": "гегемония",
         "vocab_person": ("clothing here is the dress of rank: a dark tailored long coat closed "
                          "high with a stiff standing collar, rank marks of worked metal at the "
@@ -221,9 +221,9 @@ REGISTERS: dict[str, dict] = {
                       "red; vast, symmetrical and menacing"),
     },
     "luxe": {
-        # Богатая жизнь — не хай-тек: техники тут не больше, её просто прячут в
-        # обстановку. Роскошь далёкого будущего — простор, свет и форма, которую не
-        # сделать руками; тяжёлые ткани и золото давали ретро-салон
+        # High life is not high-tech: there is no more technology here, it is just hidden in
+        # the furnishings. Far-future luxury is space, light and a form that cannot
+        # be made by hand; heavy fabrics and gold gave a retro salon
         "title": "богатая жизнь",
         "vocab": ("everything here was chosen rather than issued, and wealth shows as space, light "
                   "and making no ordinary hand could manage: vast quiet rooms of sweeping sculptural "
@@ -253,11 +253,11 @@ REGISTERS: dict[str, dict] = {
                       "not a tool used"),
     },
     "precursor": {
-        # Руины и то, что человек с ними делает, — один регистр: обжитая раскопка
-        # и есть характерный кадр этого мира
+        # The ruins and what humans do with them are one register: a lived-in dig site
+        # is the characteristic frame of this world
         "title": "древние руины",
-        # Не морды пришельцев: обсидиан, врезанный узор и геометрия, которая не
-        # сходится. Вырезанное лицо чекпойнт рисует стереотипной башкой
+        # Not alien faces: obsidian, incised patterns and geometry that does not
+        # add up. The checkpoint draws a carved face as a stereotypical head
         "vocab": ("these are ruins of a civilisation that vanished long before humans, and the frame "
                   "says so first of all: colossal masses of seamless black glassy stone, too large "
                   "to have been lifted, meeting at angles that refuse to resolve, broken, toppled "
@@ -289,7 +289,7 @@ REGISTERS: dict[str, dict] = {
                       "other damage"),
     },
 }
-# подсказка ГМу у кнопки регистра в мастерской
+# hint for the GM at the register button in the studio
 REGISTER_HINTS = {
     "derelict": "брошено давно и не чинено: ржавчина и коррозия, облезшая краска, потёки, обломки, мёртвые пульты, свет только сквозь пролом",
     "junk": "лом и ржавчина: груды хлама, разобранные корпуса, лачуги и лотки из листа, старьёвщики",
@@ -317,42 +317,42 @@ if EN:
         "precursor": "ruins of an ancient non-human civilisation: colossal black stone, incised patterns, "
                      "collapse and drifted sand, human scaffolding on top",
     }
-# снятые регистры: «хай-тек» слился с чистым будущим, «мистика» — с руинами.
-# Старые снимки формы и киты кампаний присылают их до сих пор
-# снятые ключи ведут к тем регистрам, что их вобрали: «обжитая техника» ушла
-# во фронтир, «продвинутое будущее» — в хай-тек, «мистика» — в древние руины
+# retired registers: "high-tech" merged with the clean future, "mystic" with the ruins.
+# Old form snapshots and campaign kits still send them
+# retired keys lead to the registers that absorbed them: "lived-in tech" went
+# to the frontier, "advanced future" to high-tech, "mystic" to ancient ruins
 REGISTER_LEGACY = {"future": "frontier", "advanced": "hightech",
                    "mystic": "precursor"}
 
 
 def norm_register(register: str) -> str:
-    """Привести регистр к живому набору: снятые ключи ведут к тем, что их вобрали."""
+    """Bring a register to the live set: retired keys lead to the ones that absorbed them."""
     key = (register or "").strip()
     return REGISTER_LEGACY.get(key, key)
 
-# ── якоря кадра ──────────────────────────────────────────────────────────────
-# Закрытый список: хаб выбирает ключ, код ставит фразу класса первой — она уводит
-# модель от приора нашего мира. Ключ «прочее» якоря не даёт.
-# Якоря — по подтипу, который выбрал ГМ; у планеты якорь постоянный и
-# зашит в рамку, поэтому подтипа planet в словаре нет
+# ── frame anchors ────────────────────────────────────────────────────────────
+# A closed list: the hub picks a key, code puts the class phrase first — it pulls
+# the model away from the prior of our world. The OTHER key gives no anchor.
+# Anchors are by the subtype the GM picked; a planet has a fixed anchor
+# built into the frame, so there is no planet subtype in the dict
 FRAME_ANCHORS: dict[str, dict[str, str]] = {
     "ship": {
-        # «boxy industrial» раньше сидело прямо в якоре и держало любой борт
-        # промышленным — хай-тек-регистр (плавные обводы, бесшовные швы) стоит
-        # в хвосте строки и не отбивал его. Якорь называет только класс вещи;
-        # облик (промышленный / угловатый футуристичный) отдан регистру
-        # «on landing struts» модель почти всегда читает как ноги животного —
-        # тонкие гнутые конечности вместо механического шасси, на любом
-        # регистре. «Grounded on its extended landing gear» этого не провоцирует
-        # слово starship несёт свой силуэт — сигару с соплами, и он перебивает
-        # форму, названную в слотах: три разных описания давали один корабль
-        # (зонд probe_ship). Якорь называет класс словом spacecraft, а форму
-        # корпуса — прямо, чтобы слоты формы имели с чем спорить
+        # "boxy industrial" used to sit right in the anchor and kept any hull
+        # industrial — the high-tech register (smooth lines, seamless joins) sits
+        # at the tail of the line and did not override it. The anchor names only the class of the thing;
+        # the look (industrial / angular futuristic) is left to the register
+        # the model almost always reads "on landing struts" as animal legs —
+        # thin bent limbs instead of mechanical landing gear, on any
+        # register. "Grounded on its extended landing gear" does not provoke this
+        # the word starship carries its own silhouette — a cigar with nozzles, and it overrides
+        # the shape named in the slots: three different descriptions gave one ship
+        # (probe_ship). The anchor names the class with the word spacecraft, and the hull
+        # shape directly, so the shape slots have something to argue with
         "starship": "large boxy spacecraft hull, flat slab sides",
         "small craft": "small boxy spacecraft hull",
-        # рабочий борт в деле: «on landing struts» тянет кадр в стоянку и
-        # съедает буксируемый груз — якорь сам называет груз, а не полагается
-        # на marks/surround, которые проигрывают ему конкуренцию за внимание
+        # a working hull in action: "on landing struts" pulls the frame toward a parked ship and
+        # eats the towed cargo — the anchor names the cargo itself instead of relying
+        # on marks/surround, which lose the competition for attention to it
         "tug": "tug spacecraft hull with tow arm extended, towed container in frame",
         "ground vehicle": "ground vehicle with wheels or tracks",
         "walking machine": "walking machine on legs",
@@ -361,9 +361,9 @@ FRAME_ANCHORS: dict[str, dict[str, str]] = {
     "handheld": {
         "tool": "handheld tool",
         "weapon": "weapon",
-        # не «alien»: это слово рисует зелёную голову и глушит собственный
-        # анти-свод (условный негатив снимается словами позитива). Форму и
-        # чуждость вещи несут слова ГМа, якорь только уводит от безделушки
+        # not "alien": the word draws a green head and drowns out its own
+        # anti-clause (a negative phrased in the positive prompt is overridden by the positive words). The shape and
+        # strangeness of the thing come from the GM's words, the anchor only steers away from a trinket
         "relic artifact": "otherworldly artifact",
         "device": "utilitarian device",
         OTHER: "",
@@ -383,8 +383,8 @@ FRAME_ANCHORS: dict[str, dict[str, str]] = {
         OTHER: "",
     },
     "interior": {
-        # «bulkhead ribs and pressure doors» рисовали любой борт изнутри гаражом
-        # или станцией из рёбер и труб; облик отделки даёт регистр
+        # "bulkhead ribs and pressure doors" drew any hull interior as a garage
+        # or a station of ribs and pipes; the finish look comes from the register
         "ship interior": "starship interior of curved panelled walls with light set into them",
         "station interior": "orbital station interior",
         "colony interior": "habitation room",
@@ -397,11 +397,11 @@ FRAME_ANCHORS: dict[str, dict[str, str]] = {
     },
 }
 
-# ── подмена земных слов ─────────────────────────────────────────────────────
-# Слово, называющее назначение вещи, тянет её земной образ целиком: на «suit» Z-Image
-# рисует деловую двойку, на «bike» — колёса и руль, на «alien» — серую большеглазую
-# голову. Инструкция их запрещает, но хаб порой переносит слово ГМа дословно —
-# подмена страхует. Остальное держит правило инструкции, а не словарь
+# ── replacing Earth words ───────────────────────────────────────────────────
+# A word naming the purpose of a thing pulls in its whole Earth image: for "suit" Z-Image
+# draws a business suit, for "bike" wheels and handlebars, for "alien" a gray big-eyed
+# head. The instruction forbids them, but the hub sometimes carries the GM's word over verbatim —
+# the replacement is a safety net. The rest is held by the instruction rule, not the dict
 EARTH_WORDS_WEAR = {
     "space suit": "sealed pressure garment",
     "space suits": "sealed pressure garments",
@@ -456,7 +456,7 @@ EARTH_RE = {
 
 
 def swap_earth_words(text: str, kind: str = "person") -> str:
-    """Заменить земное слово описанием по целым словам, сохранив заглавную букву."""
+    """Replace an Earth word with a description, matching whole words and keeping the capital letter."""
     words = EARTH_WORDS.get(kind)
     if not words:
         return text

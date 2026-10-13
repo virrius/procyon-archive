@@ -1,4 +1,4 @@
-/* «Вырезки из правил»: страницы корника картинками, раздел — раскрывающаяся панель */
+/* Rules clippings: core rulebook pages as images, each section a collapsible panel */
 
 .rules-sec summary { cursor: pointer; }
 
@@ -30,7 +30,7 @@
 
 .rules-page span { padding: 0 0 4px; text-align: center; }
 
-/* залитая вырезка: картинка, подпись правится на месте, кнопка сноса */
+/* an uploaded clipping: image, inline-editable caption, delete button */
 .rules-cut { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .rules-cut .rules-page { flex: none; }
 .rules-cap { font-size: 12px; padding: 2px 6px; }
@@ -43,7 +43,7 @@
   .rules-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
 
-/* раздел правится на месте: название, заметка и текстовая вырезка */
+/* a section is edited inline: title, note and text clipping */
 .rules-title { font-size: 13px; font-weight: 600; max-width: 320px; }
 .rules-note { font-size: 12px; }
 
@@ -56,6 +56,6 @@
 }
 .rules-text:hover { border-color: var(--dim2); }
 
-/* приход из поиска: найденный раздел и вырезка — янтарным кантом */
+/* arriving from search: the found section and clipping get an amber border */
 .rules-sec.lit { border-color: var(--amber-dim); }
 .rules-cut.lit .rules-page, .rules-cut.lit .rules-text { border-color: var(--amber); }

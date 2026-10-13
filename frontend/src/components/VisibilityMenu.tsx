@@ -1,4 +1,4 @@
-/* Единое меню «кто это видит» — одинаковое во всех панелях. */
+/* Unified "who can see this" menu, the same in all panels. */
 
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -46,7 +46,7 @@ export function VisibilityMenu({
   const to = visibleTo || []
   const people = ((campaign?.members || []) as Dict[]).filter(m => m.role !== 'gm')
   const known = (s: string) => ALL_SCOPES.includes(s)
-  // у ГМа «только мне» читалось бы как «только ГМу»
+  // for the GM "only me" would read as "GM only"
   const wordOf = (s: string) => (isGM && s === 'owner' ? t('vis.owner_gm') : known(s) ? t(`vis.${s}`) : s)
   const noteOf = (s: string) => (isGM && s === 'owner' ? t('vis.owner_gm_note') : known(s) ? t(`vis.${s}_note`) : '')
   const word = wordOf(cur)

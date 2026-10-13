@@ -10,7 +10,7 @@ import {
 export type Pick = 'avatar' | 'media' | 'scene' | 'replace'
 export type Change = { prompt: string; slots: Dict | null; hand: boolean; prompts?: string[] }
 
-/** Часть промпта: правка сразу уходит в сборку */
+/** Prompt part: an edit goes straight into the build */
 function Part({ label, take, value, onChange }: {
   label: string; take?: number; value: string; onChange: (v: string) => void
 }) {
@@ -43,7 +43,7 @@ export default function AttemptCard({
   const { t } = useTranslation('studio')
   const p = att.params || {}
   const kind = p.kind as PromptKind | undefined
-  // хаб пишет части, код склеивает строку; без частей (правка области, строка по API) правится строка
+  // the hub writes parts, the code joins the line; without parts (area edit, line via API) the line itself is edited
   const parted = !!p.slots && 'takes' in p.slots
   const inpaint = att.kind === 'inpaint'
   const [tab, setTab] = useState<'parts' | 'line'>(parted ? 'parts' : 'line')
@@ -61,7 +61,7 @@ export default function AttemptCard({
   const changed = !!over && (over.prompt !== att.prompt || over.hand !== !!p.hand)
   const cyr = CYRILLIC.test(prompt)
 
-  // правка плашки пересобирает строку кодом, без хаба
+  // editing a chip rebuilds the line in code, without the hub
   const rebuild = async (s: Dict, wardrobeKey = '') => {
     try {
       const r = await api.post(`${c()}/image-prompt/rebuild`, {
@@ -103,7 +103,7 @@ export default function AttemptCard({
     if (p.register) chips.push(registerTitle(p.register))
     chips.push(aspectBySize(att.width, att.height))
   }
-  // регистр не выбран — угол мира со своей палитрой выбрал хаб
+  // no register chosen: the hub picked a corner of the world with its own palette
   const corner = !inpaint && !p.register && p.slots?.corner ? registerTitle(p.slots.corner) : ''
   const left = att.status === 'ready' && att.expires_at ? hoursLeft(att.expires_at) : null
   const canRemember = kind === 'person' && !!slots

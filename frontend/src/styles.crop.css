@@ -1,4 +1,4 @@
-/* Кадрирование превью: рамка поверх картинки, вне рамки — притушено */
+/* Preview cropping: a frame over the image, everything outside it dimmed */
 
 .crop-wrap {
   position: relative;
@@ -9,7 +9,7 @@
   border: 1px solid var(--line2);
   background: var(--surface2);
   cursor: crosshair;
-  /* иначе на телефоне тяга рамки утаскивает страницу */
+  /* otherwise on phones dragging the frame drags the page */
   touch-action: none;
   overflow: hidden;
 }

@@ -10,8 +10,8 @@ import { IconButton, IconEdit, IconPlus, IconTrash } from './icons'
 import VisibilityMenu from './VisibilityMenu'
 import '../styles.entity.css'
 
-// подпись направленная: её читают от лица from_id, поэтому в форме показываем,
-// кто в этой фразе подлежащее, а кто дополнение
+// the label is directional: it reads from from_id's side, so the form shows
+// who is the subject of the phrase and who is the object
 function LabelField({ value, onChange, subject, object }: {
   value: string; onChange: (v: string) => void; subject?: string; object?: string
 }) {
@@ -32,7 +32,7 @@ function LabelField({ value, onChange, subject, object }: {
 
 const quoted = (s?: string) => (s ? i18n.t('entity:quoted', { s }) : '')
 
-/** Фраза связи от лица карточки, на которой мы стоим. */
+/** Link phrase from the side of the card we're on. */
 function phrase(r: Dict, selfName?: string): string {
   const label = String(r.label || '').trim()
   if (!label) return ''
@@ -43,12 +43,12 @@ function phrase(r: Dict, selfName?: string): string {
 
 export default function LinksPanel({ entityId, kind, name, skip }: {
   entityId: string; kind?: string; name?: string
-  /** связи с этими карточками уже показаны рядом (знакомые бланка) */
+  /** links to these cards are already shown nearby (the sheet's friends) */
   skip?: string[]
 }) {
   const { L, isGM } = useApp()
   const { t } = useTranslation('entity')
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // showcase for the table: read only
   const [rows, loading, reload, err] = useAsync<Dict[]>(
     () => api.get(`${c()}/entities/${entityId}/links`), [entityId])
   const [adding, setAdding] = useState(false)
@@ -56,7 +56,7 @@ export default function LinksPanel({ entityId, kind, name, skip }: {
   const [oops, setOops] = useState('')
   const [visNow, setVisNow] = useState<Dict>({})
 
-  // ответ сервера — источник правды; локальный слепок нужен лишь на время запроса
+  // the server reply is the source of truth; the local snapshot is only needed during the request
   useEffect(() => { setVisNow(m => (Object.keys(m).length ? {} : m)) }, [rows])
 
   const list = (rows || []).filter(r => r && r.peer && !skip?.includes(r.peer.id))
@@ -159,7 +159,7 @@ export default function LinksPanel({ entityId, kind, name, skip }: {
   )
 }
 
-/* --- новая связь ----------------------------------------------------------- */
+/* --- new link -------------------------------------------------------------- */
 
 function AddLink({ entityId, name, onClose, onDone }: {
   entityId: string; name?: string; onClose: () => void; onDone: () => void
@@ -211,7 +211,7 @@ function AddLink({ entityId, name, onClose, onDone }: {
   )
 }
 
-/* --- правка связи ---------------------------------------------------------- */
+/* --- link edit ------------------------------------------------------------- */
 
 function EditLink({ link, name, onClose, onDone }: {
   link: Dict; name?: string; onClose: () => void; onDone: () => void

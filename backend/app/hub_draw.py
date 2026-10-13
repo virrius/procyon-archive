@@ -1,12 +1,13 @@
-"""Рисование по API. Два протокола: openai — стандартный POST /images/generations, по запросу
-на кандидата; async — асинхронный Image API (POST /images/generate → задача →
-опрос → картинка бинарём), кандидатов пачки ставим разом и ждём все.
+"""Drawing over an API. Two protocols: openai — the standard POST /images/generations, one request
+per candidate; async — an asynchronous Image API (POST /images/generate → task →
+polling → binary image), where all candidates of a batch are queued at once and awaited together.
 
-Правка области (edit) есть только у стандартного протокола: POST /images/edits с картинкой и
-маской, где прозрачное — перерисовать.
+Area editing (edit) exists only in the standard protocol: POST /images/edits with an image and
+a mask, where transparent means repaint.
 
-Админ протокол не выбирает: сначала пробуем стандартный, а если сервис такого адреса не знает
-(404/405 на первом же запросе) — асинхронный. Что сервис понял, запоминаем по его адресу."""
+The admin doesn't choose the protocol: we try the standard one first, and if the service doesn't
+know that URL (404/405 on the very first request), the async one. What the service understood is
+remembered by its URL."""
 from __future__ import annotations
 
 import base64
@@ -22,9 +23,9 @@ from .i18n import ctr
 
 log = logging.getLogger("hub_draw")
 
-# пропорции, которые принимает асинхронный API: остальные из его доков отвечают 422
+# aspect ratios the async API accepts: the others from its docs return 422
 RATIOS = ("1:1", "9:16", "16:9")
-# размеры gpt-image; сервис, который их не знает, рисует без size
+# gpt-image sizes; a service that doesn't know them draws without size
 OPENAI_SIZES = ("1024x1024", "1024x1536", "1536x1024")
 POLL_EVERY = 2
 TIMEOUT = 15 * 60
@@ -35,16 +36,16 @@ class HubDrawError(Exception):
 
 
 class NoEndpoint(HubDrawError):
-    """Сервис не знает стандартного адреса рисования — пробуем другой протокол."""
+    """The service doesn't know the standard drawing URL — try the other protocol."""
 
 
 class NoEditing(HubDrawError):
-    """Сервис не умеет править область."""
+    """The service can't edit an area."""
 
 
-# адрес сервиса → протокол, на который он ответил
+# service URL → the protocol it answered to
 PROTOCOLS: dict[str, str] = {}
-# адреса, где правка области ответила 404/405
+# URLs where area editing returned 404/405
 NO_EDITS: set[str] = set()
 
 
@@ -59,13 +60,13 @@ def nearest_size(width: int, height: int) -> str:
 
 
 def can_edit(base_url: str) -> bool:
-    """Умеет ли настроенный сервис править область: только стандартный протокол."""
+    """Whether the configured service can edit an area: only the standard protocol can."""
     base = base_url.rstrip("/")
     return base not in NO_EDITS and PROTOCOLS.get(base, "openai") == "openai"
 
 
 def brief(exc: Exception) -> str:
-    """Причина сбоя без адреса сервиса: текст видят и игроки."""
+    """Failure reason without the service URL: players see this text too."""
     if isinstance(exc, httpx.HTTPStatusError):
         return f"HTTP {exc.response.status_code}"
     return type(exc).__name__
@@ -87,9 +88,9 @@ def _detail(r: httpx.Response) -> str:
 
 def draw(base_url: str, api_key: str, model: str, prompts: list[str],
          width: int, height: int, seed: int, alive=lambda: True, on_image=lambda png: None) -> int:
-    """По PNG на строку prompts, подогнанному под width×height кадрированием; каждый
-    готовый сразу уходит в on_image. alive — жива ли заявка: отменённую не дожидаемся.
-    Возвращает, сколько картинок отдано."""
+    """One PNG per line of prompts, fitted to width×height by cropping; each finished
+    one goes straight to on_image. alive tells whether the job is still alive: a cancelled one
+    is not awaited. Returns how many images were delivered."""
     base = base_url.rstrip("/")
     args = (base, api_key, model, prompts, width, height, seed, alive, on_image)
     if PROTOCOLS.get(base, "openai") == "openai":
@@ -143,8 +144,8 @@ def _openai_image(r: httpx.Response) -> bytes:
 def edit(base_url: str, api_key: str, model: str, prompt: str,
          source_png: bytes, mask_png: bytes, count: int,
          alive=lambda: True, on_image=lambda png: None) -> int:
-    """count вариантов правки области source_png по маске (белое — перерисовать), каждый
-    подогнан под размер исходника и сразу уходит в on_image. Возвращает, сколько отдано."""
+    """count variants of editing an area of source_png by mask (white means repaint), each
+    fitted to the source size and sent straight to on_image. Returns how many were delivered."""
     base = base_url.rstrip("/")
     if not can_edit(base):
         raise NoEditing(ctr("content.edit_unsupported"))
@@ -180,9 +181,9 @@ def edit(base_url: str, api_key: str, model: str, prompt: str,
 
 
 def openai_mask(mask_png: bytes) -> bytes:
-    """Маска стандартного API — RGBA, где прозрачное перерисовать; у нас — белое.
-    Размытую кромку модель читает как разрешение рисовать за границей, поэтому
-    альфа жёсткая; мягкий стык даёт композит по исходной маске на нашей стороне."""
+    """The standard API mask is RGBA where transparent means repaint; ours is white.
+    The model reads a blurred edge as permission to draw past the border, so
+    alpha is hard; a soft seam comes from compositing with the original mask on our side."""
     with Image.open(io.BytesIO(mask_png)) as mi:
         alpha = mi.convert("L").point(lambda p: 0 if p >= 128 else 255)
         out = Image.new("RGBA", mi.size, (0, 0, 0, 255))
@@ -224,7 +225,7 @@ def draw_async(base: str, api_key: str, model: str, prompts: list[str],
                     continue
                 try:
                     st = http.get(f"{base}/images/tasks/{uid}")
-                    # свежую задачу сервис какое-то время не находит
+                    # the service may not find a fresh task for a while
                     if st.status_code == 404:
                         continue
                     st.raise_for_status()

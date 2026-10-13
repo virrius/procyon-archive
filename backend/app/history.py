@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 from .models import CampaignMember, Event, now
 from .visibility import Viewer
 
-SNAP_LEN = 4000  # снимок текста в журнале: полотна режем, лента не архив
+SNAP_LEN = 4000  # text snapshot in the log: long texts are cut, the feed is not an archive
 TITLE_LEN = 200
 DETAIL_LEN = 400
-# автосохранение бланка: правки одного автора подряд по одной карточке — одна строка ленты
+# sheet autosave: consecutive edits by one author to one entry make one feed row
 MERGE_WINDOW = timedelta(minutes=10)
 
 
@@ -28,7 +28,7 @@ def snapshot(data: dict | None) -> dict:
 
 
 def changes(obj: Any, patch: dict, keys: tuple[str, ...] | None = None) -> tuple[dict, dict]:
-    """Что реально меняется. Вызывать до применения патча."""
+    """What actually changes. Call before applying the patch."""
     before: dict = {}
     after: dict = {}
     for key, val in patch.items():
@@ -43,7 +43,7 @@ def changes(obj: Any, patch: dict, keys: tuple[str, ...] | None = None) -> tuple
 
 
 def changes_map(old: dict, new: dict) -> tuple[dict, dict]:
-    """То же, что changes, но для двух словарей (fields сущности, тело формы)."""
+    """Same as changes, but for two dicts (entity fields, form body)."""
     before = {k: old.get(k) for k, val in new.items() if old.get(k) != val}
     after = {k: val for k, val in new.items() if old.get(k) != val}
     return snapshot(before), snapshot(after)
@@ -76,8 +76,8 @@ def log(
     after: dict | None = None,
     merge: bool = False,
 ) -> None:
-    """Строка журнала. Коммитит вызывающий — событие идёт той же транзакцией.
-    `merge` — дописать в прошлую строку той же карточки, если она того же автора и свежая."""
+    """A log row. The caller commits — the event goes in the same transaction.
+    `merge` — append to the previous row of the same entry if it is by the same author and recent."""
     if merge and target_id and _merged(db, v, source, action, target_id, title, before, after):
         return
     db.add(

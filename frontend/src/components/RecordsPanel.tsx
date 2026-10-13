@@ -25,14 +25,14 @@ function fmtWhen(s?: string | null): string {
 export function RecordsPanel({ entityType, entityId, title, readOnly, onOpen }:
   {
     entityType: string; entityId: string; title?: string
-    /** только чтение — быстрый просмотр карточки */
+    /** read only: a quick view of the card */
     readOnly?: boolean
-    /** связь записи открывается на месте, без ухода со страницы */
+    /** a record's link opens in place, without leaving the page */
     onOpen?: (id: string, name: string) => void
   }) {
   const { campaign, isGM, meta, memberName, L } = useApp()
   const { t } = useTranslation('entity')
-  const readonly = isPublicView() || !!readOnly  // витрина для стола — только чтение
+  const readonly = isPublicView() || !!readOnly  // showcase for the table: read only
   const [rows, loading, reload, loadErr] = useAsync<Dict[]>(
     () => api.get(`${c()}/blocks/${entityType}/${entityId}`), [entityType, entityId])
   const [form, setForm] = useState<Dict | null>(null)
@@ -40,7 +40,7 @@ export function RecordsPanel({ entityType, entityId, title, readOnly, onOpen }:
   const [err, setErr] = useState('')
   const [visNow, setVisNow] = useState<Dict>({})
 
-  // ответ сервера — источник правды; локальный слепок нужен лишь на время запроса
+  // the server reply is the source of truth; the local snapshot is only needed during the request
   useEffect(() => { setVisNow(m => (Object.keys(m).length ? {} : m)) }, [rows])
 
   const myId = campaign?.my_member_id
@@ -244,10 +244,10 @@ export function RecordsPanel({ entityType, entityId, title, readOnly, onOpen }:
 
 export default RecordsPanel
 
-/* --- выбор связанных сущностей ------------------------------------------------ */
+/* --- picking linked entities -------------------------------------------------- */
 
-/** Связи записи: выбранное — метками, новое ищет тот же пикер, что и везде. Имена уже
-    связанных карточек приходят вместе с записью. */
+/** Record links: picks as chips, new ones are found by the same picker as everywhere. Names of
+    already linked cards come with the record. */
 function LinkPick({ value, names, onChange }: {
   value: string[]
   names: Dict

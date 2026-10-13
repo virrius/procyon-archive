@@ -1,13 +1,13 @@
-"""Гонзо-депеши: событие сектора глазами одного из журналистов кампании.
+"""Gonzo dispatches: a sector event through the eyes of one of the campaign's journalists.
 
-Правду задаёт ГМ — его слова и привязанные записи (фракции, люди, места,
-счётчики); модель пишет три депеши о том, как это событие видно миру.
-Журналистов три, манера у всех гонзо, а сторона своя: анархист,
-прокорпоративная, провластный — ГМ выбирает, чьими глазами. Подбор промпта —
-reports/gonzo_prompt.html. На каждый вызов модели — один шаблон в ките кампании
-(news_templates): инструкция, строка «=== ВХОД ===» (у английского экземпляра —
-«=== INPUT ===»), вход; данные вставляет код
-на место {{…}}. Журналисты, углы и наборы откликов — тоже в ките.
+The GM sets the truth — their words and the linked entries (factions, people, places,
+clocks); the model writes three dispatches on how the world sees this event.
+There are three journalists, all gonzo in manner but each with their own side: an anarchist,
+a pro-corporate one, a pro-government one — the GM picks whose eyes to use. Prompt tuning:
+reports/gonzo_prompt.html. Each model call has one template in the campaign kit
+(news_templates): the instruction, the input marker line (its Russian form for the Russian instance,
+"=== INPUT ===" for the English one), the input; code inserts the data
+in place of {{…}}. Journalists, angles and comment sets are in the kit too.
 """
 from __future__ import annotations
 
@@ -17,12 +17,12 @@ from collections import Counter
 
 from ..i18n import twin_lang
 
-# английский экземпляр: инструкции, вход модели и всё, что из кита видит ГМ, — по-английски
+# English instance: the instructions, the model input and everything from the kit the GM sees are in English
 EN = twin_lang(__name__) == "en"
 
 ROMAN = {"1": "I", "2": "II", "3": "III", "4": "IV", "5": "V"}
 
-# отклики жителей сети — общие для депеш и для откликов к уже выпущенной новости
+# comments from net locals — shared by dispatches and by comments on an already aired story
 COMMENTS_RULE = (
     "Жители — разные люди сектора, каждого новость задевает по-своему, и откликаются они со своей колокольни. "
     "who — кто он: занятие и где живёт или работает, из открытых мест сектора; "
@@ -49,7 +49,7 @@ if EN:
         "The voice of the story's author and their side is absent from the posts."
     )
 
-# манеру каждого отклика раздаёт код: предоставленные сами себе, жители пишут одинаково
+# code hands out the manner of each comment: left to themselves, the locals all write the same way
 COMMENT_MANNERS = {
     "мем": "смеётся над новостью, как в сети смеются над абсурдом",
     "согласие": "соглашается с тем, что сказано в новости, и добавляет, почему — со своей колокольни",
@@ -59,7 +59,7 @@ COMMENT_MANNERS = {
     "эмоции": "делится тем, что чувствует, — как новость бьёт по нему лично",
     "постирония": "пишет с постиронией: всерьёз он или в шутку, не разобрать",
 }
-# длину и письмо тоже раздаёт код: без них аналитик и наёмник писали одинаково грамотные две фразы
+# code hands out length and writing too: without them analyst and mercenary wrote the same two literate sentences
 COMMENT_LENGTHS = {
     "слова": "пара-тройка слов",
     "фраза": "одна фраза",
@@ -100,7 +100,7 @@ if EN:
     }
 COMMENTS_N = 5
 
-# подписи, из которых код собирает вход модели, и ошибки шаблонов
+# labels from which code assembles the model input, and template errors
 WORDS = {
     "manner": "манера: ",
     "length": "длина: ",
@@ -147,7 +147,7 @@ def _texts(kit: dict | None, section: str, default: dict) -> list[str]:
 
 
 def _deal(pool: list[str], rng: random.Random) -> list[str]:
-    """COMMENTS_N значений: без повторов, пока хватает, а когда их меньше — каждое хотя бы раз."""
+    """COMMENTS_N values: no repeats while there are enough, and when there are fewer, each at least once."""
     if not pool:
         return [""] * COMMENTS_N
     if len(pool) >= COMMENTS_N:
@@ -158,7 +158,7 @@ def _deal(pool: list[str], rng: random.Random) -> list[str]:
 
 
 def pick_manners(kit: dict | None = None, rng: random.Random | None = None) -> list[tuple[str, str, str]]:
-    """Пять откликов: тексты манеры, длины и письма из наборов кита."""
+    """Five comments: manner, length and writing texts from the kit sets."""
     rng = rng or random
     return list(zip(_deal(_texts(kit, "comment_manners", COMMENT_MANNERS), rng),
                     _deal(_texts(kit, "comment_lengths", COMMENT_LENGTHS), rng),
@@ -174,7 +174,7 @@ def manners_block(manners: list[tuple[str, str, str]]) -> str:
         f"{i}. {line(*m)}" for i, m in enumerate(manners, 1))
 
 
-# ники жителей собирает код: модель выводила их из занятия и места («Vos_Lawyer»)
+# code builds the locals' handles: the model derived them from occupation and place ("Vos_Lawyer")
 _ONSET = ("b", "br", "d", "dr", "f", "g", "gl", "h", "k", "kr", "l", "m", "n", "p", "r", "s", "sh", "t", "tr",
           "v", "x", "z", "zh")
 _VOWEL = ("a", "e", "i", "o", "u", "a", "o", "y", "ei")
@@ -271,16 +271,16 @@ Each report opens its own way, and the take does not retell the report.
 The answer is one object holding, in order, lead and dispatches; lead is only its beginning.""",
     }
 
-# Строка входа и имена вставок — на языке экземпляра, но код понимает оба набора:
-# шаблон в базе мог быть написан на любом из языков
+# The input line and slot names are in the instance language, but code understands both sets:
+# a template in the database may have been written in either language
 INPUT_MARKS = ("=== ВХОД ===", "=== INPUT ===")
 INPUT_MARK = INPUT_MARKS[1] if EN else INPUT_MARKS[0]
 _INPUT_LINE = re.compile(r"^[ \t]*(?:" + "|".join(map(re.escape, INPUT_MARKS)) + r")[ \t]*$", re.MULTILINE)
 _SLOT = re.compile(r"\{\{\s*([^{}]+?)\s*\}\}")
-# русское имя вставки → английское
+# Russian slot name → English
 SLOT_NAMES = {"персона": "persona", "слова_ведущего": "gm_words", "причастные": "involved", "замыслы": "goals",
               "углы": "angles", "места": "places", "новость": "story", "отклики": "comments"}
-# задание сразу за ролью, персона журналиста — перед манерой
+# the task right after the role, the journalist's persona before the manner
 NEWS_TEMPLATES = {
     "dispatch": "\n\n".join([
         DISPATCH["role"], DISPATCH["task"], "{{персона}}", DISPATCH["manner"], DISPATCH["world"], DISPATCH["law"],
@@ -316,7 +316,7 @@ if EN:
             "{{comments}}", "{{places}}",
         ]),
     }
-# что код подставляет на место вставки; пустая вставка выпадает вместе с отступом перед ней
+# what code inserts in place of a slot; an empty slot drops out along with the indent before it
 NEWS_SLOTS = {
     "dispatch": {
         "персона": "кто такой выбранный журналист — его персона из «Журналистов»",
@@ -352,13 +352,13 @@ if EN:
 
 
 def _known(slots: dict) -> set[str]:
-    """Вставки шаблона под обоими именами."""
+    """Template slots under both names."""
     back = {en: ru for ru, en in SLOT_NAMES.items()}
     return set(slots) | {SLOT_NAMES.get(s) or back.get(s, s) for s in slots}
 
 
 def check_templates(templates: dict) -> list[str]:
-    """Ошибки шаблонов: нет строки входа или вставка, которую код не знает."""
+    """Template errors: no input line, or a slot code does not know."""
     errors = []
     for name, slots in NEWS_SLOTS.items():
         text = str(templates.get(name) or "")
@@ -386,7 +386,7 @@ def _render(text: str, values: dict) -> str:
 
 
 def _aliased(values: dict) -> dict:
-    """Значения под обоими именами вставок."""
+    """Values under both slot names."""
     out = dict(values)
     for ru, en in SLOT_NAMES.items():
         if en in values:
@@ -397,12 +397,12 @@ def _aliased(values: dict) -> dict:
 
 
 def fill(template: str, values: dict) -> tuple[str, str]:
-    """Шаблон → (инструкция, вход) с подставленными данными."""
+    """Template → (instruction, input) with the data filled in."""
     system, user = _INPUT_LINE.split(template, maxsplit=1)
     values = _aliased(values)
     return _render(system, values), _render(user, values)
 
-# подпись клеит код: позывной модель переводила («Лазарь», «Лазарус»)
+# code attaches the signature: the model translated the call sign into Russian name forms
 DISPATCH_JOURNALISTS = {
     "lazarus": {
         "title": "Lazarus — анархист",
@@ -451,7 +451,7 @@ Rapturous, grandiloquent and self-mocking; he describes horrors like a bulletin 
         },
     }
 
-# угол депеши раздаёт код: модель, предоставленная самой себе, трижды идёт в бар
+# code hands out the dispatch angle: left to itself, the model goes to the bar three times
 DISPATCH_LENSES = {
     "на месте": "ты оказался там, где это происходило, в тот самый момент",
     "изнутри": "ты добрался до того, кто в этом участвовал, и он проговорился",
@@ -476,8 +476,8 @@ COMMENT_ITEMS = {
     "maxItems": COMMENTS_N,
     "items": {
         "type": "object",
-        # stake — чем новость задевает жителя: без него реплики выходили
-        # пустыми шутками и выдумками о самом событии
+        # stake — how the story affects the local: without it the lines came out
+        # as empty jokes and inventions about the event itself
         "properties": {k: {"type": "string"} for k in ("who", "stake", "speech", "text")},
         "required": ["who", "stake", "speech", "text"],
         "additionalProperties": False,
@@ -491,8 +491,8 @@ DISPATCH_SCHEMA = {
         "schema": {
             "type": "object",
             "properties": {
-                # суть новости — одна на все три и пишется до них: внутри депеши
-                # угол уводил от того, что случилось, и читатель новости не понимал
+                # the story's gist is one for all three and is written before them: inside a dispatch
+                # the angle drifted away from what happened, and the reader did not understand the story
                 "lead": {"type": "string"},
                 "dispatches": {
                     "type": "array",
@@ -502,12 +502,12 @@ DISPATCH_SCHEMA = {
                         "type": "object",
                         "properties": {
                             "angle": {"type": "string"},
-                            # начало репортажа — полем схемы: просьбу «начни с находки»
-                            # модель не держала и открывала депешу собой на месте
+                            # the start of the report is a schema field: the request "start with the find"
+                            # was not kept by the model, which opened the dispatch with itself at the scene
                             "find": {"type": "string"},
                             "headline": {"type": "string"},
-                            # абзацы — полями схемы: просьба «разбей на абзацы»
-                            # текстом инструкции держится хуже, чем форма ответа
+                            # paragraphs are schema fields: the request "split into paragraphs"
+                            # holds worse as instruction text than as the answer's form
                             "report": {"type": "string"},
                             "take": {"type": "string"},
                         },
@@ -523,28 +523,28 @@ DISPATCH_SCHEMA = {
     },
 }
 
-# ниже 0.8 три депеши начинают кончаться одной и той же фразой
+# below 0.8 the three dispatches start ending with the same sentence
 TEMPERATURE = 0.8
 MAX_TOKENS = 5000
 COMMENTS_MAX_TOKENS = 2500
 DISPATCH_TIMEOUT = 300
-# gemma, решив, что ответ кончился, сыплет переносами до max_tokens: обрываем на пустой строке и повторяем
+# gemma, once it decides the answer is over, spews line breaks up to max_tokens: cut at an empty line and retry
 DISPATCH_STOP = ["\n\n"]
-# английский ответ ставит пустую строку между полями JSON — там обрываем только на сыпи переносов
+# an English answer puts an empty line between JSON fields — there we cut only on a burst of line breaks
 if EN:
     DISPATCH_STOP = ["\n\n\n"]
 DISPATCH_ATTEMPTS = 3
 
 
 def journalists_of(kit: dict) -> dict:
-    """Журналисты кампании: ключ → {title, persona, signature}. Пустая персона — не журналист."""
+    """Campaign journalists: key → {title, persona, signature}. An empty persona means not a journalist."""
     staff = kit.get("dispatch_journalists")
     staff = DISPATCH_JOURNALISTS if staff is None else staff
     return {k: v for k, v in staff.items() if isinstance(v, dict) and str(v.get("persona") or "").strip()}
 
 
 def pick_journalist(kit: dict, key: str = "") -> str:
-    """Чьими глазами пишем: названный ГМом, иначе первый по списку кита."""
+    """Whose eyes we write through: the one named by the GM, otherwise the first in the kit list."""
     staff = journalists_of(kit)
     if key:
         return key if key in staff else ""
@@ -552,7 +552,7 @@ def pick_journalist(kit: dict, key: str = "") -> str:
 
 
 def byline(journalist: dict, key: str) -> str:
-    """Позывной для ленты новостей: подпись или название до тире."""
+    """Call sign for the news feed: the signature or the title up to the dash."""
     for text in (journalist.get("signature"), journalist.get("title")):
         head = re.split(r"\s+[—–-]\s+", str(text or "").strip(), maxsplit=1)[0].strip()
         if head:
@@ -566,7 +566,7 @@ def lenses_of(kit: dict) -> dict:
 
 
 def pick_lenses(kit: dict, wanted: list[str] | None = None, rng: random.Random | None = None) -> list[str]:
-    """Три разных угла: названные ГМом — как есть, недостающие добираются случайно."""
+    """Three different angles: those named by the GM as is, the missing ones are filled in at random."""
     pool = list(lenses_of(kit))
     chosen = [k for k in (wanted or []) if k in pool][:3]
     rest = [k for k in pool if k not in chosen]
@@ -591,11 +591,11 @@ if EN:
 
 
 def portrait(entity, blocks: list) -> str:
-    """Что миру известно о причастном: сводка, внешность и открытые столу блоки."""
+    """What the world knows about someone involved: summary, appearance and blocks open to the table."""
     rank = ROMAN.get(str((entity.fields or {}).get("rank") or ""), "")
     head = f"{entity.name} — {WHO.get(entity.kind, entity.kind)}" + (WORDS["rank"] + rank if rank else "")
     known = [entity.summary or ""]
-    # у персонажа внешность пишет игрок, у остальных — ГМ
+    # a character's appearance is written by the player, everyone else's by the GM
     looks = (entity.fields or {}).get("look" if entity.kind == "character" else "gm_appearance")
     if looks:
         known.append(f"{WORDS['looks']}{looks}")
@@ -605,7 +605,7 @@ def portrait(entity, blocks: list) -> str:
 
 
 def goal_line(clock, owner_name: str = "") -> str:
-    """Замысел со счётчика. Состояние словами: числа модель вклеивает в депешу."""
+    """A plan from a clock. The state in words: numbers get pasted into the dispatch by the model."""
     goal = clock.name.strip() + (f" — {clock.description.strip()}" if (clock.description or "").strip() else "")
     if clock.segments and clock.filled >= clock.segments:
         state = WORDS["done"]
@@ -622,11 +622,11 @@ def places_block(locations: list | None) -> str:
 
 def dispatch_prompt(kit: dict, journalist: str, *, gm_text: str, entities: list[tuple], goals: list[tuple],
                     locations: list | None = None, lenses: list[str]) -> tuple[str, str]:
-    """Инструкция и вход депеш: слова ГМа первыми, остальное — общим контекстом.
+    """Instruction and input for dispatches: the GM's words first, the rest as shared context.
 
-    entities — пары (запись, открытые блоки), goals — пары (счётчик, чей замысел).
-    Закулисье сюда не попадает вовсе: запрет «ты этого не знаешь» модель не
-    держит, и досье из книги утекало в депеши почти целиком.
+    entities — pairs (entry, open blocks), goals — pairs (clock, whose plan).
+    Backstage material does not get here at all: the model does not keep a "you don't know this"
+    ban, and the rulebook dossier leaked into the dispatches almost whole.
     """
     texts = lenses_of(kit)
     return fill(news_template(kit, "dispatch"), {
@@ -644,13 +644,13 @@ _MARKUP = re.compile(r"(\*{1,2}|_{2})(?=\S)(.+?)(?<=\S)\1")
 
 
 def clean(text: str) -> str:
-    """Депеша — простой текст: курсив звёздочками модель изредка всё же ставит."""
+    """A dispatch is plain text: the model still occasionally adds asterisk italics."""
     return _MARKUP.sub(r"\2", str(text or "")).strip()
 
 
 def sign(text: str, signature: str) -> str:
-    """Депеша с подписью журналиста. Если модель всё же подписалась сама, её подпись
-    срезается: в своей она путает позывной."""
+    """A dispatch with the journalist's signature. If the model signed it anyway, its signature
+    is cut off: in its own one it gets the call sign wrong."""
     body = clean(text)
     signature = str(signature or "").strip()
     if not signature:
@@ -689,7 +689,7 @@ COMMENTS_SCHEMA = {
 
 def comments_prompt(kit: dict, *, headline: str = "", lead: str = "", body: str = "", locations: list | None = None,
                     manners: list[tuple[str, str, str]] | None = None) -> tuple[str, str]:
-    """Инструкция и вход откликов жителей к новости."""
+    """Instruction and input for the locals' comments on a story."""
     return fill(news_template(kit, "comments"), {
         "story": "\n\n".join(x.strip() for x in (headline, lead, body) if (x or "").strip()),
         "comments": manners_block(manners or pick_manners(kit)),
@@ -698,7 +698,7 @@ def comments_prompt(kit: dict, *, headline: str = "", lead: str = "", body: str 
 
 
 def clean_comments(raw: list | None, rng: random.Random | None = None) -> list[dict]:
-    """Отклики для ленты: ник — случайный, stake и speech — подсказки модели, наружу не идут."""
+    """Comments for the feed: the handle is random, stake and speech are hints for the model and are not sent out."""
     return [{"handle": random_nick(rng), "who": clean(x.get("who")), "text": clean(x.get("text"))}
             for x in raw or [] if isinstance(x, dict) and clean(x.get("text"))]
 
@@ -708,10 +708,10 @@ def _period(text: str) -> str:
 
 
 def compose(lead: str, items: list[dict], signature: str) -> list[str]:
-    """Тексты депеш набора: находка и репортаж, вывод, подпись журналиста. Суть — отдельным полем.
+    """Dispatch texts of the set: find and report, conclusion, journalist's signature. The gist is a separate field.
 
-    Фраза вывода, общая для двух депеш, выпадает из всех; фраза сути или вывода,
-    повторённая в репортаже, и повтор внутри репортажа — из репортажа.
+    A conclusion sentence shared by two dispatches is dropped from all of them; a gist or conclusion sentence
+    repeated in the report, and a repeat inside the report, are dropped from the report.
     """
     lead = clean(lead)
     said = {_norm(x) for x in _sentences(lead)}

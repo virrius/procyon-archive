@@ -31,8 +31,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const { i18n } = useTranslation()
   useEffect(() => { api.get('/api/meta').then(setMeta).catch(() => {}) }, [i18n.language])
-  // токен и кампания живут в localStorage: без подписки на переход провайдер не
-  // перерисуется после входа или смены кампании и останется со старыми
+  // token and campaign live in localStorage: without subscribing to navigation the provider
+  // won't re-render after login or a campaign switch and will keep the old ones
   useLocation()
   const token = store.token
   const campaignId = store.campaign
@@ -48,7 +48,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     api.get(c()).then(r => live && setLoaded(r)).catch((e: any) => {
       if (!live) return
       setLoaded(null)
-      // кампанию удалили или участника убрали: сперва снимаем «глазами игрока», потом саму кампанию
+      // the campaign was deleted or the member removed: drop “player's eyes” mode first, then the campaign itself
       if (e?.status === 403 || e?.status === 404) {
         if (store.viewAs) store.viewAs = null
         else store.campaign = null
@@ -82,8 +82,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 }
 
-/** Загрузка с обновлением. reload() тихий: старые данные остаются на экране,
- *  loading не поднимается — обновление не мигает списком. reload(false) — с индикатором. */
+/** Load with refresh. reload() is silent: old data stays on screen,
+ *  loading isn't raised — refresh doesn't flash the list. reload(false) shows the indicator. */
 export function useAsync<T>(fn: () => Promise<T>, deps: any[] = []):
   [T | null, boolean, (silent?: boolean) => void, string] {
   const [data, setData] = useState<T | null>(null)

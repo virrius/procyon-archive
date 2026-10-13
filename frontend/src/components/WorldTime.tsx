@@ -5,11 +5,11 @@ import { useApp } from '../ctx'
 import { IconCalendar } from './icons'
 import { useLayer } from '../layers'
 
-// рульник: «На дворе 1261 год от основания Галактической Гегемонии»; календаря нет — год из 52 недель
+// rulebook: "It is the year 1261 since the founding of the Galactic Hegemony"; no calendar, a year of 52 weeks
 const YEAR0 = 1261
 const WEEK = 7
 const YEAR = 52 * WEEK
-// игроки видят сдвиг ГМа без перезагрузки
+// players see the GM's shift without reloading
 const POLL_MS = 30000
 const STEPS = [{ days: 1, label: 'time.step_day' }, { days: WEEK, label: 'time.step_week' }]
 
@@ -24,7 +24,7 @@ export function parseStamp(s: string): number | null {
   return (y - YEAR0) * YEAR + (w - 1) * WEEK + d - 1
 }
 
-/** Игровое время в шапке: год.неделя.день. ГМ сдвигает его по клику, игроки только видят. */
+/** In-game time in the header: year.week.day. The GM shifts it on click, players only see it. */
 export function WorldTime({ canShift }: { canShift: boolean }) {
   const { campaign } = useApp()
   const { t } = useTranslation('map')

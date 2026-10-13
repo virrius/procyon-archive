@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --no-audit --no-fund
 
-# dev-сервер: исходники приходят монтированием, в образе только зависимости
+# dev server: sources are mounted, the image holds only dependencies
 FROM deps AS dev
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 

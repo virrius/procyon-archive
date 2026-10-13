@@ -1,5 +1,5 @@
-"""Воркер картинок Procyon Archive: берёт заявки с сервера, рисует в локальном ComfyUI
-(Z-Image-Turbo), отдаёт кандидатов. Заявки — txt2img и inpaint. Запуск — README.md."""
+"""Procyon Archive image worker: takes jobs from the server, draws in a local ComfyUI
+(Z-Image-Turbo), uploads candidates. Jobs are txt2img and inpaint. How to run: README.md."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ HERE = Path(__file__).resolve().parent
 
 
 def load_env() -> None:
-    """KEY=VALUE из .env рядом с воркером или уровнем выше; окружение важнее."""
+    """KEY=VALUE from a .env next to the worker or one level up; the environment takes precedence."""
     for f in (HERE / ".env", HERE.parent / ".env"):
         if f.is_file():
             for line in f.read_text(encoding="utf-8").splitlines():
@@ -38,10 +38,10 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 POLL_SECONDS = 4
 HEARTBEAT_SECONDS = 10
 CANDIDATES = 4
-# пачка PNG по домашнему аплинку — минуты
+# a batch of PNGs over a home uplink takes minutes
 UPLOAD_TIMEOUT = 600
 UPLOAD_TRIES = 3
-# второй проход inpaint сводит предмет с кадром; выше 0.4 меняет сам предмет
+# the second inpaint pass blends the object into the frame; above 0.4 it changes the object itself
 HARMONIZE_DENOISE = 0.35
 
 ZIMAGE_UNET = "z_image_turbo_int8_convrot.safetensors"
@@ -53,13 +53,13 @@ ZIMAGE_SHIFT = 3.0
 SHOWN_MODEL = f"{ZIMAGE_UNET} ({ZIMAGE_STEPS} steps, cfg 1.0)"
 SHOWN_INPAINT = f"{ZIMAGE_UNET} + differential diffusion"
 
-# что рисуем сейчас: пишет основной цикл, читает heartbeat
+# what is being drawn now: written by the main loop, read by heartbeat
 CURRENT = {"job_id": None, "progress": None}
-SAVE = "out"  # узел SaveImage, по нему результат ищется в history
+SAVE = "out"  # SaveImage node, used to find the result in history
 
 
 def heartbeat_loop() -> None:
-    """Отдельный тред: пока основной цикл ждёт ComfyUI, плашка в интерфейсе должна гореть."""
+    """Separate thread: while the main loop waits for ComfyUI, the status badge in the UI must stay lit."""
     while True:
         try:
             requests.get(f"{COMFY}/system_stats", timeout=2).raise_for_status()
@@ -73,13 +73,13 @@ def heartbeat_loop() -> None:
                       "inpaint_checkpoint": SHOWN_INPAINT,
                       "job_id": CURRENT["job_id"], "progress": CURRENT["progress"]},
             )
-        except Exception:  # noqa: BLE001, S110 — сервер недоступен, плашка погаснет сама
+        except Exception:  # noqa: BLE001, S110 — server unreachable, the badge will go out on its own
             pass
         time.sleep(HEARTBEAT_SECONDS)
 
 
 def zimage_base(prompt: str) -> dict:
-    """Загрузчики, промпт и сдвиг расписания. При cfg 1.0 негатив не считается — он нулевой."""
+    """Loaders, prompt and schedule shift. At cfg 1.0 the negative is not computed — it is empty."""
     return {
         "1": {"class_type": "UNETLoader",
               "inputs": {"unet_name": ZIMAGE_UNET, "weight_dtype": "default"}},
@@ -114,9 +114,9 @@ def workflow(prompt: str, width: int, height: int, seed: int) -> dict:
 
 
 def inpaint_workflow(prompt: str, source: str, mask: str, seed: int, denoise: float) -> dict:
-    """Перерисовать область. Стык держит DifferentialDiffusion по размытой маске с сервера;
-    composite с исходником — чтобы VAE не сдвинул цвет вне маски; второй проход на слабом
-    denoise сводит предмет с окружением."""
+    """Redraw an area. The seam is held by DifferentialDiffusion over the blurred mask from the server;
+    composite with the source so the VAE does not shift color outside the mask; a second pass at low
+    denoise blends the object with its surroundings."""
     g = zimage_base(prompt)
     g.update({
         "dd": {"class_type": "DifferentialDiffusion", "inputs": {"model": ["ms", 0]}},
@@ -142,7 +142,7 @@ def inpaint_workflow(prompt: str, source: str, mask: str, seed: int, denoise: fl
 
 
 def comfy_upload(name: str, data: bytes) -> str:
-    """Во входную папку ComfyUI. Имя постоянное — перезапись, а не новый файл на заявку."""
+    """Into the ComfyUI input folder. The name is fixed — overwrite instead of a new file per job."""
     r = requests.post(
         f"{COMFY}/upload/image", timeout=60,
         files={"image": (name, io.BytesIO(data), "image/png")},
@@ -153,7 +153,7 @@ def comfy_upload(name: str, data: bytes) -> str:
 
 
 class JobGone(Exception):
-    """Заявку отменили или вернули в очередь — пачку бросаем, /fail не шлём."""
+    """The job was cancelled or returned to the queue — drop the batch, do not send /fail."""
 
 
 def job_state(job_id: str) -> str:
@@ -162,7 +162,7 @@ def job_state(job_id: str) -> str:
                          headers=HEADERS, timeout=10)
         r.raise_for_status()
         return r.json().get("status") or "gone"
-    except Exception:  # noqa: BLE001 — сеть моргнула: считаем живой
+    except Exception:  # noqa: BLE001 — network blip: assume it is alive
         return "claimed"
 
 
@@ -183,7 +183,7 @@ def send_candidates(job_id: str, files: list) -> None:
             if code in (404, 409):
                 raise JobGone(f"server says {code} on upload") from exc
             last = exc
-        except Exception as exc:  # noqa: BLE001 — сеть, а не заявка: ещё раз
+        except Exception as exc:  # noqa: BLE001 — a network issue, not the job: try again
             last = exc
         print(f"[job {job_id}] upload attempt {attempt + 1} failed: {last}")
         time.sleep(5)
@@ -201,7 +201,7 @@ def run_graph(graph: dict) -> bytes:
     r = requests.post(f"{COMFY}/prompt", json={"prompt": graph}, timeout=30)
     r.raise_for_status()
     prompt_id = r.json()["prompt_id"]
-    # до 15 минут на кандидата, считая очередь ComfyUI
+    # up to 15 minutes per candidate, counting the ComfyUI queue
     for _ in range(900):
         entry = requests.get(f"{COMFY}/history/{prompt_id}", timeout=15).json().get(prompt_id)
         if entry:
@@ -223,7 +223,7 @@ def run_graph(graph: dict) -> bytes:
 def handle_job(job: dict) -> None:
     job_id = job["id"]
     prompt = job["prompt"]
-    # строка на кандидата собирается на сервере
+    # the line for each candidate is assembled on the server
     variants = job.get("prompts") or [prompt]
     width, height = job["width"], job["height"]
     inpaint = job.get("kind") == "inpaint"
@@ -239,7 +239,7 @@ def handle_job(job: dict) -> None:
             source = comfy_upload("pa_source.png", fetch_blob(job_id, "source"))
             mask = comfy_upload("pa_mask.png", fetch_blob(job_id, "mask"))
         render_error = None
-        fixed = int(job.get("seed") or 0)  # 0 — случайный
+        fixed = int(job.get("seed") or 0)  # 0 — random
         for i in range(count):
             if i and job_state(job_id) != "claimed":
                 raise JobGone("canceled on server mid-batch")
@@ -249,7 +249,7 @@ def handle_job(job: dict) -> None:
                      else workflow(variants[i % len(variants)], width, height, seed))
             try:
                 data = run_graph(graph)
-            except Exception as exc:  # noqa: BLE001 — нарисованное отдаём неполной пачкой
+            except Exception as exc:  # noqa: BLE001 — upload what was drawn as an incomplete batch
                 render_error = exc
                 print(f"[job {job_id}] candidate {i + 1}/{count} failed: {exc}")
                 break
@@ -261,21 +261,21 @@ def handle_job(job: dict) -> None:
         print(f"[job {job_id}] {len(files)} candidates uploaded{tail}")
     except JobGone as gone:
         print(f"[job {job_id}] dropped: {gone}")
-    except Exception as exc:  # noqa: BLE001 — репортим и едем дальше
+    except Exception as exc:  # noqa: BLE001 — report and move on
         print(f"[job {job_id}] FAILED: {exc}")
         try:
             requests.post(
                 f"{SERVER}/api/worker/image-jobs/{job_id}/fail",
                 headers=HEADERS, data={"error": str(exc)[:2000]}, timeout=30,
             )
-        except Exception as tell:  # noqa: BLE001 — заявку подберёт серверный сборщик висяков
+        except Exception as tell:  # noqa: BLE001 — the server's stuck-job sweeper will pick the job up
             print(f"[job {job_id}] fail report lost: {tell}")
     finally:
         CURRENT.update(job_id=None, progress=None)
 
 
 def start_comfy(folder: str) -> subprocess.Popen:
-    """Поднять ComfyUI из его папки (venv, .venv или portable) и дождаться ответа."""
+    """Start ComfyUI from its folder (venv, .venv or portable) and wait for it to respond."""
     root = Path(folder).resolve()
     python = next((p for p in (
         root / "venv" / "Scripts" / "python.exe", root / "venv" / "bin" / "python",
@@ -283,7 +283,7 @@ def start_comfy(folder: str) -> subprocess.Popen:
         root.parent / "python_embeded" / "python.exe",
     ) if p.is_file()), Path(sys.executable))
     port = COMFY.rsplit(":", 1)[-1].split("/")[0]
-    log = open(HERE / "comfyui.log", "w", encoding="utf-8")  # noqa: SIM115 — живёт до выхода
+    log = open(HERE / "comfyui.log", "w", encoding="utf-8")  # noqa: SIM115 — lives until exit
     proc = subprocess.Popen([str(python), "main.py", "--listen", "127.0.0.1", "--port", port],
                             cwd=root, stdout=log, stderr=subprocess.STDOUT)
     print(f"starting ComfyUI from {root} (log: worker/comfyui.log)")
@@ -308,7 +308,7 @@ def main() -> None:
     try:
         while True:
             try:
-                # caps: заявки inpaint не уйдут воркеру старой версии
+                # caps: inpaint jobs will not go to an older worker version
                 r = requests.get(f"{SERVER}/api/worker/image-jobs/next",
                                  params={"caps": "inpaint"}, headers=HEADERS, timeout=15)
                 r.raise_for_status()

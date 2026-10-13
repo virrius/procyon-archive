@@ -8,7 +8,7 @@ import { type Ctx } from './lanes'
 import { ACT_MAX, type Attr, rating, talentKey, talentOf } from './model'
 import '../../styles.dossier.css'
 
-/* значения бланка в обоих языках → ключи формулировок досье */
+/* sheet values in both languages → dossier wording keys */
 const TRAITS: Dict = {
   'Визионер': 'haunted', 'Маньяк': 'obsessed', 'Параноик': 'paranoid', 'Псих': 'unstable',
   'Раздолбай': 'reckless', 'Садист': 'vicious', 'Социопат': 'cold', 'Тряпка': 'soft',
@@ -23,12 +23,12 @@ const VICES: Dict = {
 }
 const HEAT_HIGH = 5
 
-/** Ключ строки → число для выбора дознавателя: одно дело — один подписант. */
-// листов в описи имущества по уровню жизни, разброс ±25%
+/** Line key → number for picking the investigator: one case, one signer. */
+// pages in the asset inventory by lifestyle, spread ±25%
 const ASSET_PAGES = [2, 5, 18, 184]
 const pick = (id: string, n: number) => [...id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % n
 
-/** k разных номеров из n — по ключу дела. */
+/** k distinct numbers out of n, by case key. */
 const several = (key: string, n: number, k: number) => {
   const out: number[] = []
   for (let i = 0; out.length < Math.min(k, n); i++) {
@@ -38,16 +38,16 @@ const several = (key: string, n: number, k: number) => {
   return out
 }
 
-/** Вставки вразброс между элементами списка (не перед первым) — места по ключу дела. */
+/** Insertions scattered between list items (not before the first), positions by case key. */
 function scatter<T>(key: string, base: T[], extra: T[]): T[] {
   const out = [...base]
   extra.forEach((x, j) => out.splice(1 + pick(key + j, out.length), 0, x))
   return out
 }
 
-/** «Досье» — личное дело из реестра: только то, что держится дольше сцены. Анкета, резюме
- *  дознавателя, описание, психопрофиль, розыск экипажа, подготовка, связи, организации, приложения.
- *  Скрытое от игрока — вымарано. */
+/** "Dossier": a personal file from the registry, only what lasts longer than a scene. Form, investigator's
+ *  assessment, description, psych profile, crew warrants, training, ties, organizations, annexes.
+ *  What's hidden from the player is redacted. */
 export function DossierFile({ c, id, name, alias, photo, texts, status, rev, npcs }: {
   c: Ctx; id: string; name: string; alias: string; photo: ReactNode; texts: ReactNode
   status: string; rev: string; npcs: Dict[]
@@ -73,7 +73,7 @@ export function DossierFile({ c, id, name, alias, photo, texts, status, rev, npc
   const book = c.book
   const role = !c.locked('playbook') && book ? t(`dos.role.${c.pb}`, { defaultValue: book.label.toLowerCase() }) : ''
 
-  // розыск экипажа по системам: уровень и подозрения
+  // crew wanted level by system: level and suspicions
   const heat = dict(ship?.fields?.heat)
   const systems = Object.keys(heat)
     .map(s => ({ s, wanted: Math.min(4, num(heat[s]?.wanted)), hot: num(heat[s]?.heat) >= HEAT_HIGH }))
@@ -100,7 +100,7 @@ export function DossierFile({ c, id, name, alias, photo, texts, status, rev, npc
   const ties = c.locked('contacts') ? null : readContacts(f.contacts)
     .map(r => ({ ...r, name: String(npcs.find(n => n.id === r.entity_id)?.name || '') }))
     .filter(r => r.name)
-  // отношение организаций Гегемонии и синдикатов к экипажу: союз и вражда от ±2; отметки сделанных для них дел
+  // Hegemony and syndicate stance toward the crew: alliance and hostility from ±2; marks for jobs done for them
   const orgs = factions
     .filter(e => ['hegemony', 'criminal'].includes(String(e.fields?.category || '')))
     .map(e => ({
@@ -126,7 +126,7 @@ export function DossierFile({ c, id, name, alias, photo, texts, status, rev, npc
   const unique = f.xeno
     ? { name: t('unique.xeno'), text: String(f.xeno_text || '') }
     : book && { name: book.unique.name, text: t(`dos.mark.${c.pb}.unique`, { defaultValue: book.unique.text || '' }) }
-  // наблюдение дознавателя вместо правил; своей способности ГМа в словаре нет — её текст
+  // investigator's observation instead of the rules; a GM's custom ability isn't in the dictionary, so its own text
   const mark = (key: string, text: string) => t(`dos.mark.${key.replace(':', '.')}`, { defaultValue: text })
 
   const names: string[] = t('dos.investigators', { returnObjects: true }) as any
@@ -139,7 +139,7 @@ export function DossierFile({ c, id, name, alias, photo, texts, status, rev, npc
   const heritage = c.locked('heritage') ? '' : asList(f.heritage).join(', ')
   const past = c.locked('past') ? '' : asList(f.past).join(', ')
   const sys = (x: { s: string; wanted: number }) => `${x.s} — ${t(`dos.wanted.${x.wanted}`)}`
-  // организации в резюме: три самые сильные по рангу, война и «свои» — даже вне тройки
+  // organizations in the summary: top three by rank, plus war and allies even outside the top three
   const brief = (label: string, xs: typeof orgs, fmt: (x: (typeof orgs)[number]) => string, sep: string) => {
     const ranked = [...xs].sort((a, b) => b.rank - a.rank || Math.abs(b.stance) - Math.abs(a.stance) || b.deeds - a.deeds)
     const shown = [...ranked.slice(0, 3), ...ranked.slice(3).filter(x => Math.abs(x.stance) === 3)]
@@ -361,20 +361,20 @@ export function DossierFile({ c, id, name, alias, photo, texts, status, rev, npc
   )
 }
 
-/** Вымаранное: плашка вместо скрытого от игрока или засекреченного. */
+/** Redacted: a bar in place of what's hidden from the player or classified. */
 function Red({ w }: { w: number }) {
   const { t } = useTranslation('char')
   return <span className="cs-red" role="img" aria-label={t('dos.redacted')} title={t('dos.redacted')} style={{ width: `${w}ch` }} />
 }
 
-/** Текст с вымаранными местами: каждая серия «█» — плашка той же длины. */
+/** Text with redacted spots: each run of "█" becomes a bar of the same length. */
 function Redacted({ text }: { text: string }) {
   return <>{text.split(/(█+[.,;:»”)]?)/).map((p, i) => (p.startsWith('█')
     ? <span key={i} className="cs-red-g"><Red w={p.replace(/[^█]/g, '').length} />{p.replace(/█+/, '')}</span>
     : p))}</>
 }
 
-/** Заметка к анкете: длинная сворачивается до трёх строк. */
+/** Form note: a long one collapses to three lines. */
 function IdNote({ text }: { text: string }) {
   const { t } = useTranslation('sheet')
   const box = useRef<HTMLDivElement>(null)

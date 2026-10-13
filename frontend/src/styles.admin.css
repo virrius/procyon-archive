@@ -1,4 +1,4 @@
-/* Admin space: настройки сервера вне кампании. */
+/* Admin space: server settings outside any campaign. */
 
 .adm-mark {
   font-size: 10.5px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase;
@@ -18,7 +18,7 @@
 
 .adm-lang { max-width: 320px; }
 
-/* --- хаб: подключение слева, модели справа --- */
+/* --- hub: connection on the left, models on the right --- */
 .adm-hub-grid { display: grid; grid-template-columns: minmax(0, 620px) minmax(0, 420px); gap: 18px; align-items: start; }
 .adm-hub {
   display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px;
@@ -47,7 +47,7 @@
 .adm-model-tag { margin-left: auto; font-size: 11px; color: var(--dim2); white-space: nowrap; }
 .adm-model.on .adm-model-tag { color: var(--amber-dim); }
 
-/* --- документы на всю ширину --- */
+/* --- full-width documents --- */
 .adm-docs { background: var(--surface); border: 1px solid var(--line); }
 .adm-doc-tabs {
   display: flex; flex-wrap: wrap; gap: 4px 22px; align-items: center;
@@ -100,7 +100,7 @@ button.adm-toc.input { font-family: var(--util); color: var(--steel); }
 .adm-ins.off { opacity: .45; }
 .adm-ins.bad, .adm-ins.bad code { color: #e08a70; font-family: var(--util); font-size: 11.5px; padding: 4px 8px; }
 
-/* --- короткие наборы карточками --- */
+/* --- short sets as cards --- */
 .adm-sec-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
 .adm-sec-hd h3 { border: none; margin: 0; padding-bottom: 6px; }
 .adm-sec-hd button { margin-bottom: 4px; }
@@ -130,7 +130,7 @@ textarea.adm-auto { resize: none; overflow: hidden; min-height: 0; font-size: 13
 .adm-pair-k { font-family: var(--util); font-size: 11.5px; color: var(--dim); padding-top: 8px; overflow-wrap: anywhere; }
 .adm-pair.off .adm-pair-k { opacity: .5; }
 
-/* --- одна панель сохранения на раздел --- */
+/* --- one save bar per section --- */
 .adm-savebar {
   position: sticky; bottom: 0; z-index: 5;
   display: flex; align-items: center; gap: 14px;
@@ -144,7 +144,7 @@ button.adm-unsaved-item {
   text-transform: none; letter-spacing: .02em; font-weight: 500; font-size: 11.5px; padding: 2px 8px;
 }
 
-/* --- кампании --- */
+/* --- campaigns --- */
 .adm-camps table { width: 100%; }
 .adm-camps-pad { padding: 12px 14px; }
 .adm-camp-acts { justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
@@ -153,7 +153,7 @@ button.adm-unsaved-item {
 .adm-import { border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .adm-import .row { gap: 12px; align-items: center; flex-wrap: wrap; }
 
-/* ход выгрузки и загрузки */
+/* export and import progress */
 .xfer { margin-top: 8px; max-width: 520px; font-size: 12px; }
 .xfer-line { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 4px; color: var(--dim); }
 .xfer-track { height: 4px; background: var(--surface3); position: relative; overflow: hidden; }

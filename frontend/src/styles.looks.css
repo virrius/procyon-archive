@@ -1,4 +1,4 @@
-/* образы кампании в GM space: кадр слева, одежда справа */
+/* campaign looks in GM space: image on the left, outfit on the right */
 .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 14px; }
 .look-card { display: grid; grid-template-columns: 170px 1fr; background: var(--surface); border: 1px solid var(--line); }
 .look-shot { background: var(--surface2); display: flex; align-items: center; justify-content: center; min-height: 230px; }

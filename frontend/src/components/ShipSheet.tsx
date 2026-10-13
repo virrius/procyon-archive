@@ -37,7 +37,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
   const [name, setName] = useState<string>(ship?.name || '')
   const [savedName, setSavedName] = useState<string>(ship?.name || '')
   const [shot, setShot] = useState<string>(ship?.image_url || '')
-  // поштучно закрытое ГМом: из него бланку нужен только снимок
+  // hidden by the GM piece by piece: the sheet only needs the picture from it
   const [hid, setHid] = useState<string[]>(ship?.hidden_fields || [])
   const [phase, setPhase] = useState<'' | 'busy' | 'ok'>('')
   const [err, setErr] = useState('')
@@ -86,8 +86,8 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
     }
   }, [shipId, name, savedName, saved, t])
 
-  /* Правки уходят сами: пауза в наборе, выход из режима правки, уход со страницы.
-     Отдельной кнопки «сохранить» на бланке нет — как в остальных формах. */
+  /* Edits go out on their own: a typing pause, leaving edit mode, leaving the page.
+     There's no separate "save" button on the sheet, as in other forms. */
   const saveRef = useRef(save)
   saveRef.current = save
   const draft = useRef(fields)
@@ -113,7 +113,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
   if (loading) return <div className="dim">{t('common:loading')}</div>
   if (!ship) return <div className="empty">{t('no_ship')}</div>
 
-  // правки живут в черновике, на сервер уходят автосейвом
+  // edits live in the draft and go to the server via autosave
   const put = (next: Dict) => { setFields(next); setPhase(''); setErr('') }
   const putSoon = put
 
@@ -136,7 +136,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
     put({ ...fields, [k]: cur.includes(key) ? cur.filter(x => x !== key) : [...cur, key] })
   }
 
-  /* --- справочник и шаблон этого корабля ------------------------------------ */
+  /* --- reference and template of this ship ---------------------------------- */
 
   const types = dict(meta?.ship_types)
   const typeKeys = Object.keys(types)
@@ -175,7 +175,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
   const orphanTalents = talents.filter(k => !talentItems.some(x => x.key === k))
   const orphanUpgrades = upgrades.filter(k => !upgradeItems.some(x => x.key === k))
 
-  /* --- знакомые экипажа: только карточки NPC -------------------------------- */
+  /* --- crew contacts: NPC cards only ---------------------------------------- */
 
   const contactRows = readContacts(fields.contacts)
   const npcById: Dict = {}
@@ -200,7 +200,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
       await api.post(`${c()}/links`, {
         from_id: shipId, to_id: npcId, label: t('contact_link'), visibility: 'crew',
       })
-    } catch { /* связь необязательна: знакомый уже записан в бланк */ }
+    } catch { /* the link is optional: the contact is already written into the sheet */ }
   }
   const addContact = async (npc: Dict) => {
     setAdding(false)
@@ -210,7 +210,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
     await linkNpc(npc.id)
   }
 
-  /* --- прочее -------------------------------------------------------------- */
+  /* --- other --------------------------------------------------------------- */
 
   const saveShot = async (url: string) => {
     setPhase('busy'); setErr('')
@@ -220,7 +220,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
     } catch (e: any) { setErr(e?.message || t('err.image')); setPhase('') }
   }
   const shotHidden = hid.includes('image_url')
-  // закрытый снимок игрок не меняет: сервер такую правку не примет
+  // a player can't change a hidden picture: the server won't accept such an edit
   const shotLocked = !isGM && shotHidden
   const hideShot = async (hide: boolean) => {
     const next = [...hid.filter(k => k !== 'image_url'), ...(hide ? ['image_url'] : [])]
@@ -243,13 +243,13 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
     } catch (e: any) { setErr(e?.message || t('err.upload')); setPhase('') }
   }
 
-  // подпись берём из бланка типа, но своя строка её перекрывает; пустая — возврат к книжной
+  // the label comes from the type's sheet, but an own line overrides it; empty restores the book one
   const ownBlurb = String(fields.blurb ?? '')
   const blurb = ownBlurb.trim() || String(type.blurb || '')
 
   return (
     <div className={`ss${editing ? ' edit' : ''}`}>
-      {/* Ctrl+V на бланке — вставленный снимок становится снимком корабля */}
+      {/* Ctrl+V on the sheet: the pasted picture becomes the ship picture */}
       <PasteImage enabled={editing && !shotLocked} onFiles={files => void upload(files[0])}
         question={shot ? t('paste.replace') : t('paste.set')} />
       <div className="ss-tools">
@@ -273,8 +273,8 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
         </div>
       )}
 
-      {/* шапка: название с подписью, справа на том же уровне реноме.
-          «класс корабля» и «цвет / вид» с бланка убраны — их держат тип и снимок */}
+      {/* header: the name with its tagline, reputation on the right at the same level.
+          "ship class" and "color / look" were removed from the sheet: the type and the picture cover them */}
       <header className="ss-head">
         <div className="ss-name">
           {editing
@@ -291,7 +291,7 @@ export function ShipSheet({ ship, loading }: { ship: Dict | null; loading?: bool
           onChange={v => setSoon('reputation', v)} />
       </header>
 
-      {/* снимок и состояние экипажа: ранг с опытом, размер, ресурсы */}
+      {/* picture and crew state: crew quality with xp, size, resources */}
       <div className="ss-top">
         <section className="ss-p ss-shot imgbox">
           {shot

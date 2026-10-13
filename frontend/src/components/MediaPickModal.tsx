@@ -5,9 +5,9 @@ import { useAsync } from '../ctx'
 import { Modal } from '../ui'
 import '../styles.gallery.css'
 
-/** Выбор портрета из уже сохранённых медиа кампании: свои вложения карточки идут
- *  первыми, дальше вся остальная библиотека — один и тот же файл может быть
- *  портретом нескольких карточек, ничего не копируется. */
+/** Portrait pick from the campaign's saved media: the card's own attachments go
+ *  first, then the rest of the library; the same file can be
+ *  the portrait of several cards, nothing is copied. */
 export function MediaPickModal({ entityId, current, onClose, onPick }: {
   entityId: string
   current?: string
@@ -16,7 +16,7 @@ export function MediaPickModal({ entityId, current, onClose, onPick }: {
 }) {
   const { t } = useTranslation('media')
   const [rows, loading, , err] = useAsync<Dict[]>(() => api.get(`${c()}/attachments`), [entityId])
-  // файлы карточек подписываем именем карточки: имена файлов генерации ничего не говорят
+  // card files are labeled with the card name: generated file names say nothing
   const [cards] = useAsync<Dict[]>(() => api.get(`${c()}/entities?limit=2000`), [])
   const [busy, setBusy] = useState(false)
   const [oops, setOops] = useState('')
@@ -25,8 +25,8 @@ export function MediaPickModal({ entityId, current, onClose, onPick }: {
   const names = new Map<string, string>((cards || []).map(e => [String(e.id), String(e.name || '')]))
   const images = (rows || []).filter(a => String(a.mime || '').startsWith('image/'))
   const mine = images.filter(a => a.target_type === 'entity' && a.target_id === entityId)
-  // служебные файлы (маски и исходники правки, кандидаты, развороты книги, картинки досок)
-  // портретом не бывают — в библиотеке только три источника
+  // service files (edit masks and sources, candidates, rulebook spreads, board images)
+  // are never portraits: the library has only three sources
   const groups: [string, Dict[]][] = [
     ['frames', images.filter(a => a.target_type === 'scene_frame')],
     ['other_entries', images.filter(a => a.target_type === 'entity' && a.target_id !== entityId)],
@@ -48,7 +48,7 @@ export function MediaPickModal({ entityId, current, onClose, onPick }: {
     }
   }
 
-  // у своих вложений имя карточки повторялось бы на каждой плитке — там только подпись
+  // on own attachments the card name would repeat on every tile, so only the caption there
   const grid = (list: Dict[], own = false) => (
     <div className="att-grid">
       {list.map(a => {

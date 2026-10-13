@@ -15,7 +15,7 @@ GM_PREFIX = "gm_"
 
 SCOPES = ("crew", "selected", "owner", "gm")
 
-# «только мне» — у кого: у карточек и счётчиков это owner_member_id, у прочих строк — автор
+# whose "only me" it is: for entities and clocks it is owner_member_id, for other rows the author
 AUTHOR_COLUMNS = {
     "attachments": "uploaded_by",
     "content_blocks": "created_by",
@@ -26,7 +26,7 @@ AUTHOR_COLUMNS = {
 
 
 def owner_attr(model_or_row: Any) -> Any:
-    """Колонка владельца у модели или её значение у строки; None — владельца нет."""
+    """Owner column of a model, or its value on a row; None means there is no owner."""
     name = AUTHOR_COLUMNS.get(getattr(model_or_row, "__tablename__", ""), "owner_member_id")
     return getattr(model_or_row, name, None)
 
@@ -68,7 +68,7 @@ def can_see(obj: Any, viewer: Viewer, owner_member_id: str | None = None) -> boo
     owner = owner_member_id if owner_member_id is not None else owner_attr(obj)
     mine = bool(owner) and owner == viewer.member_id
     if scope == "selected":
-        # автор не выпадает из своего круга: «выбранным» без отметок — как «только мне»
+        # the author never drops out of their own circle: "selected" with nobody checked acts like "only me"
         return mine or viewer.member_id in (getattr(obj, "visible_to", None) or [])
     if scope == "owner":
         return mine
@@ -103,8 +103,8 @@ def strip_gm_fields(fields: dict | None, viewer: Viewer) -> dict:
     return {k: v for k, v in fields.items() if not k.startswith(GM_PREFIX)}
 
 
-# что ГМ вправе держать закрытым поштучно, и чем заменяем скрытое значение;
-# имя и тип карточки не скрываются — иначе её нельзя опознать в списке
+# what the GM may hide field by field, and what replaces the hidden value;
+# an entry's name and kind are never hidden — otherwise it can't be recognized in a list
 HIDEABLE: dict[str, Any] = {
     "image_url": "",
     "summary": "",
@@ -112,26 +112,26 @@ HIDEABLE: dict[str, Any] = {
     "location_ids": [],
 }
 
-# отношения экипажа с организацией видны всем, кому видна сама карточка
+# the crew's standing with a faction is visible to everyone who can see the entry itself
 ALWAYS_OPEN: dict[str, frozenset[str]] = {"faction": frozenset({"stance", "deeds"})}
 
 
-# статус карточки стол видит всегда
+# the table always sees an entry's status
 NEVER_HIDDEN = frozenset({"status"})
 
 
 def hidden_keys(e) -> set[str]:
-    """Поштучно закрытые от стола ключи карточки."""
+    """Keys of an entry hidden from the table field by field."""
     return {str(k) for k in (e.hidden_fields or [])} - ALWAYS_OPEN.get(e.kind, frozenset()) - NEVER_HIDDEN
 
 
-SHARED_KINDS = ("ship",)  # общий ресурс экипажа — правит любой игрок, не только владелец
-ANY_PLAYER = "*"  # спец-значение owner_member_id: карточку открыл ГМ для любого игрока
+SHARED_KINDS = ("ship",)  # shared crew resource — any player edits it, not only the owner
+ANY_PLAYER = "*"  # special owner_member_id value: the GM opened the entry to any player
 
 
 def entity_editable(e, v: Viewer) -> bool:
-    """Правит ГМ, любой игрок на общем ресурсе экипажа, владелец карточки —
-    либо любой игрок, если ГМ открыл карточку для всех (owner_member_id == ANY_PLAYER)."""
+    """Editable by the GM, any player on a shared crew resource, the entry's owner —
+    or any player if the GM opened the entry to everyone (owner_member_id == ANY_PLAYER)."""
     if v.is_gm or e.kind in SHARED_KINDS or e.owner_member_id == ANY_PLAYER:
         return True
     return bool(v.member_id) and e.owner_member_id == v.member_id
@@ -159,15 +159,15 @@ def public_entity(e, viewer: Viewer, peers: dict[str, str] | None = None) -> dic
     for key, blank in HIDEABLE.items():
         if key in hidden:
             data[key] = blank
-    # имена привязанных карточек: связь на открытой карточке читается даже тогда,
-    # когда сама привязанная карточка закрыта от стола — перехода на неё не будет
+    # names of linked entries: a link on an open entry stays readable even when
+    # the linked entry itself is hidden from the table — it just can't be opened
     if peers is not None:
         linked = [*data["faction_ids"], *data["location_ids"], *(v for v in fields.values() if isinstance(v, str))]
         data["peer_names"] = {i: peers[i] for i in linked if i in peers}
-    # список закрытых ключей отдаём всем: игрок видит «неизвестно», а не пустоту
+    # the list of hidden keys goes to everyone: a player sees "unknown" instead of a blank
     data["hidden_fields"] = [k for k in (e.hidden_fields or []) if str(k) in hidden_keys(e)]
-    # аудиторию карточки отдаём тому, кто вправе её менять: иначе пикер у игрока
-    # показывает дефолт «всем» вместо настоящего скоупа и затирает его при правке
+    # the entry's audience goes to whoever may edit it: otherwise the player's picker
+    # shows the default "everyone" instead of the real scope and overwrites it on edit
     if entity_editable(e, viewer):
         data["visibility"] = e.visibility
         data["visible_to"] = e.visible_to or []

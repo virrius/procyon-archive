@@ -4,16 +4,16 @@ import { api, c } from '../api'
 import { Modal } from '../ui'
 import CropBox, { cropParam, cropSize, type Box } from './CropBox'
 
-/** Рамка вложения из пикселей оригинала в доли — в них рисует CropBox. */
+/** Attachment crop box from original pixels to fractions, which CropBox draws in. */
 const toBox = (raw: string, w: number, h: number): Box | null => {
   const n = raw.split(',').map(Number)
   if (n.length !== 4 || n.some(v => !isFinite(v)) || n[2] < 1 || n[3] < 1) return null
   return { x: n[0] / w, y: n[1] / h, w: n[2] / w, h: n[3] / h }
 }
 
-/** Кадрирование превью: рамка живёт у вложения и режет только миниатюры — оригинал
- *  цел, по клику открывается он же целиком, а рамку можно переиграть в любой момент. */
-/** Рамка во всю ширину или высоту снимка по центру, с заданной пропорцией. */
+/** Preview crop: the box lives on the attachment and crops only thumbnails; the original
+ *  stays intact, a click opens it whole, and the box can be redone at any moment. */
+/** Box across the full width or height of the picture, centered, with the given ratio. */
 const fit = (aspect: number, ratio: number): Box =>
   ratio > aspect
     ? { x: 0, w: 1, h: aspect / ratio, y: (1 - aspect / ratio) / 2 }
@@ -21,7 +21,7 @@ const fit = (aspect: number, ratio: number): Box =>
 
 export default function CropModal({ attachmentId, src, title, ratio, onClose, onDone }: {
   attachmentId: string
-  /** ширина/высота превью: рамка держит её, чтобы снимок ложился в плитку без полей */
+  /** preview width/height: the box keeps it so the picture fits the tile without margins */
   ratio: number
   src: string
   title: string

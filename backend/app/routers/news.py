@@ -1,7 +1,7 @@
-"""Новости сектора: отдельный раздел, куда ГМ выпускает депеши журналистов.
+"""Sector news: a separate section where the GM puts journalists' dispatches on the air.
 
-Депеши заказываются заданием и пишутся в фоне: ГМ может закрыть окно и вернуться
-к черновикам потом — они ждут в задании, пока их не выпустят в эфир или не уберут.
+Dispatches are ordered as a job and written in the background: the GM can close the window and come back
+to the drafts later — they wait in the job until they are put on the air or removed.
 """
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ from ..server_cfg import campaign_kit
 log = logging.getLogger("news")
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["news"], responses=AUTH_ERRORS)
 
-# хаб отвечает за минуту; задание, которое пишется дольше, уже не допишется —
-# сервер перезапускали или хаб завис
+# the hub answers within a minute; a job that takes longer than this will never finish —
+# the server was restarted or the hub hung
 STALE = timedelta(minutes=10)
 
 
@@ -169,7 +169,7 @@ class CommentsOut(BaseModel):
 
 
 def _links(db: Session, v: Viewer, rows: list) -> dict[str, list[dict]]:
-    """Привязки новостей и заданий одним заходом. Стол видит только то, что ему открыто."""
+    """Links of stories and jobs in one pass. The table sees only what is open to it."""
     eids = {i for n in rows for i in (n.entity_ids or [])}
     cids = {i for n in rows for i in (n.clock_ids or [])}
     ents = {e.id: e for e in campaign_rows(db, Entity, v.campaign_id, list(eids))}
@@ -207,7 +207,7 @@ def _get(db: Session, v: Viewer, news_id: str) -> News:
 
 
 def _clean_links(db: Session, v: Viewer, patch: dict) -> dict:
-    """Привязки — только к записям этой кампании, без повторов."""
+    """Links only to entries of this campaign, no repeats."""
     if "entity_ids" in patch:
         patch["entity_ids"] = [e.id for e in campaign_rows(db, Entity, v.campaign_id, patch["entity_ids"])]
     if "clock_ids" in patch:
@@ -216,7 +216,7 @@ def _clean_links(db: Session, v: Viewer, patch: dict) -> dict:
 
 
 def _publish(db: Session, v: Viewer, n: News) -> None:
-    """Новость выходит в эфир сегодняшним игровым днём, если ГМ не задал другой."""
+    """A story airs on the current in-game day unless the GM set another one."""
     if n.world_day is None:
         n.world_day = db.get(Campaign, v.campaign_id).world_day
     db.add(n)
@@ -225,7 +225,7 @@ def _publish(db: Session, v: Viewer, n: News) -> None:
                 visibility=n.visibility, after={"headline": n.headline, "body": n.body})
 
 
-# --- задания: заказ депеш и черновики ----------------------------------------------
+# --- jobs: ordering dispatches and drafts -------------------------------------------
 
 
 def _bylines(db: Session, campaign_id: str) -> dict[str, str]:
@@ -234,7 +234,7 @@ def _bylines(db: Session, campaign_id: str) -> dict[str, str]:
 
 
 def fail_stale_jobs(db: Session) -> None:
-    """Задание, которое пишется дольше STALE, уже не допишется: процесс перезапускали или хаб молчит."""
+    """A job that takes longer than STALE will never finish: the process was restarted or the hub is silent."""
     cutoff = datetime.now(timezone.utc) - STALE
     hung = db.query(NewsJob).filter(NewsJob.status == "pending", NewsJob.updated_at < cutoff).all()
     for j in hung:
@@ -270,7 +270,7 @@ def _job(db: Session, v: Viewer, job_id: str) -> NewsJob:
 
 
 def _draft(job: NewsJob, i: int) -> list[dict]:
-    """Копия черновиков задания: JSONB меняется только присваиванием нового списка."""
+    """A copy of the job's drafts: JSONB changes only when a new list is assigned."""
     drafts = [dict(d) for d in job.drafts or []]
     if not 0 <= i < len(drafts) or drafts[i].get("dropped"):
         raise HTTPException(404, tr("news.no_draft"))
@@ -278,7 +278,7 @@ def _draft(job: NewsJob, i: int) -> list[dict]:
 
 
 def _settle(db: Session, job: NewsJob) -> bool:
-    """Все черновики выпущены или убраны — заказ закрывается."""
+    """All drafts are aired or removed — the order is closed."""
     if job.status == "ready" and not _live(job):
         db.delete(job)
         return True
@@ -286,7 +286,7 @@ def _settle(db: Session, job: NewsJob) -> bool:
 
 
 def run_job(job_id: str) -> None:
-    """Фоновое написание депеш: своя сессия, итог — в самом задании."""
+    """Writing dispatches in the background: its own session, the result goes into the job itself."""
     db = SessionLocal()
     lang = None
     try:
@@ -452,7 +452,7 @@ def drop_news_job(job_id: str, v: Viewer = Depends(gm_only), db: Session = Depen
     return {"ok": True}
 
 
-# --- лента ------------------------------------------------------------------------
+# --- feed -------------------------------------------------------------------------
 
 
 @router.get("/news", summary="List published news", response_model=list[NewsOut])
@@ -490,7 +490,7 @@ def patch_news(news_id: str, body: NewsPatch, v: Viewer = Depends(gm_only),
     n = _get(db, v, news_id)
     patch = _clean_links(db, v, {k: val for k, val in body.model_dump(exclude_unset=True).items()
                                  if val is not None or k == "world_day"})
-    # журнал видит стол: спрятанная суть в нём не светится
+    # the table sees the log: a hidden gist must not show up in it
     before, after = journal.changes(n, patch, keys=tuple(k for k in patch if k not in ("lead", "lead_hidden")))
     for k, val in patch.items():
         setattr(n, k, val)

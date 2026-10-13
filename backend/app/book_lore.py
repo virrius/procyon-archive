@@ -1,14 +1,14 @@
-"""Канон книги (глава «Сектор Процион») в карточках новой кампании.
+"""Book canon (the "Procyon Sector" chapter) as entries of a new campaign.
 
-``book().ORGS`` и ``book().PROCYON`` держат данные, здесь они становятся сущностями:
-короткое описание уходит в ``summary``, подробности книги (цель, территория, лица,
-ресурсы, союзники, враги, положение; для мест — правило и сцена) — в одну запись-досье
-с видимостью ГМ. Картинок нет: облик местам ГМ даёт сам.
+``book().ORGS`` and ``book().PROCYON`` hold the data; here they become entities:
+the short description goes into ``summary``, the book details (goal, turf, NPCs,
+assets, allies, enemies, situation; for locations a rule and a scene) into one dossier note
+with GM visibility. No images: the GM gives locations their look.
 
-Карта сектора — фон из ./assets и отметки мест, у которых в книге стоит ``map``.
+The sector map is a background from ./assets plus markers for locations that have ``map`` in the book.
 
-Заполняет только отсутствующее: описание — пустым карточкам, досье — тем, у кого записи
-с этим заголовком ещё нет; правки ГМа не трогаются.
+Fills in only what is missing: the description for empty entries, the dossier for those without
+a note with that title yet; GM edits are left alone.
 """
 
 from __future__ import annotations
@@ -28,9 +28,9 @@ SECTOR_STEMS = ("procyon-sector", "procyon_sector", "sector")
 
 
 def sector_background() -> str:
-    """Статический путь к карте сектора: nginx отдаёт ./assets как /media."""
+    """Static path to the sector map: nginx serves ./assets as /media."""
     for stem in SECTOR_STEMS:
-        for ext in ("webp", "png", "jpg", "jpeg"):  # webp первым: тот же кадр вдевятеро легче
+        for ext in ("webp", "png", "jpg", "jpeg"):  # webp first: the same image is nine times lighter
             hits = glob.glob(os.path.join(ASSET_DIR, f"{stem}.{ext}"))
             if hits:
                 return f"/media/{os.path.basename(hits[0])}"
@@ -68,7 +68,7 @@ def place_dossier(place: dict, lang: str) -> str:
 
 
 def places(lang: str) -> list[tuple[str, dict]]:
-    """Места книги по порядку, с системой: тот же порядок у обеих книг."""
+    """Book locations in order, with their system: both books use the same order."""
     return [
         (sysdef["system"], p)
         for sysdef in book(lang).PROCYON
@@ -113,7 +113,7 @@ def apply_orgs(db: Session, campaign_id: str, lang: str) -> dict[str, Entity]:
         e = _entity(db, campaign_id, "faction", org["name"], known)
         if not e.fields:
             e.fields = {"category": org["category"], "rank": str(org["tier"]), "stance": "0"}
-            # весь список сектора у ГМа: организацию стол узнаёт, когда ГМ её откроет
+            # the whole sector list stays with the GM: the table learns of a faction when the GM reveals it
             e.visibility = "gm"
         if not e.summary:
             e.summary = org["blurb"]
@@ -142,7 +142,7 @@ def apply_places(db: Session, campaign_id: str, lang: str) -> dict[str, Entity]:
 
 
 def apply_map(db: Session, campaign_id: str, lang: str, located: dict[str, Entity]) -> MapNode:
-    """Карта сектора с отметками мест книги; есть карта — ничего не трогаем."""
+    """Sector map with markers for book locations; if a map exists, nothing is touched."""
     node = db.query(MapNode).filter_by(campaign_id=campaign_id, level="sector").first()
     if node:
         return node
@@ -166,6 +166,6 @@ def apply_map(db: Session, campaign_id: str, lang: str, located: dict[str, Entit
 
 
 def seed_campaign(db: Session, campaign_id: str, lang: str) -> None:
-    """Всё, с чем кампания стартует: фракции и места книги, карта с их отметками."""
+    """Everything a campaign starts with: book factions and locations, and the map with their markers."""
     apply_orgs(db, campaign_id, lang)
     apply_map(db, campaign_id, lang, apply_places(db, campaign_id, lang))

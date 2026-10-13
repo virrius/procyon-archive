@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-/* Текст длиннее пары строк прячется под «развернуть» и по умолчанию свёрнут. */
+/* Text longer than a couple of lines hides under "show more" and is collapsed by default. */
 export default function Foldable({ children, className = '', lines = 2, style }: {
   children: ReactNode
   className?: string

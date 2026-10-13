@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     upload_dir: str = "/data/uploads"
     worker_token: str = ""
     admin_password: str = ""
-    # тексты правил книги в репозиторий не входят: <book_dir>/<язык>.json, если есть
+    # book rules text is not part of the repository: <book_dir>/<lang>.json, if present
     book_dir: str = "/data/book"
 
     class Config:
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
 
 def _stored_secret(folder: str) -> str:
-    """Без PA_JWT_SECRET секрет заводится при первом старте и живёт рядом с загрузками."""
+    """Without PA_JWT_SECRET, the secret is created on first start and kept next to the uploads."""
     path = os.path.join(folder, ".jwt_secret")
     try:
         with open(path, encoding="utf-8") as f:

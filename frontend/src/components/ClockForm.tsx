@@ -10,7 +10,7 @@ import {
 
 void OwnerMenu
 
-/** Типы счётчиков не предзаданы: словарь собираем из того, что уже вписали. */
+/** Clock types aren't predefined: the dictionary is built from what was already entered. */
 export function useClockKinds(rows: Dict[] | null): string[] {
   const [known, loading] = useAsync<string[]>(() => api.get(`${c()}/clock-kinds`), [])
   const seen = new Set<string>([
@@ -20,7 +20,7 @@ export function useClockKinds(rows: Dict[] | null): string[] {
   return [...seen].sort((a, b) => a.localeCompare(b))
 }
 
-/** Счётчик ГМа заводится закрытым и правит его только ГМ, пока он сам не откроет */
+/** A GM clock is created hidden and only the GM edits it, until they reveal it */
 export const blankClock = (kind = '', isGM = false): Dict => ({
   name: '', description: '', outcome: '', kind, color: 'amber',
   segments: 6, filled: 0, visible_to: [],
@@ -28,14 +28,14 @@ export const blankClock = (kind = '', isGM = false): Dict => ({
   owner_member_id: isGM ? '' : ANY_PLAYER,
 })
 
-/** Заведение и правка счётчика: одна форма для базы кампании и для доски квеста. */
+/** Creating and editing a clock: one form for the campaign database and for a story board. */
 export function ClockForm({ form, setForm, owner, setOwner, kinds, onDone, onClose }: {
   form: Dict
   setForm: (v: Dict) => void
   owner: Dict | null
   setOwner: (v: Dict | null) => void
   kinds: string[]
-  /** id счётчика: на создании — нового, на правке — того же */
+  /** clock id: a new one on create, the same one on edit */
   onDone: (id: string) => void
   onClose: () => void
 }) {
@@ -94,7 +94,7 @@ export function ClockForm({ form, setForm, owner, setOwner, kinds, onDone, onClo
   )
 }
 
-/** Готовая обёртка для мест, где счётчик заводится «между делом» (доска квеста). */
+/** Ready-made wrapper for places where a clock is created in passing (story board). */
 export function NewClockModal({ preset, onDone, onClose }: {
   preset?: Dict
   onDone: (id: string) => void

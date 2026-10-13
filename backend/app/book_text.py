@@ -1,7 +1,7 @@
-"""Тексты правил книги для бланков: в репозитории только структура, сами тексты — у владельца книги.
+"""Book rules text for the sheets: the repository holds only the structure, the texts stay with the book owner.
 
-Файл <PA_BOOK_DIR>/<язык>.json той же формы {"PLAYBOOK_SHEETS": ..., "CHAR_SHEET": ...} заполняет
-пустые строки бланков. Нет файла — бланки без текстов правил.
+A file <PA_BOOK_DIR>/<lang>.json of the same shape {"PLAYBOOK_SHEETS": ..., "CHAR_SHEET": ...} fills
+the empty strings of the sheets. No file means sheets without rules text.
 """
 
 from __future__ import annotations

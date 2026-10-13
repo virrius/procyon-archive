@@ -1,5 +1,5 @@
-/* Единая панель сохранения: индикатор «изменено» + явные «сохранить»/«отменить».
-   Один вид во всех формах — бланк корабля, лист персонажа, карточка сущности. */
+/* Unified save bar: a "changed" indicator + explicit "save"/"cancel".
+   One look across all forms: ship sheet, character sheet, entry card. */
 
 import { useTranslation } from 'react-i18next'
 import '../styles.save.css'

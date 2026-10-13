@@ -1,4 +1,4 @@
-/* Карта: одно изображение, зум/пан, кругляши-отметки, рисунок маркером. */
+/* Map: a single image, zoom/pan, round markers, marker drawing. */
 
 .mp-bar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
@@ -10,7 +10,7 @@
 }
 .mp-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
 
-/* кружки палитры — .sw в styles.css, общие с счётчиками */
+/* palette circles are .sw in styles.css, shared with clocks */
 
 .mp-view {
   position: relative; width: 100%; margin: 0 auto; overflow: hidden;
@@ -22,7 +22,7 @@
 .mp-view.t-draw { cursor: crosshair; }
 .mp-view.t-erase { cursor: cell; }
 
-/* без will-change: слой с will-change растрируется один раз и мылит фон при зуме */
+/* no will-change: a will-change layer is rasterized once and blurs the background on zoom */
 .mp-layer { position: absolute; inset: 0; transform-origin: 0 0; }
 .mp-layer > img {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -37,8 +37,8 @@
   background: repeating-linear-gradient(45deg, #100f0d 0 14px, #131210 14px 28px);
 }
 
-/* метки лежат поверх масштабируемого слоя, а не внутри него: слой растрируется
-   при зуме и текст с иконками мылит — здесь они рисуются в экранном масштабе */
+/* markers sit above the scaled layer, not inside it: the layer is rasterized
+   on zoom and blurs text and icons — here they render at screen scale */
 .mp-pins { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .mp-pin { position: absolute; width: 0; height: 0; }
 .mp-dot {
@@ -67,7 +67,7 @@
 }
 .mp-hint { font-family: var(--util); font-size: 11.5px; color: var(--dim2); }
 
-/* --- два столбца: холст слева, заметки справа ---------------------------- */
+/* --- two columns: canvas on the left, notes on the right ------------------ */
 
 .mp-split {
   display: grid; gap: 12px; align-items: stretch;
@@ -111,18 +111,18 @@
   padding: 0 5px; background: var(--amber); color: #17140f;
 }
 
-/* карта живёт во всю ширину окна — общий предел колонки её не касается */
+/* the map spans the full window width — the shared column limit doesn't apply */
 .content:has(.mp-split) { max-width: none; padding: 12px 14px 18px; }
 .mp-split { grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 420px); }
 
-/* после базового правила: при равной специфичности побеждает то, что ниже */
+/* after the base rule: with equal specificity, the later rule wins */
 @media (max-width: 1000px) {
   .mp-split { grid-template-columns: minmax(0, 1fr); }
   .mp-side { max-height: none; }
   .mp-side-body { overflow: visible; }
 }
 
-/* --- карточка отметки в модалке ------------------------------------------- */
+/* --- marker card in a modal ----------------------------------------------- */
 
 .mp-loc {
   display: flex; gap: 12px; align-items: flex-start; cursor: pointer;

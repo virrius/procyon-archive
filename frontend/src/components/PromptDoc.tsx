@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { type Dict } from '../api'
 import { locale } from '../i18n'
 
-// строка входа шаблона — на языке экземпляра, понимаем обе
+// template input line: in the instance's language, we understand both
 const INPUT_LINE = /^[ \t]*=== (?:ВХОД|INPUT) ===[ \t]*$/
 const SLOT = /\{\{\s*([^{}]+?)\s*\}\}|\{(view)\}/g
 
 type Head = { at: number; len: number; text: string; input?: boolean }
 
-/** Оглавление: абзацы, начатые фразой капсом до точки, и строка входа шаблона. */
+/** Table of contents: paragraphs that start with an all-caps phrase up to a period, and the template input line. */
 function headings(text: string): Head[] {
   const out: Head[] = []
   let at = 0
@@ -28,7 +28,7 @@ function headings(text: string): Head[] {
   return out
 }
 
-/** Высота строки offset внутри textarea: зеркальный блок с тем же шрифтом и шириной. */
+/** Line height of offset inside a textarea: a mirror block with the same font and width. */
 function offsetY(ta: HTMLTextAreaElement, offset: number): number {
   const cs = getComputedStyle(ta)
   const m = document.createElement('div')
@@ -55,7 +55,7 @@ export function PromptDoc({ title, value, onChange, changed, onReset, inserts }:
   onChange: (v: string) => void
   changed: boolean
   onReset: () => void
-  /** вставка → что код подставит на её место */
+  /** insertion → what the code substitutes in its place */
   inserts?: Dict
 }) {
   const { t } = useTranslation('media')
@@ -101,7 +101,7 @@ export function PromptDoc({ title, value, onChange, changed, onReset, inserts }:
   }
 
   const noInput = inserts && Object.keys(inserts).some(k => k !== 'view') && !value.split('\n').some(l => INPUT_LINE.test(l))
-  // недостающую строку подсказываем на языке вставок шаблона
+  // suggest the missing line in the language of the template's insertions
   const inputMark = inserts && Object.keys(inserts).some(k => /[а-яё]/i.test(k)) ? '=== ВХОД ===' : '=== INPUT ==='
 
   return (

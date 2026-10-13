@@ -1,10 +1,10 @@
-"""Промптинг: из описания ГМа в промпт рисующей модели и в депеши.
+"""Prompting: from the GM's description to the drawing model's prompt and to dispatches.
 
-* ``lore``     — мир для рисующей стороны: подтипы кадра, регистры, якоря, подмена земных слов;
-* ``prose``    — инструкция хабу и сборка строки промпта из его частей;
-* ``inpaint``  — инструкция правки области;
-* ``kit``      — дефолты плюс правки админа;
-* ``dispatch`` — депеши журналистов и отклики.
+* ``lore``     — the world for the drawing side: frame subtypes, registers, anchors, replacing Earth words;
+* ``prose``    — the hub instruction and assembling the prompt line from its parts;
+* ``inpaint``  — the area edit instruction;
+* ``kit``      — defaults plus admin edits;
+* ``dispatch`` — journalist dispatches and comments.
 """
 from __future__ import annotations
 

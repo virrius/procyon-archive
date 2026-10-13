@@ -40,50 +40,50 @@ worker_router = APIRouter(prefix="/api/worker", tags=["images-worker"])
 CANDIDATES_PER_JOB = 4
 ACTIVE_STATUSES = ("pending", "claimed", "ready")
 
-# кандидат портрета живёт до выбора и виден только ГМу; кадр кампании остаётся
-# насовсем и по умолчанию открыт столу
+# a portrait candidate lives until picked and only the GM sees it; a campaign frame stays
+# for good and is open to the table by default
 CANDIDATE = "image_candidate"
 OUTFIT = "outfit"
 SCENE_FRAME = "scene_frame"
-# служебные вложения заявки на инпеинт: маска и подготовленная копия исходника.
-# Живут ровно столько, сколько заявка, и наружу не отдаются
+# service attachments of an inpaint job: the mask and a prepared copy of the source.
+# They live exactly as long as the job and are never served outside
 MASK = "image_mask"
 SOURCE = "image_source"
 JOB_TEMP = (MASK, SOURCE)
 
-# срок годности heartbeat: три пропущенных подряд при интервале воркера в 10 с.
-# Единственное свидетельство живого воркера — свежий пинг; отсутствие пинга
-# трактуем как выключенную генерацию, причину не различаем
+# heartbeat shelf life: three missed in a row at the worker's 10 s interval.
+# The only evidence of a live worker is a fresh ping; no ping is
+# treated as generation switched off, the reason is not distinguished
 HEARTBEAT_TTL = 30
 _worker_beat: dict = {}
-# заявка, которую сейчас рисует хаб: её сборщик висяков не трогает
+# the job the hub is drawing right now: the stuck-job sweeper leaves it alone
 _hub_job: dict = {}
 
-# Заявку в claimed держит ровно один воркер. Умер он (перезапуск, OOM, закрытая
-# консоль) — вернуть её некому: она висит вечно, а картинка-исходник остаётся
-# занятой навсегда. Поэтому висяки подбираем сами.
-# grace — сколько ждём после claim, прежде чем верить пингу: первый пинг с job_id
-# приходит не мгновенно
+# Exactly one worker holds a claimed job. If it dies (restart, OOM, closed
+# console), no one returns the job: it hangs forever and the source image stays
+# locked for good. So we pick up stuck jobs ourselves.
+# grace — how long to wait after claim before trusting the ping: the first ping with job_id
+# does not arrive instantly
 CLAIM_GRACE = 90
-# «пинг свежий, но воркер занят другим» — сигнал слабее: воркеров может оказаться
-# запущено несколько, и пингом они перебивают друг друга. Поэтому по нему ждём
-# дольше самой длинной честной пачки из 4 кандидатов
+# "ping is fresh, but the worker is busy with something else" is a weaker signal: several workers
+# may be running, and their pings override each other. So on that signal we wait
+# longer than the longest honest batch of 4 candidates
 CLAIM_IDLE = 12 * 60
 MAX_ATTEMPTS = 2
-# сколько живёт нарисованный, но не выбранный черновик. Заявка в ready ждёт человека,
-# и без срока таких набирается тысяча: файлы кандидатов лежат мёртвым весом, а форма
-# генерации показывает при заходе прошлонедельный кадр как свежий
+# how long a drawn but unpicked draft lives. A job in ready waits for a person,
+# and without a time limit they pile up by the thousand: candidate files are dead weight, and the
+# generation form shows last week's frame as fresh on open
 DRAFT_TTL = 24 * 3600
 
 
 def key_out(key: str | None) -> dict:
-    """Ключ хаба наружу не уходит: только задан ли он и последние четыре знака."""
+    """The hub key never leaves the server: only whether it is set and its last four characters."""
     key = key or ""
     return {"api_key_set": bool(key), "api_key_tail": key[-4:]}
 
 
 def save_wardrobe(camp: Campaign, db: Session, key: str, item: dict | None) -> None:
-    """Гардероб кампании: {"wardrobe": {ключ: наряд}}; None — наряд убран."""
+    """Campaign wardrobe: {"wardrobe": {key: look}}; None means the look is removed."""
     ward = dict(parse_kit(camp.img_prompt_kit).get("wardrobe") or {})
     if item is None:
         ward.pop(key, None)
@@ -94,8 +94,8 @@ def save_wardrobe(camp: Campaign, db: Session, key: str, item: dict | None) -> N
 
 
 def outfit_key(title: str, taken: set[str]) -> str:
-    """Ключ наряда из названия: он попадает в снимок формы карточки, поэтому
-    остаётся латиницей и переживает переименование."""
+    """Look key from the title: it ends up in the card form snapshot, so it
+    stays in Latin letters and survives renaming."""
     slug = slugify(title, "outfit", 40)
     key, n = slug, 2
     while key in taken:
@@ -148,7 +148,7 @@ def clean_outfit(body: OutfitIn) -> dict:
 
 
 def keep_outfit_image(db: Session, campaign_id: str, key: str, url: str) -> None:
-    """Кадр-кандидат, ставший миниатюрой образа, уходит из черновиков — иначе его снесёт чистка."""
+    """A candidate frame that became a look's thumbnail leaves the drafts — otherwise the cleanup deletes it."""
     a = db.get(Attachment, url.split("?")[0].rstrip("/").rsplit("/", 1)[-1]) if url else None
     if a and a.campaign_id == campaign_id and a.target_type == CANDIDATE:
         a.target_type, a.target_id = OUTFIT, key
@@ -231,8 +231,8 @@ def hub_call(camp: Campaign, system: str, text: str, schema: dict,
              model: str = "", timeout: float = 120,
              stop: list[str] | None = None, attempts: int = 1, base_url: str = "", api_key: str = "",
              where: str = "") -> dict:
-    """Поход в LLM-хаб со structured output. Возвращает разобранный ответ; битый JSON — повтор.
-    Адрес, модель и ключ — хаба картинок, если вызов не принёс своих; where — где их искать ГМу."""
+    """Call to the LLM hub with structured output. Returns the parsed answer; broken JSON means a retry.
+    Address, model and key are the image hub's unless the call brings its own; where — where the GM finds them."""
     hub = hub_conf(object_session(camp))
     base_url = base_url or hub["base_url"]
     model = model or hub["model"]
@@ -248,11 +248,11 @@ def hub_call(camp: Campaign, system: str, text: str, schema: dict,
             {"role": "system", "content": system},
             {"role": "user", "content": text},
         ],
-        # слотам кадра нужен дефолт 0.3: ниже 0.5 выхлоп заметно стабильнее, половина
-        # брака была не ошибкой инструкции, а разбросом от прогона к прогону
+        # frame slots need a default of 0.3: below 0.5 the output is noticeably more stable, half
+        # of the defects were not an instruction error but run-to-run variance
         "temperature": temperature,
-        # рассуждающая модель здесь не годится: она съедает тысячи токенов до
-        # того, как начнёт отвечать, и возвращает пустой content
+        # a reasoning model does not fit here: it eats thousands of tokens before
+        # it starts answering and returns empty content
         "max_tokens": max_tokens,
         "response_format": schema,
     }
@@ -280,15 +280,15 @@ def hub_call(camp: Campaign, system: str, text: str, schema: dict,
 
 
 def dress(slots: dict, wear: list[str]) -> dict:
-    """Наряд встаёт в часть одежды дословно — и в первом черновике, и при смене наряда."""
+    """A look goes into the clothing part word for word — both in the first draft and when the look changes."""
     return {**slots, "wear": wear, "outfit": "They wear " + "; ".join(wear) + "."}
 
 
 def draft_slots(camp: Campaign, kind: str, register: str, text: str,
                 view: str = "interior", wardrobe: str = "", who: str = "", sex: str = "",
                 people: str = "", seed_key: str = "", takes: int = CANDIDATES_PER_JOB) -> dict:
-    """Промпт для рисующей модели: хаб пишет части видимого, код склеивает их и ставит стиль,
-    рамку и якорь."""
+    """Prompt for the drawing model: the hub writes the parts of what is visible, code joins them and adds the style,
+    the frame and the anchor."""
     kit = campaign_kit(camp)
     doc = doc_override(object_session(camp), kind) or P().prose.DOCS[kind]
     wear = P().kit.outfit_slots(kit, wardrobe).get("wear") if kind == "person" and wardrobe else None
@@ -301,12 +301,12 @@ def draft_slots(camp: Campaign, kind: str, register: str, text: str,
     parsed = P().prose.fold_time(hub_call(camp, system, text, schema, max_tokens=3000))
     if wear:
         parsed = dress(parsed, wear)
-    # руки в абзаце хаб мог выдумать: анатомию плеч код дописывает только по слову ГМа
+    # the hub may have invented arms in the paragraph: code adds shoulder anatomy only on the GM's word
     parsed["four_arms"] = P().prose.gm_four_arms(text)
     if people == "none":
         parsed["people"] = "none"
     return {
-        # слоты наружу: абзац и якорь пересобираются в строку кодом, одежда — для гардероба
+        # slots go out: the paragraph and anchor are reassembled into a line by code, the clothing is for the wardrobe
         "slots": parsed,
         "wardrobe": wardrobe,
         "prompt": P().prose.build(kind, parsed, view, kit, register),
@@ -322,13 +322,13 @@ def draft_inpaint_prompt(camp: Campaign, system: str, text: str) -> dict:
 
 
 def check_draft_choices(kind: str, view: str, register: str, kit: dict) -> None:
-    """Проверить развилки ГМа. Регистры — из кита: добавленные админом законны наравне с кодом."""
+    """Check the GM's choices. Registers come from the kit: ones added by the admin are as valid as those in code."""
     if kind not in P().KINDS:
         raise HTTPException(400, tr("images.bad_kind", options=', '.join(P().KINDS)))
     if view not in P().VIEWS:
         raise HTTPException(400, tr("images.bad_view", options=', '.join(P().VIEWS)))
-    # пустой регистр — законный выбор: словарь угла сеттинга дописывается только
-    # когда ГМ этот угол назвал
+    # an empty register is a valid choice: the vocabulary of a corner of the setting is added only
+    # when the GM named that corner
     regs = P().prose.live_registers(kit)
     if register and register not in regs:
         raise HTTPException(400, tr("images.bad_register", options=', '.join(regs)))
@@ -424,11 +424,11 @@ class InpaintBaseOut(BaseModel):
 
 
 def source_prompt(db: Session, campaign_id: str, a: Attachment) -> str:
-    """Промпт, которым нарисован исходник: заявка после выбора не удаляется, а
-    правка области без исходного промпта вырождается в перерисовку всего кадра.
+    """The prompt the source was drawn with: the job is not deleted after picking, and
+    an area edit without the source prompt degenerates into redrawing the whole frame.
 
-    У кадра кампании вложение указывает на заявку напрямую, у портрета — на карточку,
-    поэтому там берём последнюю завершённую заявку этой карточки.
+    For a campaign frame the attachment points to the job directly, for a portrait to the card,
+    so there we take the card's latest finished job.
     """
     job = None
     if a.target_type in (SCENE_FRAME, CANDIDATE) and a.target_id:
@@ -507,7 +507,7 @@ class ActiveJobOut(BaseModel):
 
 def job_out(job: ImageGenJob, db: Session) -> dict:
     candidates = []
-    # claimed — кандидаты, что уже дорисованы: показываем, не дожидаясь пачки
+    # claimed — candidates already drawn: show them without waiting for the batch
     if job.status in ("ready", "claimed"):
         rows = (
             db.query(Attachment)
@@ -544,15 +544,15 @@ def worker_fresh() -> bool:
 
 
 def reap_stale_jobs(db: Session) -> None:
-    """Вернуть в очередь заявки, которые держит мёртвый воркер.
+    """Return to the queue the jobs held by a dead worker.
 
-    Живой воркер пингует каждые 10 с и называет заявку, над которой сидит: такую не
-    трогаем, сколько бы она ни рисовалась — свой потолок на кандидата воркер держит
-    сам. Пинг пропал — рисовать некому, заявка потеряна. Пинг есть, но про другую
-    заявку — сигнал слабее (воркеров может быть запущено несколько), и такую ждём дольше.
+    A live worker pings every 10 s and names the job it is working on: such a job is
+    left alone however long it takes to draw — the worker keeps its own per-candidate
+    limit. If the ping is gone, no one is drawing and the job is lost. If there is a ping, but about
+    another job, the signal is weaker (several workers may be running), and such a job waits longer.
 
-    Первый заход возвращаем в pending: чаще всего воркер просто перезапустили, и он
-    дорисует сам. Второй — гасим в failed, чтобы не гонять по кругу сбоящую задачу.
+    The first time it goes back to pending: most often the worker was just restarted and will
+    finish it itself. The second time it is marked failed, so a failing job does not loop forever.
     """
     rows = db.query(ImageGenJob).filter(ImageGenJob.status == "claimed").all()
     if not rows:
@@ -582,13 +582,13 @@ def reap_stale_jobs(db: Session) -> None:
 
 
 def sweep_stale_drafts(db: Session) -> None:
-    """Снести готовые черновики, за которыми никто не вернулся.
+    """Delete finished drafts no one came back for.
 
-    За `ready` стоит выбор человека, поэтому заявка ждёт его без срока: пачка
-    калибровки на тысячу кадров так и осталась лежать гигабайтами кандидатов, а
-    форма кадра при заходе подхватывала как свой недорисованный кадр черновик
-    недельной давности. Сохранённые кадры и портреты не трогаем — у них статус
-    `done`, а вложение уже не кандидат. Срок виден в ленте (`expires_at`).
+    `ready` waits for a person's choice, so the job waits for it with no time limit: a calibration
+    batch of a thousand frames was left lying around as gigabytes of candidates, and
+    the frame form on open picked up a week-old draft as its own unfinished
+    frame. Saved frames and portraits are left alone — their status is
+    `done`, and the attachment is no longer a candidate. The deadline is visible in the feed (`expires_at`).
     """
     cutoff = datetime.now(timezone.utc) - timedelta(seconds=DRAFT_TTL)
     rows = (
@@ -602,7 +602,7 @@ def sweep_stale_drafts(db: Session) -> None:
         drop_job_attachments(db, job, (CANDIDATE, *JOB_TEMP))
         db.delete(job)
     db.commit()
-    log.info("снято просроченных черновиков: %d", len(rows))
+    log.info("expired drafts removed: %d", len(rows))
 
 
 def get_own_job(db: Session, campaign_id: str, job_id: str) -> ImageGenJob:
@@ -613,16 +613,16 @@ def get_own_job(db: Session, campaign_id: str, job_id: str) -> ImageGenJob:
 
 
 def editable_entity(db: Session, v: Viewer, entity_id: str) -> Entity:
-    """Карточка, портрет которой позволено генерировать: генерация меняет карточку,
-    поэтому право на неё — право правки, а не роль ГМа."""
+    """A card whose portrait may be generated: generation changes the card,
+    so the right to do it is the right to edit, not the GM role."""
     e = get_visible_entity(db, v, entity_id)
     if not entity_editable(e, v):
         raise HTTPException(403, tr("images.generate_denied"))
     return e
 
 
-# --- генерация карточки: создать заявку, следить, выбрать -----------------------
-# доступна не только ГМу: игрок генерирует для карточек, которые может править
+# --- card generation: create a job, track it, pick -------------------------------
+# available not only to the GM: a player generates for cards they can edit
 
 
 class ImageJobIn(BaseModel):
@@ -640,11 +640,11 @@ MAX_PARAMS_BYTES = 16_000
 
 
 MIN_SIDE, MAX_SIDE = 256, 1536
-# энкодер рисующей модели кириллицу не читает — промпт должен быть на английском
+# the drawing model's encoder cannot read Cyrillic — the prompt must be in English
 CYRILLIC = re.compile(r"[а-яёА-ЯЁ]")
 PROMPT_MAX = 3200
-# Z-Image-Turbo почти не меняет кадр от сида к сиду: строку без дублей хаба (правленую
-# руками или пришедшую по API без slots) кандидаты повторяют с подсказкой ракурса
+# Z-Image-Turbo barely changes the frame from seed to seed: a line without hub variants (edited
+# by hand or sent via API without slots) is repeated by the candidates with a camera angle hint
 COMPOSITION_HINTS = ("", "alternate pose and framing, ", "different camera angle, ",
                      "varied composition and lighting, ")
 
@@ -659,8 +659,8 @@ def check_prompt(prompt: str) -> str:
 
 
 def candidate_prompts(db: Session, v: Viewer, params: dict, prompt: str, n_images: int) -> list[str]:
-    """Строка на каждого кандидата: дубли хаба, а без них — та же строка с подсказкой ракурса.
-    Воркер и рисование по API берут этот список одинаково."""
+    """A line for each candidate: the hub variants, or without them, the same line with a camera angle hint.
+    The worker and API drawing take this list the same way."""
     if n_images < 2:
         return []
     slots = params.get("slots") or {}
@@ -698,7 +698,7 @@ def create_image_job(
     `ready`, then `POST /image-jobs/{id}/pick`. Each call is a new attempt in the card's workshop feed;
     unpicked attempts expire after 24 h. 400 — non-Latin prompt or oversized params."""
     editable_entity(db, v, entity_id)
-    # каждая заявка — новая попытка в ленте мастерской; прошлые живут рядом до выбора
+    # each job is a new attempt in the studio feed; earlier ones live alongside until picked
     job = build_job(db, v, body, entity_id=entity_id, n_images=CANDIDATES_PER_JOB)
     db.add(job)
     db.flush()
@@ -707,13 +707,13 @@ def create_image_job(
 
 
 def is_new_inpaint(job: ImageGenJob) -> bool:
-    """Правка по маске невыбранного варианта: результат ложится новой попыткой,
-    а не на место сохранённой картинки."""
+    """A mask edit of an unpicked variant: the result becomes a new attempt
+    instead of replacing the saved image."""
     return job.kind == "inpaint" and (job.params or {}).get("mode") == "new"
 
 
 def list_attempts(db: Session, v: Viewer, entity_id: str | None) -> list[dict]:
-    """Лента мастерской: свои незакрытые попытки — рисуются, ждут выбора или сорвались."""
+    """Studio feed: your own open attempts — drawing, waiting to be picked, or failed."""
     fresh = datetime.now(timezone.utc) - timedelta(seconds=DRAFT_TTL)
     q = db.query(ImageGenJob).filter(
         ImageGenJob.campaign_id == v.campaign_id,
@@ -737,7 +737,7 @@ def list_entity_attempts(entity_id: str, v: Viewer = Depends(editor),
     return list_attempts(db, v, entity_id)
 
 
-MAX_FORM_BYTES = 16_000  # снимок формы, а не хранилище: слоты и промпт в него влезают с запасом
+MAX_FORM_BYTES = 16_000  # a form snapshot, not storage: slots and prompt fit in it with room to spare
 
 
 class GenFormOut(BaseModel):
@@ -814,7 +814,7 @@ def image_worker_status(v: Viewer = Depends(editor), db: Session = Depends(get_d
     beat = _worker_beat
     age = time.time() - beat["ts"] if beat else None
     drawer = draw_conf(db)
-    # правку области воркер забирает себе, пока жив; без него — сервис, если умеет
+    # area edits go to the worker while it is alive; without it, to the service if it can do them
     editing = worker_fresh() or bool(drawer and can_edit(drawer["base_url"]))
     if drawer:
         state = "online"
@@ -856,7 +856,7 @@ def image_worker_status(v: Viewer = Depends(editor), db: Session = Depends(get_d
     }
 
 
-# --- кадры кампании: заявка без карточки, одна картинка, сразу в галерее -------
+# --- campaign frames: a job without a card, one image, straight to the gallery ------
 
 SCENE_HISTORY = 24
 
@@ -874,9 +874,9 @@ def create_scene_job(body: ImageJobIn, v: Viewer = Depends(editor), db: Session 
 
 
 def own_scene_job(db: Session, v: Viewer, job_id: str) -> ImageGenJob:
-    """Своя заявка на кадр: черновик до сохранения принадлежит тому, кто его завёл.
-    Правка кадра по маске к карточке тоже не привязана — её отсекаем по kind, иначе
-    экран генерации подхватит её как свой недорисованный кадр."""
+    """Your own frame job: a draft belongs to whoever created it until it is saved.
+    A mask edit of a frame is not tied to a card either — it is filtered out by kind, otherwise
+    the generation screen would pick it up as its own unfinished frame."""
     job = db.get(ImageGenJob, job_id)
     if (not job or job.campaign_id != v.campaign_id or job.entity_id is not None
             or not ((job.kind or "txt2img") == "txt2img" or is_new_inpaint(job))
@@ -963,7 +963,7 @@ def cancel_scene_job(job_id: str, v: Viewer = Depends(editor), db: Session = Dep
     return {"ok": True}
 
 
-# --- галерея кадров: то же вложение, но с подписью и своей видимостью ---------
+# --- frame gallery: the same attachment, but with a caption and its own visibility --------
 
 
 def frame_out(a: Attachment, v: Viewer, jobs: dict[str, ImageGenJob]) -> dict:
@@ -974,7 +974,7 @@ def frame_out(a: Attachment, v: Viewer, jobs: dict[str, ImageGenJob]) -> dict:
         "caption": a.caption,
         "width": job.width if job else 0,
         "height": job.height if job else 0,
-        # свой кадр игрок подписывает и убирает сам, чужой не трогает
+        # a player captions and removes their own frame, and does not touch others'
         "mine": bool(a.uploaded_by) and a.uploaded_by == v.member_id,
         "created_at": a.created_at,
     }
@@ -1013,7 +1013,7 @@ def get_frame(db: Session, v: Viewer, frame_id: str) -> Attachment:
 
 
 def own_frame(db: Session, v: Viewer, frame_id: str) -> Attachment:
-    """Правит и убирает кадр ГМ или тот, кто его завёл."""
+    """A frame is edited and removed by the GM or by whoever created it."""
     a = get_frame(db, v, frame_id)
     if not v.is_gm and a.uploaded_by != v.member_id:
         raise HTTPException(403, tr("images.frame_not_yours"))
@@ -1035,7 +1035,7 @@ def patch_scene_frame(
     """Change the caption (author or GM) or the visibility (GM only, 403 otherwise). Journaled."""
     a = own_frame(db, v, frame_id)
     if body.visibility is not None:
-        # что стол видит — решает только ГМ
+        # only the GM decides what the table sees
         if not v.is_gm:
             raise HTTPException(403, tr("images.frame_vis_gm"))
         a.visibility = body.visibility
@@ -1070,22 +1070,22 @@ def delete_scene_frame(
     return {"ok": True}
 
 
-# --- инпеинт: перерисовать область сохранённой картинки по маске ---------------
+# --- inpaint: redraw an area of a saved image by mask ------------------------------
 
-# ниже этого максимума маска считается пустой — кисть не коснулась холста
+# below this maximum the mask is considered empty — the brush did not touch the canvas
 MASK_MIN_WHITE = 16
-# радиус размытия кромки маски: доля меньшей стороны кадра
+# mask edge blur radius: a fraction of the frame's shorter side
 FEATHER_DIVISOR = 170
-# запас окружения вокруг закрашенного, долями его размера с каждой стороны
+# margin of surroundings around the painted area, as a fraction of its size on each side
 CROP_PAD = 0.55
-# к этой стороне тянем вырезанный кусок: рабочее разрешение модели
+# the cut-out piece is scaled to this side: the model's working resolution
 INPAINT_TARGET = 1024
 INPAINT_BUSY = ("pending", "claimed")
 
 
 def inpaint_source(db: Session, v: Viewer, attachment_id: str) -> Attachment:
-    """Что можно перерисовать: сохранённый портрет карточки или кадр кампании.
-    Кандидаты генерации сюда не попадают — сперва выбор, потом правка."""
+    """What can be redrawn: a card's saved portrait or a campaign frame.
+    Generation candidates are excluded — pick first, then edit."""
     a = db.get(Attachment, attachment_id)
     if not a or a.campaign_id != v.campaign_id or not can_see(a, v):
         raise HTTPException(404, tr("images.not_found"))
@@ -1109,20 +1109,20 @@ def inpaint_source(db: Session, v: Viewer, attachment_id: str) -> Attachment:
 
 
 def crop_window(mask: Image.Image, w: int, h: int) -> tuple[int, int, int, int] | None:
-    """Кусок кадра вокруг закрашенного, который уйдёт в модель.
+    """The piece of the frame around the painted area that goes to the model.
 
-    Инпеинт по всему холсту — главная причина «просил дрона, получил кусок корабля»:
-    закрашенная область занимает пару процентов кадра, в латенте от неё остаются
-    считаные клетки, а промпт при этом описывает весь кадр — модель и дорисовывает
-    то, что вокруг. Кусок вокруг маски даёт области полное разрешение модели.
+    Inpainting over the whole canvas is the main cause of "asked for a drone, got a piece of a ship":
+    the painted area takes up a couple of percent of the frame, only a handful of cells of it remain
+    in the latent, while the prompt describes the whole frame — so the model draws
+    what is around. A piece around the mask gives the area the model's full resolution.
 
-    Пусто — маска и так во весь кадр, резать нечего.
+    Empty means the mask already covers the whole frame, nothing to crop.
     """
     bbox = mask.point(lambda p: 255 if p >= MASK_MIN_WHITE else 0).getbbox()
     if not bbox:
         return None
     bw, bh = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    # запас вокруг маски: без окружения модель не знает, во что вписывать объект
+    # margin around the mask: without surroundings the model does not know what to fit the object into
     side = max(bw, bh) * (1 + 2 * CROP_PAD)
     side = int(min(max(side, MIN_SIDE), w, h))
     side -= side % 8
@@ -1137,15 +1137,15 @@ def crop_window(mask: Image.Image, w: int, h: int) -> tuple[int, int, int, int] 
 def prepare_inpaint_pair(
     src: Attachment, mask_raw: bytes
 ) -> tuple[bytes, bytes, int, int, str]:
-    """Свести исходник и маску к одному размеру, кратному 8, размыть кромку маски и
-    вырезать рабочий кусок вокруг закрашенного.
+    """Bring the source and the mask to one size that is a multiple of 8, blur the mask edge and
+    cut out a working piece around the painted area.
 
-    Кратность 8 — требование латента: иначе декодированный кадр разъезжается с
-    оригиналом на пару пикселей и композит по маске оставляет полосу по краю.
-    Жёсткая кромка кисти даёт видимый шов, поэтому маску размываем.
+    The multiple of 8 is a latent requirement: otherwise the decoded frame drifts off the
+    original by a couple of pixels and the mask composite leaves a strip along the edge.
+    A hard brush edge leaves a visible seam, so the mask is blurred.
 
-    Возвращает пару для воркера, размер подготовленного кадра целиком и вырезанное
-    окно "x,y,w,h" — по нему кандидаты вклеиваются обратно (см. stitch_candidate).
+    Returns the pair for the worker, the size of the whole prepared frame, and the cut-out
+    window "x,y,w,h" — the candidates are pasted back by it (see stitch_candidate).
     """
     path = os.path.join(settings.upload_dir, src.campaign_id, src.url)
     if not os.path.exists(path):
@@ -1161,8 +1161,8 @@ def prepare_inpaint_pair(
                 raise HTTPException(422, tr("images.too_small"))
         with Image.open(io.BytesIO(mask_raw)) as mi:
             mask = mi.convert("L")
-            # маску рисуют поверх картинки во всю величину, поэтому и обрезаем её
-            # так же, как исходник, а не масштабируем в кадр — иначе сдвиг до 7 px
+            # the mask is drawn over the image at full size, so it is cropped
+            # the same way as the source rather than scaled to the frame — otherwise a shift of up to 7 px
             if mask.size != full_size:
                 mask = mask.resize(full_size, Image.LANCZOS)
             mask = mask.crop(box)
@@ -1176,8 +1176,8 @@ def prepare_inpaint_pair(
             full = full.crop((x, y, x + cw, y + ch))
             mask = mask.crop((x, y, x + cw, y + ch))
             crop = f"{x},{y},{cw},{ch}"
-            # мелкий кусок тянем к рабочему разрешению модели: на 300 px она рисует
-            # кашу, вклеиваем всё равно с уменьшением обратно
+            # a small piece is scaled up to the model's working resolution: at 300 px it draws
+            # mush; it is pasted back with downscaling anyway
             if max(full.size) != INPAINT_TARGET:
                 side = INPAINT_TARGET - INPAINT_TARGET % 8
                 full = full.resize((side, side), Image.LANCZOS)
@@ -1190,17 +1190,17 @@ def prepare_inpaint_pair(
         mask.save(mask_buf, "PNG")
     except HTTPException:
         raise
-    except Exception as exc:  # noqa: BLE001 — битый файл или незнакомый формат
+    except Exception as exc:  # noqa: BLE001 — broken file or unknown format
         raise HTTPException(422, tr("images.read_failed", exc=exc)) from exc
     return src_buf.getvalue(), mask_buf.getvalue(), w, h, crop
 
 
 def stitch_candidate(db: Session, job: ImageGenJob, data: bytes) -> bytes:
-    """Вклеить перерисованный кусок обратно в целый кадр.
+    """Paste the redrawn piece back into the whole frame.
 
-    Воркер видел только окно вокруг маски — кандидат приходит куском. Возвращаем его
-    на место по маске заявки: вне маски остаются исходные пиксели, поэтому кадр не
-    уезжает по цвету от прогона через VAE.
+    The worker saw only the window around the mask — the candidate arrives as a piece. It is returned
+    to its place by the job's mask: outside the mask the original pixels stay, so the frame does not
+    drift in color from the trip through the VAE.
     """
     src = db.get(Attachment, job.source_attachment_id) if job.source_attachment_id else None
     mask_row = (
@@ -1224,7 +1224,7 @@ def stitch_candidate(db: Session, job: ImageGenJob, data: bytes) -> bytes:
         out = io.BytesIO()
         full.save(out, "PNG")
         return out.getvalue()
-    except Exception:  # noqa: BLE001 — кусок не вклеился, отдаём как пришло
+    except Exception:  # noqa: BLE001 — the piece was not pasted in, return it as it came
         return data
 
 
@@ -1280,8 +1280,8 @@ async def create_inpaint_job(
     )
     if busy:
         raise HTTPException(409, tr("images.edit_busy"))
-    # сорвавшуюся правку ГМ обычно не отменяет, а закрывает окно: её маска и копия
-    # исходника иначе остались бы на диске навсегда
+    # the GM usually does not cancel a failed edit but closes the window: its mask and the copy
+    # of the source would otherwise stay on disk forever
     for stale in (
         db.query(ImageGenJob)
         .filter(ImageGenJob.campaign_id == v.campaign_id, ImageGenJob.kind == "inpaint",
@@ -1295,17 +1295,17 @@ async def create_inpaint_job(
     params = {"mode": "replace", "text": text.strip()[:1000]}
     entity_id = src.target_id if src.target_type == "entity" else None
     if src.target_type == CANDIDATE:
-        # вариант ещё не выбран: правка уходит в ту же ленту, что и он сам
+        # the variant is not picked yet: the edit goes into the same feed as the variant itself
         parent = db.get(ImageGenJob, src.target_id)
         params |= {"mode": "new", "from_job": parent.id}
         entity_id = parent.entity_id
     job = ImageGenJob(
         campaign_id=v.campaign_id, kind="inpaint", params=params,
-        # правка портрета остаётся при карточке: так её видно в аудите и уборке
+        # a portrait edit stays with the card: that way it is visible in audit and cleanup
         entity_id=entity_id,
         source_attachment_id=src.id, prompt=prompt[:PROMPT_MAX],
-        # размер держим полный: кандидат вклеивается обратно в целый кадр, а окно
-        # правки и галерея показывают пропорции исходника, а не куска
+        # keep the full size: the candidate is pasted back into the whole frame, and the edit window
+        # and gallery show the source's proportions, not the piece's
         width=width, height=height, crop_box=crop, n_images=CANDIDATES_PER_JOB,
         denoise=strength, created_by=v.member_id,
     )
@@ -1378,7 +1378,7 @@ def pick_inpaint_job(
     winner.visibility = src.visibility
     winner.visible_to = list(src.visible_to or [])
     if src.target_type == SCENE_FRAME:
-        # кадру нужна заявка рядом: из неё галерея берёт размер и промпт
+        # a frame needs its job alongside: the gallery takes the size and prompt from it
         winner.target_type = SCENE_FRAME
         winner.target_id = job.id
     else:
@@ -1461,11 +1461,11 @@ def again_inpaint_job(
 
 
 def job_entity_gate(db: Session, v: Viewer, job: ImageGenJob) -> Entity | None:
-    """Generic-маршруты /image-jobs/{id} — только для заявок карточек (txt2img):
-    у кадров кампании и правок по маске свои маршруты со своими правами, и правка
-    портрета по маске остаётся ГМской — право правки карточки её не открывает.
-    Заявка карточки открыта тем, кто правит карточку; заявка без карточки —
-    черновик кадра, его generic-маршрутом по-прежнему трогает только ГМ."""
+    """Generic /image-jobs/{id} routes are only for card jobs (txt2img):
+    campaign frames and mask edits have their own routes with their own rights, and a mask edit
+    of a portrait stays GM-only — the right to edit the card does not open it.
+    A card job is open to those who edit the card; a job without a card is
+    a frame draft, and the generic route still lets only the GM touch it."""
     if (job.kind or "txt2img") != "txt2img" and not is_new_inpaint(job):
         raise HTTPException(404, tr("images.not_found"))
     if job.entity_id:
@@ -1509,8 +1509,8 @@ def pick_image_job(
     entity = job_entity_gate(db, v, job)
     if entity is None:
         raise HTTPException(404, tr("images.not_found"))
-    # ГМ мог закрыть портрет от стола: правку image_url сервер у игрока не принимает
-    # (см. patch_entity) — выбор кандидата не должен давать обход
+    # the GM may have hidden the portrait from the table: the server does not accept an image_url edit from a player
+    # (see patch_entity) — picking a candidate must not be a way around that
     if body.set_avatar and not v.is_real_gm and "image_url" in (entity.hidden_fields or []):
         raise HTTPException(403, tr("images.portrait_locked"))
     rows = (
@@ -1548,7 +1548,7 @@ def cancel_image_job(job_id: str, v: Viewer = Depends(editor), db: Session = Dep
     return {"ok": True}
 
 
-# --- воркер: забрать задачу, принести кандидатов, сообщить об ошибке ----------
+# --- worker: take a job, bring candidates, report an error ---------------------
 
 
 def worker_auth(authorization: str | None = Header(default=None)) -> None:
@@ -1569,8 +1569,8 @@ class HeartbeatIn(BaseModel):
 
 @worker_router.post("/heartbeat")
 def worker_heartbeat(body: HeartbeatIn, _: None = Depends(worker_auth)):
-    # храним только снимок; свежесть считается на чтении, поэтому писателя
-    # срока годности нет и рестарт бэкенда лечится первым же пингом
+    # only the snapshot is stored; freshness is computed on read, so there is no expiry
+    # writer and a backend restart is cured by the very first ping
     _worker_beat.clear()
     _worker_beat.update({
         "ts": time.time(),
@@ -1586,8 +1586,8 @@ def worker_heartbeat(body: HeartbeatIn, _: None = Depends(worker_auth)):
 def next_image_job(
     caps: str = "", _: None = Depends(worker_auth), db: Session = Depends(get_db)
 ):
-    """caps — что воркер умеет, через запятую. Воркер без inpaint не должен получить
-    заявку на правку: он нарисует по её промпту обычную картинку и молча подменит кадр."""
+    """caps — what the worker can do, comma-separated. A worker without inpaint must not get
+    an edit job: it would draw an ordinary image from its prompt and silently replace the frame."""
     can = {c.strip() for c in caps.split(",") if c.strip()}
     q = db.query(ImageGenJob).filter_by(status="pending")
     if "inpaint" not in can:
@@ -1605,7 +1605,7 @@ def next_image_job(
         "width": job.width, "height": job.height,
         "n_images": job.n_images or CANDIDATES_PER_JOB, "denoise": job.denoise,
         "seed": job.seed or 0,
-        # строка на кандидата (см. candidate_prompts); пусто — одна строка на всех
+        # a line per candidate (see candidate_prompts); empty means one line for all
         "prompts": (job.params or {}).get("prompts") or [],
     }}
 
@@ -1654,7 +1654,7 @@ def job_blob(db: Session, job_id: str, target_type: str) -> FileResponse:
 def worker_job_source(
     job_id: str, _: None = Depends(worker_auth), db: Session = Depends(get_db)
 ):
-    """Подготовленная копия исходника: размер кратен 8 и совпадает с маской."""
+    """Prepared copy of the source: its size is a multiple of 8 and matches the mask."""
     return job_blob(db, job_id, SOURCE)
 
 
@@ -1669,8 +1669,8 @@ def worker_job_mask(
 def worker_job_state(
     job_id: str, _: None = Depends(worker_auth), db: Session = Depends(get_db)
 ):
-    """Жива ли заявка: ГМ мог отменить её посреди пачки — воркер сверяется между
-    кандидатами и не жжёт GPU на уже выброшенную работу."""
+    """Whether the job is alive: the GM may cancel it mid-batch — the worker checks between
+    candidates and does not burn GPU on work already thrown away."""
     job = db.get(ImageGenJob, job_id)
     return {"status": job.status if job else "gone"}
 
@@ -1687,9 +1687,9 @@ async def upload_candidates(
         raise HTTPException(404, "job not found or not claimed")
     if not files:
         raise HTTPException(400, "no files")
-    # кандидаты ждут решения автора заявки и видны только ему (и ГМу): заявку
-    # карточки теперь заводит не только ГМ, поэтому «gm» для них больше не годится —
-    # автор-игрок получал четыре битые картинки. Победитель откроется по «pick»
+    # candidates await the decision of the job's author and are visible only to them (and the GM): card
+    # jobs are no longer created only by the GM, so "gm" no longer fits them —
+    # a player author got four broken images. The winner is opened by "pick"
     for f in files[:CANDIDATES_PER_JOB]:
         if f.content_type not in ALLOWED:
             raise HTTPException(415, f"unsupported type {f.content_type}")
@@ -1713,8 +1713,8 @@ def fail_image_job(
     if not job:
         raise HTTPException(404, "job not found")
     if job.status != "claimed":
-        # заявку уже отменили, пересоздали или подобрал сборщик висяков — устаревший
-        # отчёт о сбое не должен убивать не свою работу
+        # the job was already cancelled, recreated or picked up by the stuck-job sweeper — a stale
+        # failure report must not kill work that is not its own
         return {"ok": False, "ignored": job.status}
     job.status = "failed"
     job.claimed_at = None
@@ -1723,7 +1723,7 @@ def fail_image_job(
     return {"ok": True}
 
 
-# --- рисование по API: сервер сам забирает txt2img-заявки, пока рисует не воркер ---
+# --- API drawing: the server takes txt2img jobs itself while no worker is drawing ---
 
 HUB_IDLE = 3
 
@@ -1738,14 +1738,14 @@ def _job_status(job_id: str) -> str | None:
 
 
 def hub_draw_once() -> bool:
-    """Одна заявка с хаба. False — рисовать нечего или нечем."""
+    """One job from the hub. False means there is nothing to draw or nothing to draw with."""
     db = SessionLocal()
     lang = None
     try:
         conf = draw_conf(db)
         if not conf:
             return False
-        # правку области воркер забирает себе, пока жив (см. next_image_job)
+        # area edits go to the worker while it is alive (see next_image_job)
         kinds = ("txt2img",)
         if not worker_fresh() and can_edit(conf["base_url"]):
             kinds += ("inpaint",)
@@ -1798,22 +1798,22 @@ def hub_draw_once() -> bool:
                      job.width, job.height, job.seed or 0, alive=alive, on_image=got)
             error = ""
             requeue = False
-        except Exception as exc:  # noqa: BLE001 — любой сбой хаба гасит заявку с текстом
+        except Exception as exc:  # noqa: BLE001 — any hub failure fails the job with a message
             if not isinstance(exc, HubDrawError):
                 log.exception("hub draw %s", job_id)
             error = str(exc) if isinstance(exc, HubDrawError) else ctr("content.draw_failed", exc=brief(exc))
             requeue = isinstance(exc, NoEditing)
         db.expire_all()
         job = db.get(ImageGenJob, job_id)
-        # заявку могли отменить, пока хаб рисовал
+        # the job may have been cancelled while the hub was drawing
         if not job or job.status != "claimed":
             return True
-        # сервис править не умеет — правка ждёт воркера, сервис её больше не возьмёт (can_edit)
+        # the service cannot edit — the edit waits for the worker, the service will not take it again (can_edit)
         if requeue and not added:
             job.status, job.claimed_at, job.attempts = "pending", None, (job.attempts or 1) - 1
             db.commit()
             return True
-        # часть пачки готова — выбор есть, сбой остальных не отнимает её
+        # part of the batch is ready — there is a choice, the failure of the rest does not take it away
         if added:
             job.status = "ready"
         else:
@@ -1828,12 +1828,12 @@ def hub_draw_once() -> bool:
         db.close()
 
 
-# уборка не ждёт запросов: чтение ленты или плашки ничего не меняет
+# housekeeping does not wait for requests: reading the feed or the badge changes nothing
 HOUSEKEEP_EVERY = 10
 
 
 def housekeeping() -> None:
-    """Висяки воркера — в очередь или в сбой, просроченные черновики и задания новостей — прочь."""
+    """Stuck worker jobs go back to the queue or to failed; expired drafts and news jobs are removed."""
     from .news import fail_stale_jobs
 
     db = SessionLocal()
@@ -1854,7 +1854,7 @@ def background_loop() -> None:
                 last = time.time()
                 housekeeping()
             busy = hub_draw_once()
-        except Exception as exc:  # noqa: BLE001 — цикл не должен умирать
+        except Exception as exc:  # noqa: BLE001 — the loop must not die
             log.warning("background: %s", exc)
         if not busy:
             time.sleep(HUB_IDLE)

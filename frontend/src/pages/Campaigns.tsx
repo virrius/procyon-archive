@@ -7,7 +7,7 @@ import { useApp, useAsync } from '../ctx'
 import { Chip, Input, Modal } from '../ui'
 import PasswordModal from '../components/PasswordModal'
 
-/** Язык стартовых материалов кампании: канон книги, карта, корабль. Заведённые так и остаются. */
+/** Language of the campaign's starting presets: book canon, map, ship. What's already created stays as is. */
 export function SetupLang({ value, onChange }: { value: Lang; onChange: (v: Lang) => void }) {
   const { t } = useTranslation('admin')
   return (

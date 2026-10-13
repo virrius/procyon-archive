@@ -16,7 +16,7 @@ import '../styles.map.css'
 
 type V = { k: number; tx: number; ty: number }
 
-/* цвет отметки хранится в MapMarker.size как индекс палитры */
+/* marker color is stored in MapMarker.size as a palette index */
 const COLORS = PALETTE
 const HEX = PALETTE_HEX
 const CNAME = PALETTE_NAME
@@ -44,12 +44,12 @@ function thin(pts: number[][]) {
 export default function MapPage() {
   const { isGM, campaign, memberName, L } = useApp()
   const { t } = useTranslation('map')
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // table view is read-only
   const myId: string = campaign?.my_member_id || ''
   const nav = useNavigate()
   const loc = useLocation()
 
-  /* активная карта — в пути (/map/:mapId), выбранная отметка — в ?m */
+  /* active map lives in the path (/map/:mapId), the selected marker in ?m */
   const urlMapId = useMemo(() => {
     const m = /^\/map\/([^/?#]+)/.exec(loc.pathname)
     if (!m) return ''
@@ -58,7 +58,7 @@ export default function MapPage() {
   const selId = useMemo(() => new URLSearchParams(loc.search).get('m') || '', [loc.search])
 
   const [maps, mapsLoading, reloadMaps] = useAsync<Dict[]>(() => api.get(`${c()}/maps`), [])
-  /* без карты в пути открываем последнюю посещённую */
+  /* with no map in the path, open the last visited one */
   const current = useMemo(() => {
     const list = maps || []
     if (urlMapId) return list.find(m => m.id === urlMapId) || list[0] || null
@@ -85,7 +85,7 @@ export default function MapPage() {
   const [dragPos, setDragPos] = useState<Dict | null>(null)
   const [newMap, setNewMap] = useState<Dict | null>(null)
 
-  /* отмена действий: стек обратных операций, живёт в рамках открытой карты */
+  /* undo: a stack of inverse operations, scoped to the open map */
   const undoRef = useRef<{ label: string; run: () => Promise<void> }[]>([])
   const [undoTop, setUndoTop] = useState('')
   const pushUndo = (label: string, run: () => Promise<void>) => {
@@ -109,10 +109,10 @@ export default function MapPage() {
   const spaceRef = useRef(false)
   const dragRef = useRef<{ id: string; sx: number; sy: number; moved: boolean } | null>(null)
   const skipClick = useRef(false)
-  const wantMap = useRef('') /* только что созданная карта — ждём её в списке */
+  const wantMap = useRef('') /* just-created map — wait for it to show up in the list */
 
   const mode = readonly ? 'pan' : tool
-  /* право правки отметки считает сервер; локальная проверка — тот же порядок */
+  /* the server decides marker edit rights; the local check follows the same order */
   const canEdit = (m: Dict) =>
     m.can_edit ?? (isGM || (!!m.created_by && m.created_by === myId))
   const mapKey = current?.id || ''
@@ -149,7 +149,7 @@ export default function MapPage() {
     const r = viewRef.current?.getBoundingClientRect()
     if (r) zoomAt(r.width / 2, r.height / 2, f)
   }
-  /* подвести отметку в центр холста */
+  /* bring the marker to the center of the canvas */
   const focusMarker = (m: Dict) => {
     const el = viewRef.current
     if (!el) return
@@ -164,7 +164,7 @@ export default function MapPage() {
     })
   }
 
-  /* путь всегда указывает на реально открытую карту */
+  /* the path always points to the map that is actually open */
   useEffect(() => {
     if (!maps) return
     if (wantMap.current) {
@@ -174,7 +174,7 @@ export default function MapPage() {
     if (current && loc.pathname !== pathOf(current.id)) go(current.id, selId, true)
   }, [maps, loc.pathname, current?.id, selId])
 
-  /* ?m на исчезнувшую отметку не держим */
+  /* don't keep ?m pointing at a marker that is gone */
   useEffect(() => {
     if (!current || markersLoading || !selId) return
     if (!(markers || []).some(m => m.id === selId)) go(current.id, '', true)
@@ -215,7 +215,7 @@ export default function MapPage() {
     return () => ro.disconnect()
   }, [mapKey])
 
-  /* code, а не key: на кириллической раскладке Ctrl+Z даёт «я» */
+  /* code, not key: on a Cyrillic layout Ctrl+Z reports a Cyrillic letter as key */
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.code !== 'KeyZ' || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
@@ -237,7 +237,7 @@ export default function MapPage() {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
   }, [])
 
-  /* точка события в нормализованных координатах изображения */
+  /* event point in normalized image coordinates */
   const norm = (e: { clientX: number; clientY: number }): number[] => {
     const el = viewRef.current
     if (!el) return [0.5, 0.5]
@@ -375,8 +375,8 @@ export default function MapPage() {
 
   const pinDown = (e: React.PointerEvent<Element>, m: Dict) => {
     if (mode !== 'pan' && mode !== 'mark') return
-    /* нажатие на метку не отдаём холсту: иначе панорама помечает клик «сдвигом»
-       и выбор отметки не срабатывает — в общем виде это ломало открытие карточки */
+    /* don't pass a press on a marker to the canvas: otherwise panning marks the click as a drag
+       and the marker is not selected — in the shared view this broke opening the card */
     e.stopPropagation()
     if (e.button !== 0 || readonly || !canEdit(m)) return
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -415,7 +415,7 @@ export default function MapPage() {
     if (!confirm(t('drop_marker_confirm'))) return false
     try {
       await api.del(`${c()}/markers/${m.id}`)
-      /* Ctrl+Z вернёт саму отметку, но не её записи — они удалены на сервере */
+      /* Ctrl+Z restores the marker itself but not its notes — they are deleted on the server */
       pushUndo('undo_action.drop', async () => {
         await api.post(`${c()}/markers`, {
           map_id: current!.id, x: m.x, y: m.y, marker_type: m.marker_type || 'custom',
@@ -838,7 +838,7 @@ function IconPick({ value, color, onChange }: {
   )
 }
 
-/** Карточка привязанной записи: картинка и описание, вся карточка — ссылка. */
+/** Linked entry card: image and description; the whole card is a link. */
 function LinkedCard({ e, onOpen }: { e: Dict; onOpen: (id: string) => void }) {
   const { L } = useApp()
   const { t } = useTranslation('map')
@@ -917,8 +917,8 @@ function MarkerModal({
     || vis.visibility !== (marker.visibility || 'crew')
     || vis.visible_to.join(',') !== (marker.visible_to || []).join(',')
 
-  /* автосохранение: правка уезжает сама. Запросы не наслаиваются — пока один в
-     полёте, следующий ждёт в очереди; при закрытии окна недосохранённое дошлётся */
+  /* autosave: edits go out on their own. Requests don't pile up — while one is in
+     flight, the next waits in the queue; unsaved edits are sent when the window closes */
   const flying = useRef({ busy: false, next: null as Dict | null, gone: false })
   const flush = async (p: Dict) => {
     if (flying.current.gone) return
@@ -943,10 +943,10 @@ function MarkerModal({
     return () => clearTimeout(t)
   }, [readonly, dirty, JSON.stringify(patch)])
 
-  /* закрыли окно раньше, чем сработал таймер, — дошлём правку вдогонку */
+  /* the window closed before the timer fired — send the edit after it */
   useEffect(() => () => { if (pending.current) flush(pending.current) }, [])
 
-  /* удаление гасит дошлю правок; отказ от подтверждения — возвращает как было */
+  /* deleting cancels pending edit sends; declining the confirm restores things as they were */
   const kill = async () => {
     flying.current.gone = true
     pending.current = null

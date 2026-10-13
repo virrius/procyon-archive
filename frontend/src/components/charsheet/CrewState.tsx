@@ -10,12 +10,12 @@ import {
 
 const HARM_ROW: Record<number, string[]> = { 3: ['h3'], 2: ['h2a', 'h2b'], 1: ['h1a', 'h1b'] }
 
-/** ГМу на плитке «Команды»: стресс и нагрузка полосками, травмы, раны, таланты с текстом по наведению. */
+/** For the GM on a "Team" tile: stress and load as bars, trauma, harm, abilities with text on hover. */
 export function CrewState({ e }: { e: Dict }) {
   const { meta, campaign } = useApp()
   const { t } = useTranslation('crew')
   const { t: tc } = useTranslation('char')
-  // открытая карточка таланта: на телефоне — по нажатию, на компьютере ещё и по наведению
+  // open ability card: on a phone on tap, on desktop also on hover
   const [open, setOpen] = useState('')
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {

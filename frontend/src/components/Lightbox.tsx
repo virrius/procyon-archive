@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLayer } from '../layers'
 
-/** Просмотр фото в полную величину: тёмная подложка, картинка целиком без обрезки/растяжения.
- *  Если переданы onPrev/onNext — стрелками и кнопками листаем набор снимков. */
+/** Full-size photo view: dark backdrop, the whole picture without cropping/stretching.
+ *  If onPrev/onNext are passed, arrows and buttons page through the set of pictures. */
 export default function Lightbox({ src, alt, caption, onClose, onPrev, onNext }: {
   src: string
   alt?: string
@@ -13,7 +13,7 @@ export default function Lightbox({ src, alt, caption, onClose, onPrev, onNext }:
   onNext?: () => void
 }) {
   const { t } = useTranslation('media')
-  // просмотр открывают и поверх окна карточки: Escape снимает только его
+  // the viewer can open over a card window too: Escape closes only the viewer
   useLayer(true, onClose)
 
   useEffect(() => {
@@ -30,8 +30,8 @@ export default function Lightbox({ src, alt, caption, onClose, onPrev, onNext }:
     fn?.()
   }
 
-  // закрываем, только если и нажатие, и отпускание были на подложке: иначе выделение
-  // подписи, вылезшее мышкой за картинку, захлопывает просмотр
+  // close only if both press and release were on the backdrop: otherwise selecting
+  // the caption and dragging the mouse past the picture would slam the viewer shut
   const downOnBd = useRef(false)
 
   return (

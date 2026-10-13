@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { api, store, type Dict } from '../api'
 import { lang } from '../i18n'
 
-/** Перенос кампании: архив собирается и разбирается на сервере в фоне, здесь — ход работы. */
+/** Campaign transfer: the archive is built and unpacked on the server in the background; here, the progress. */
 
 export type Job = Dict & { id: string; status: 'running' | 'done' | 'failed'; stage: string; done: number; total: number }
 
 const mb = (n: number) => (n / 1048576).toFixed(n < 10 * 1048576 ? 1 : 0)
 
-/** Опрос задачи, пока она идёт. */
+/** Poll the task while it runs. */
 export function useJob(onDone?: (job: Job) => void) {
   const [job, setJob] = useState<Job | null>(null)
   const done = useRef(onDone)
@@ -49,7 +49,7 @@ export function TransferBar({ job }: { job: Job }) {
   )
 }
 
-/** Готовый архив скачивает сам браузер: кука с токеном пускает его на адрес файла. */
+/** The browser downloads the finished archive itself: the token cookie lets it reach the file URL. */
 export function download(job: Job) {
   const a = document.createElement('a')
   a.href = `/api/admin/transfers/${job.id}/file`
@@ -59,7 +59,7 @@ export function download(job: Job) {
   a.remove()
 }
 
-/** Архив уходит телом запроса — ход отправки видно по байтам. */
+/** The archive goes as the request body: upload progress is shown in bytes. */
 export function upload(file: File, onProgress: (done: number, total: number) => void): Promise<Job> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()

@@ -1,4 +1,4 @@
-"""Правка области: хаб переписывает просьбу ГМа в короткий абзац для куска кадра."""
+"""Area edit: the hub rewrites the GM's request into a short paragraph for a piece of the frame."""
 from __future__ import annotations
 
 from .lore import EN

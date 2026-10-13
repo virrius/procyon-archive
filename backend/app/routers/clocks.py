@@ -103,7 +103,7 @@ class ClockHistoryOut(BaseModel):
 
 
 def clock_editable(c: Clock, v: Viewer) -> bool:
-    """Правку счётчика раздаёт ГМ: любой игрок ('*'), один участник или никто ('')."""
+    """The GM hands out who can edit a clock: any player ('*'), one member, or no one ('')."""
     if v.is_gm:
         return True
     who = ANY_PLAYER if c.owner_member_id is None else c.owner_member_id
@@ -118,10 +118,10 @@ def _editable_or_403(c: Clock, v: Viewer) -> None:
 
 
 def clock_title(c: Clock, db: Session) -> str:
-    """Имя счётчика в журнале: «привязанная запись: счётчик».
+    """Clock name in the log: "linked entry: clock".
 
-    Счётчиков с одинаковым именем в кампании много («Погоня», «Тревога»), и без
-    записи, к которой он привязан, строка журнала не читается.
+    A campaign has many clocks with the same name ("Chase", "Alarm"), and without
+    the entry it is linked to, the log line makes no sense.
     """
     if c.owner_type == "entity" and c.owner_id:
         e = db.get(Entity, c.owner_id)
@@ -140,7 +140,7 @@ def _owner_visible(c: Clock, v: Viewer, db: Session) -> Entity | None:
 def _out(c: Clock, v: Viewer, db: Session) -> dict:
     owner = _owner_visible(c, v, db)
     owner_name = owner.name if owner else ""
-    # закрытый от стола владелец не выдаётся даже идентификатором
+    # an owner hidden from the table is not returned, not even as an id
     hidden_owner = bool(c.owner_id) and owner is None and not v.is_gm
     d = {
         "id": c.id, "name": c.name, "description": c.description, "outcome": c.outcome,
@@ -176,7 +176,7 @@ def list_clocks(
         q = q.filter(Clock.owner_id == owner_id)
     if kind:
         q = q.filter(Clock.kind == kind)
-    # тип вперёд (без типа — в конец), внутри — по created_at: тик не переставляет карточки
+    # by type first (no type goes last), then by created_at: a tick does not reorder the cards
     q = (
         apply_scope(q, Clock, v)
         .order_by(
@@ -208,13 +208,13 @@ def create_clock(body: ClockIn, v: Viewer = Depends(editor), db: Session = Depen
         raise HTTPException(403, tr("clocks.gm_only"))
     data = body.model_dump()
     data["kind"] = (data.get("kind") or "").strip()[:60]
-    # счётчик ГМа заводится закрытым, и правит его только ГМ: стол получает
-    # и счётчик, и право на него, когда ГМ сам их отдаст
+    # a GM's clock is created hidden and only the GM edits it: the table gets
+    # both the clock and the right to edit it when the GM hands them over
     data["visibility"] = default_visibility(v, body.visibility)
     if v.is_gm and data.get("owner_member_id") is None:
         data["owner_member_id"] = ""
     if not v.is_gm:
-        # игрок не раздаёт права: свой счётчик он завёл открытым для стола
+        # a player does not assign rights: their own clock is created open to the table
         data["owner_member_id"] = ANY_PLAYER
     c = Clock(campaign_id=v.campaign_id, **data)
     db.add(c)
@@ -246,7 +246,7 @@ def patch_clock(
     if "owner_member_id" in data and not v.is_gm:
         raise HTTPException(403, tr("clocks.owner_gm_only"))
     if c.status != "active":
-        # закрытый счётчик — только видимость; содержимое заморожено
+        # a closed clock accepts only visibility; its content is frozen
         extra = set(data) - {"visibility", "visible_to", "owner_member_id"}
         if extra:
             raise HTTPException(400, tr("clocks.closed_frozen"))
@@ -255,7 +255,7 @@ def patch_clock(
     if "kind" in data:
         data["kind"] = (data["kind"] or "").strip()[:60]
     if not v.is_gm and c.owner_id and _owner_visible(c, v, db) is None:
-        # игрок не видит владельца — и не может его снять или подменить
+        # a player who cannot see the owner cannot remove or replace it either
         data.pop("owner_type", None)
         data.pop("owner_id", None)
     before, after = journal.changes(c, data)
@@ -349,7 +349,7 @@ def clock_history(clock_id: str, v: Viewer = Depends(viewer), db: Session = Depe
     )
     out = []
     for e in rows:
-        # у завершения шкала не двигается: заполненный счётчик дальше заморожен
+        # completing does not move the track: a filled clock stays frozen from then on
         was = (e.before or {}).get("filled", c.filled)
         became = (e.after or {}).get("filled", was)
         out.append({

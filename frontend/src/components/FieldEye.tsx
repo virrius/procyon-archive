@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { IconEye, IconEyeOff } from './icons'
 
-/** Открыть поле столу или держать при себе. Значение живёт всегда — меняется только видимость.
- *  Стоит сразу за подписью поля; на картинке — первым в планке действий. */
+/** Reveal a field to the table or keep it to yourself. The value always lives; only visibility changes.
+ *  Sits right after the field label; on a picture, first in the action bar. */
 export function FieldEye({ hidden, onChange }: {
   hidden: boolean; onChange: (hide: boolean) => void
 }) {

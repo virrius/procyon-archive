@@ -7,7 +7,7 @@ import i18n, { locale } from '../i18n'
 import { Chip, Select } from '../ui'
 import '../styles.history.css'
 
-/** чипы разделов: каждый собирает несколько источников ленты */
+/** section chips: each collects several feed sources */
 const GROUPS: [string, string[]][] = [
   ['cards', ['entity', 'block', 'link']],
   ['files', ['file']],
@@ -25,13 +25,13 @@ const tr = (key: string, fallback: string) =>
 const VIS = ['crew', 'selected', 'owner', 'gm']
 const visLabel = (v: string) => (VIS.includes(v) ? i18n.t(`history:vis.${v}`) : v)
 
-/** «источник:действие» → фраза ленты; без пары берём общее слово по действию */
+/** "source:action" → feed phrase; without a pair, use the generic word for the action */
 const phrase = (e: Dict) => {
   const act = String(e.action || '').replace(/-/g, '_')
   return tr(`phrase.${e.source}.${act}`, tr(`fallback.${act}`, e.action))
 }
 
-/** ключи бланка корабля без подписи в схеме — как в заголовках бланка */
+/** ship sheet keys without a label in the schema: as in the sheet headings */
 const sheetLabel = (f: string, other: string) => tr(`sheet.${f}`, other)
 
 const val = (v: any): string => {
@@ -46,11 +46,11 @@ const val = (v: any): string => {
 
 type Change = { key: string; label: string; was: string; now: string }
 
-/** «было → стало»: словарь fields раскрывается по ключам, остаются только изменившиеся;
-    подписи — как на карточке (поля типа из схемы, затем общий словарь) */
+/** "before → after": the fields dict is expanded by key, only changed ones stay;
+    labels as on the card (type fields from the schema, then the shared dictionary) */
 function changesOf(e: Dict, meta: Dict | null): Change[] {
   const kinds: Dict = meta?.kinds || {}
-  // у правки карточки в detail лежит её тип; «отношения» типа не знают — ищем по всем
+  // a card edit carries its type in detail; "relations" don't know the type, so search all
   const defs: Dict[] = e.source === 'entity'
     ? [kinds[e.detail], ...Object.values(kinds)].filter(Boolean) : []
   const name = (k: string): string => {
@@ -88,9 +88,9 @@ const DAY = (iso: string) =>
 const TIME = (iso: string) =>
   new Date(iso).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
 
-/** Журнал кампании: одна лента правок, комментариев и учётных действий.
-    Данные пишет backend/app/history.py на каждой правке, поэтому в ленте
-    остаются и удалённые записи — со снимком того, что в них было. */
+/** Campaign log: one feed of edits, comments and account actions.
+    backend/app/history.py writes the data on every edit, so the feed
+    keeps deleted entries too, with a snapshot of what was in them. */
 export default function HistoryFeed() {
   const { campaign } = useApp()
   const { t } = useTranslation('history')

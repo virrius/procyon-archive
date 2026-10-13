@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { lang } from '../i18n'
 
 const LATIN = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#$%&*+=<>/\\|'
-// кириллица в шуме — только для русского интерфейса
+// Cyrillic in the noise only for the Russian interface
 const glyphs = () => (lang() === 'ru' ? LATIN + 'БГДЖЗИЛПФЦЧШЩЭЮЯ' : LATIN)
 const FRAME_MS = 45
 
@@ -20,11 +20,11 @@ const reduced = () => {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false }
 }
 
-/** Текст «пропечатывается»: пока не попал на экран — закрыт символами, на экране мелькает и проявляется
-    слева направо. Пробелы и переносы стоят на своих местах, поэтому строки не прыгают. */
+/** The text "prints out": until it's on screen it's masked with symbols; on screen it flickers and shows
+    left to right. Spaces and line breaks stay in place, so lines don't jump. */
 export function MatrixText({ text, className, as: Tag = 'span', off = false }: {
   text: string
-  /** без эффекта — сразу готовый текст */
+  /** no effect: the finished text right away */
   off?: boolean
   className?: string
   as?: 'span' | 'div' | 'h2' | 'p'

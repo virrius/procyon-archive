@@ -1,7 +1,7 @@
-/* Левое меню консоли: тёмный рельс, янтарная риска на активном.
-   Разделы — капслок, подвкладки — обычный кегль на тонкой линии-рейке.
-   Селекторы намеренно прибиты к .sidenav: styles.css грузится позже
-   и иначе перебивал бы `a:hover` при равной специфичности. */
+/* The console's left menu: a dark rail, an amber tick on the active item.
+   Sections in caps, sub-tabs in normal size on a thin rail line.
+   Selectors are deliberately pinned to .sidenav: styles.css loads later
+   and would otherwise override `a:hover` at equal specificity. */
 
 .sidenav {
   display: flex;
@@ -13,7 +13,7 @@
   border-right: 1px solid var(--line);
 }
 
-/* кнопка-гамбургер: только узкий экран */
+/* hamburger button: narrow screens only */
 .sidenav .nav-burger { display: none; }
 
 .sidenav .sidenav-scroll {
@@ -97,7 +97,7 @@
 .sidenav .sidenav-foot .row { gap: 6px; flex-wrap: wrap; }
 .sidenav .sidenav-foot button { flex: 1 1 auto; }
 
-/* --- узкий экран: меню выезжает сбоку поверх страницы --------------------- */
+/* --- narrow screen: the menu slides in from the side over the page --------- */
 @media (max-width: 900px) {
   .nav-scrim {
     position: fixed; inset: 0; z-index: 75;
@@ -121,7 +121,7 @@
   .sidenav { transition: none; }
 }
 
-/* черновики новостей ждут ГМа */
+/* news drafts waiting for the GM */
 .sidenav .nav-badge {
   margin-left: 8px; padding: 0 5px; font-family: var(--util); font-size: 10.5px;
   letter-spacing: 0; color: #17140f; background: var(--amber);

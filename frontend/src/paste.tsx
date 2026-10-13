@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import i18n from './i18n'
 import { Modal } from './ui'
 
-/** Ctrl+V картинкой: снимок из буфера уходит тем же путём, что и выбранный файл.
- *  Слушателей на странице может быть несколько (карточка окном поверх галереи) —
- *  вставку забирает верхний, тот что смонтирован последним. */
+/** Ctrl+V with an image: the clipboard image takes the same path as a picked file.
+ *  A page may have several listeners (an entry modal over the gallery) —
+ *  the topmost one, mounted last, takes the paste. */
 type Handler = (files: File[]) => void
 
 const stack: Handler[] = []
@@ -19,7 +19,7 @@ const typing = (node: any): boolean => {
 const onPaste = (ev: ClipboardEvent) => {
   const top = stack[stack.length - 1]
   if (!top) return
-  // в поле ввода вставка остаётся текстовой
+  // in an input field, paste stays text
   if (typing(ev.target) || typing(document.activeElement)) return
   const files = Array.from(ev.clipboardData?.items || [])
     .filter(i => i.kind === 'file' && i.type.startsWith('image/'))
@@ -55,12 +55,12 @@ const kb = (n: number) => (n < 1024 * 1024
   ? i18n.t('common:size_kb', { n: Math.max(1, Math.round(n / 1024)) })
   : i18n.t('common:size_mb', { n: (n / 1024 / 1024).toFixed(1) }))
 
-/** Вставка спрашивает: показываем снимок из буфера и ждём «да». Случайный Ctrl+V
- *  чужой картинкой не затирает портрет. */
+/** Paste asks first: we show the clipboard image and wait for “yes”. A stray Ctrl+V
+ *  with some other image won't overwrite the portrait. */
 export default function PasteImage({ onFiles, enabled = true, title, question }: {
   onFiles: Handler
   enabled?: boolean
-  /** заголовок окна и строка вопроса — что именно случится с картинкой */
+  /** modal title and question line — what exactly will happen to the image */
   title?: string
   question?: string
 }) {
@@ -70,7 +70,7 @@ export default function PasteImage({ onFiles, enabled = true, title, question }:
 
   usePasteImage(files => setAsk(files), enabled)
 
-  // предпросмотр живёт ровно столько, сколько открыто окно
+  // the preview lives exactly as long as the modal is open
   useEffect(() => {
     if (!ask) { setUrls([]); return }
     const made = ask.map(f => URL.createObjectURL(f))
@@ -78,7 +78,7 @@ export default function PasteImage({ onFiles, enabled = true, title, question }:
     return () => made.forEach(URL.revokeObjectURL)
   }, [ask])
 
-  // окно закрылось вместе с блоком, который его поставил — файлы не всплывут потом
+  // the modal closed along with the block that opened it — the files won't pop up later
   useEffect(() => { if (!enabled) setAsk(null) }, [enabled])
 
   if (!ask) return null

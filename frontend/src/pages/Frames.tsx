@@ -6,8 +6,8 @@ import Studio, { type BrushSource } from '../components/studio/Studio'
 import FramesGallery from '../components/FramesGallery'
 import '../styles.frames.css'
 
-/** «Кадры кампании»: то, что стол видел своими глазами. Сверху мастерская,
- *  снизу коллекция. Кадры заводит весь стол; ГМ прячет лишнее глазом. */
+/** "Campaign frames": what the table saw with their own eyes. Studio on top,
+ *  collection below. Anyone at the table adds frames; the GM hides extra ones with the eye. */
 export default function Frames() {
   const { t } = useTranslation('media')
   const { campaign } = useApp()

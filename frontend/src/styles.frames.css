@@ -1,4 +1,4 @@
-/* «Кадры кампании»: сверху генерация, снизу коллекция кадров одного размера */
+/* Campaign frames: generation on top, a collection of equal-size frames below */
 
 .frames-panel { gap: 12px; }
 .frames-bar { gap: 6px; align-items: center; }
@@ -11,7 +11,7 @@
   white-space: nowrap;
 }
 
-/* лента по дням: заголовок дня с числом кадров, под ним своя сетка */
+/* feed by day: a day heading with the frame count, its own grid below */
 .frames-day { display: flex; flex-direction: column; gap: 10px; }
 .frames-day-hd {
   display: flex;
@@ -45,7 +45,7 @@
 
 .frame-card.hidden { border-color: #5c3327; }
 
-/* все кадры в сетке одного размера: разный аспект вписан в ячейку целиком */
+/* all frames in the grid are the same size: any aspect ratio fits the cell whole */
 .frame-shot {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -54,7 +54,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* снимок вынут из потока: иначе высокий кадр растянул бы ячейку и сетка разъехалась */
+/* the image is out of flow: otherwise a tall frame would stretch its cell and break the grid */
 .frame-shot img {
   position: absolute;
   inset: 0;
@@ -82,7 +82,7 @@
 
 .frame-cap.none { color: var(--dim2); font-style: italic; }
 
-/* правится по клику, но выглядит как обычная подпись — не как кнопка */
+/* editable on click but looks like a plain caption, not a button */
 button.frame-cap {
   padding: 0;
   border: none;
@@ -106,7 +106,7 @@ button.frame-cap:hover { color: var(--amber); }
 
 .frame-when { font-family: var(--util); font-size: 10px; color: var(--dim2); }
 
-/* трафарет карточки: пустая плитка того же размера, свой файл кладут прямо в неё */
+/* card template: an empty tile of the same size; drop your own file right onto it */
 .frame-add {
   border-style: dashed;
   border-color: var(--line2);
@@ -144,7 +144,7 @@ button.frame-cap:hover { color: var(--amber); }
 
 .frame-add:hover .frame-add-in { color: var(--amber); }
 
-/* файл тащат на панель: подсвечиваем всю зону приёма и трафарет в ней */
+/* a file dragged onto the panel: highlight the whole drop zone and the template in it */
 .frames-panel.over { border-color: var(--amber); }
 .frame-add.over { border-color: var(--amber); background: rgba(216, 162, 74, 0.06); }
 .frame-add.over .frame-add-in { color: var(--amber); }

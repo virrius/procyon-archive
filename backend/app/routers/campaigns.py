@@ -367,7 +367,7 @@ def create_player(
 
 
 def _account_locked(db: Session, v: Viewer, user: User) -> bool:
-    """Учётка шире этой кампании: ГМ может только убрать её отсюда, менять её — админ экземпляра."""
+    """The account spans more than this campaign: the GM can only remove it from here; the instance admin edits it."""
     if db.get(User, v.user_id).is_admin:
         return False
     if user.is_admin or user.id == db.get(Campaign, v.campaign_id).owner_id:

@@ -18,7 +18,7 @@ from .entities import block_visible, peer_brief
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["map"], responses=AUTH_ERRORS)
 
-# что у отметки считаем событием: координаты меняются перетаскиванием, их не пишем
+# what counts as a marker event: coordinates change by dragging, they are not logged
 MARKER_LOGGED = ("label", "marker_type", "visibility", "visible_to", "linked_type", "linked_id")
 
 MARKER_ICONS = ("dot", "ring", "cross", "target", "diamond", "star")
@@ -37,7 +37,7 @@ def marker_title(m: MapMarker) -> str:
 
 
 def marker_editable(m: MapMarker, v: Viewer) -> bool:
-    """Как у карточек: ГМ правит любую отметку, игрок — только свою."""
+    """As with cards: the GM edits any marker, a player only their own."""
     return v.is_gm or bool(v.member_id) and m.created_by == v.member_id
 
 
@@ -202,8 +202,8 @@ def marker_item(db: Session, v: Viewer, m: MapMarker, note_count: int) -> dict:
         "linked": linked, "note_count": note_count,
         "created_by": m.created_by,
         "can_edit": can,
-        # аудиторию отдаём тому, кто вправе её менять: иначе пикер покажет
-        # дефолт «всем» и затрёт настоящий скоуп при первой же правке
+        # the audience is returned only to whoever may change it: otherwise the picker shows
+        # the "everyone" default and overwrites the real scope on the first edit
         "visibility": m.visibility if can else None,
         "visible_to": (m.visible_to or []) if can else None,
     }
@@ -348,7 +348,7 @@ def patch_marker(
              if val is not None}
     if patch.get("icon") not in MARKER_ICONS:
         patch.pop("icon", None)
-    # пустая строка в связке — снять привязку: None в PATCH означает «не трогать»
+    # an empty string in the link pair removes the link: None in PATCH means "leave as is"
     for k in ("linked_type", "linked_id"):
         if patch.get(k) == "":
             patch[k] = None
@@ -356,7 +356,7 @@ def patch_marker(
         check_link(db, v,
                    patch.get("linked_type", m.linked_type),
                    patch.get("linked_id", m.linked_id))
-    # перетаскивание отметки — не событие журнала, иначе лента забита координатами
+    # dragging a marker is not a log event, otherwise the feed fills up with coordinates
     before, after = journal.changes(m, patch, MARKER_LOGGED)
     for k, val in patch.items():
         setattr(m, k, val)

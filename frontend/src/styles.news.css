@@ -1,12 +1,12 @@
-/* Новости: генератор депеш и лента эфира.
-   Голос журналиста — свой тон: ржавчина помех, золото биржи, сталь мундира.
-   Текст депеши набран с засечками: его читают, а не сканируют, как остальной прибор. */
+/* News: the dispatch generator and the on-air feed.
+   Each journalist's voice has its own tone: static rust, market gold, uniform steel.
+   Dispatch text is set in serif: it is read, not scanned like the rest of the console. */
 .nw, .nw-feed { --serif: Georgia, Cambria, "Times New Roman", serif; --tone: var(--dim); }
 .tone-lazarus { --tone: var(--rust); }
 .tone-sterling { --tone: var(--amber); }
 .tone-herald { --tone: var(--steel); }
 
-/* --- генератор --------------------------------------------------------------- */
+/* --- generator --------------------------------------------------------------- */
 .nw-grid {
   display: grid; grid-template-columns: minmax(290px, 370px) minmax(0, 1fr);
   gap: 24px; align-items: start;
@@ -68,7 +68,7 @@ button.nw-hit:hover, button.nw-hit.hot { background: var(--surface2); }
 
 .nw-go { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-/* переключатель «Убить журналиста» у заголовка ленты */
+/* “Kill the journalist” toggle by the feed heading */
 button.nw-slop {
   display: inline-flex; align-items: center; gap: 8px; align-self: center; margin-left: 14px;
   text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12.5px;
@@ -87,7 +87,7 @@ button.nw-slop[aria-checked="true"] .nw-slop-track { background: #2a1f10; }
 button.nw-slop[aria-checked="true"] .nw-slop-track::after { transform: translateX(12px); background: var(--amber); }
 .nw-err { color: #e79a83; font-size: 13px; }
 
-/* --- эфир: черновики ----------------------------------------------------------- */
+/* --- on air: drafts ------------------------------------------------------------ */
 .nw-air { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .nw-idle { border: 1px dashed var(--line2); padding: 26px 22px; color: var(--dim2); max-width: 62ch; }
 .nw-idle strong { display: block; color: var(--dim); font-size: 15px; margin-bottom: 4px; }
@@ -116,7 +116,7 @@ textarea.nw-body {
   border: 1px solid var(--line); border-left: 3px solid var(--olive); color: var(--olive); font-size: 13px;
 }
 
-/* пока журналист пишет — три пустых листа и несущая, бегущая по ним сверху вниз */
+/* while the journalist writes — three blank sheets with a carrier line sweeping down them */
 .nw-wait-note { color: var(--dim); font-size: 13.5px; }
 .nw-slip.wait { height: 168px; position: relative; overflow: hidden; }
 .nw-slip.wait::after {
@@ -128,13 +128,13 @@ textarea.nw-body {
 .nw-slip.wait:nth-child(4)::after { animation-delay: .7s; }
 @keyframes nw-carrier { 0%, 100% { top: 10%; opacity: .4; } 50% { top: 90%; opacity: 1; } }
 
-/* --- лента: депеша — экран терминала на черте тона, справа ветка откликов сети ------- */
+/* --- feed: a dispatch is a terminal screen on a tone rule, network comments thread on the right --- */
 .nw-feed { display: flex; flex-direction: column; gap: 40px; }
 .nw-item {
   display: grid; gap: 18px 44px; align-items: start;
   grid-template-columns: minmax(0, 2fr) minmax(250px, 1fr);
 }
-/* приход из поиска: найденная новость — янтарным кантом, под липкой шапкой не прячется */
+/* arriving from search: the found story gets an amber border and doesn't hide under the sticky header */
 .nw-item.lit { scroll-margin-top: 60px; }
 .nw-item.lit .nw-story { border-color: var(--amber-dim); border-left-color: var(--tone); }
 .nw-story {
@@ -142,7 +142,7 @@ textarea.nw-body {
   background: #0c0b09; border: 1px solid var(--line); border-left: 3px solid var(--tone);
   font-family: var(--util);
 }
-/* строки развёртки поверх экрана */
+/* scan lines over the screen */
 .nw-story::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px);
@@ -166,7 +166,7 @@ textarea.nw-body {
   background: color-mix(in srgb, var(--tone) 12%, transparent);
   border: 1px dashed color-mix(in srgb, var(--tone) 55%, transparent);
 }
-/* суть закрыта от стола — тот же рустовый кант, что у закрытого поля карточки */
+/* gist hidden from the table — the same rust border as a hidden entry field */
 .nw-lead.hidden {
   color: var(--dim); background: #1f1512; border-color: #5c3327; border-left: 3px solid var(--rust);
 }
@@ -183,13 +183,13 @@ textarea.nw-body {
 .nw-link { font-size: 12px; color: var(--dim); border: 1px dashed var(--line2); padding: 1px 8px; }
 a.nw-link:hover { color: var(--txt); border-color: var(--tone); text-decoration: none; }
 
-/* журналист убит: сводка — одна колонка, суть сразу под строкой эфира */
+/* journalist killed: the summary is one column, the gist right under the on-air line */
 .nw-feed.bare { gap: 14px; }
 .nw-item.bare { grid-template-columns: minmax(0, 1fr); }
 .nw-item.bare .nw-story { max-width: 900px; }
 .nw-item.bare .nw-lead { margin-bottom: 0; }
 
-/* отклики сети: реплики висят на одной нити, как ветка ответов */
+/* network comments: replies hang on one thread, like a reply chain */
 .nw-chatter { min-width: 0; padding-top: 30px; }
 .nw-chatter h3 {
   margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--dim);
@@ -208,7 +208,7 @@ a.nw-link:hover { color: var(--txt); border-color: var(--tone); text-decoration:
 .nw-chatter p { margin: 4px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
 .nw-chatter.empty p { margin: 0 0 12px; color: var(--dim2); }
 
-/* правка сути и откликов в черновике */
+/* editing the gist and comments in a draft */
 .nw-sub { margin-top: 10px; font-size: 12.5px; color: var(--dim); font-weight: 600; }
 .nw-sub small { font-weight: 400; color: var(--dim2); margin-left: 6px; }
 .nw-sub.lbl-row { display: flex; align-items: center; gap: 5px; }
@@ -221,7 +221,7 @@ textarea.nw-lead-edit {
 }
 textarea.nw-lead-edit:focus { border-color: var(--tone); }
 
-/* черновик повторяет ленту: текст на две трети, отклики справа */
+/* a draft mirrors the feed: text on two thirds, comments on the right */
 .nw-slip { container-type: inline-size; }
 .nw-slip-grid { display: grid; gap: 14px 32px; }
 @container (min-width: 900px) {
@@ -234,7 +234,7 @@ button.nw-chat-go { margin: 6px 0 4px; }
 .nw-edit-row { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 12px; }
 .nw-edit-row input.bad { border-color: var(--rust); }
 .nw-comments-edit { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; align-items: flex-start; }
-/* отклик: ник и крестик в строку, ниже кто он, ещё ниже реплика */
+/* comment: nickname and close button on one line, who they are below, the reply below that */
 .nw-comment-edit {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 6px; width: 100%;
   padding-bottom: 10px; border-bottom: 1px solid var(--line);
@@ -244,7 +244,7 @@ button.nw-chat-go { margin: 6px 0 4px; }
 .nw-comment-edit input:nth-of-type(2) { grid-column: 1 / -1; grid-row: 2; font-size: 12.5px; color: var(--dim); }
 .nw-comment-edit textarea { grid-column: 1 / -1; min-height: 0; font-size: 13.5px; line-height: 1.45; field-sizing: content; }
 
-/* брифинг остаётся под рукой, пока листаешь черновики, — если он целиком влезает по высоте */
+/* the briefing stays at hand while scrolling drafts — if it fits the height in full */
 @media (min-width: 901px) and (min-height: 820px) {
   .nw-brief { position: sticky; top: 0; }
 }
@@ -262,7 +262,7 @@ button.nw-chat-go { margin: 6px 0 4px; }
 button.nw-voice:focus-visible, button.nw-hit:focus-visible, button.nw-slop:focus-visible,
 button.nw-tag-x:focus-visible { outline: 1px solid var(--amber); outline-offset: 1px; }
 
-/* --- черновики над лентой ---------------------------------------------------------- */
+/* --- drafts above the feed ---------------------------------------------------------- */
 .nw-drafts { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
 .nw-job { display: flex; flex-direction: column; gap: 10px; }
 .nw-job-about { font-size: 12.5px; color: var(--dim2); }

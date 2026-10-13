@@ -11,8 +11,8 @@ import Stub from './Stub'
 import '../styles.entity.css'
 import '../styles.peek.css'
 
-/* Быстрый просмотр карточки окном поверх экрана — только чтение, экран под ним не трогается.
-   Ответы те же, что у страницы сущности: закрытое от стола сервер сюда не отдаёт. */
+/* Quick view of a card as a window over the screen: read only, the screen under it is untouched.
+   Same responses as the entry page: the server doesn't send here what's hidden from the table. */
 
 function Unknown() {
   const { t } = useTranslation('entity')
@@ -26,7 +26,7 @@ export default function EntityPeek({ id, name, onClose }: {
   const { meta, isGM, L } = useApp()
   const { t } = useTranslation('entity')
   const [e, loading, , err] = useAsync<Dict>(() => api.get(`${c()}/entities/${id}`), [id])
-  // связь в записи открывает следующее окно поверх этого: закрыл — вернулся сюда
+  // a link in a record opens the next window over this one: close it to come back here
   const [next, setNext] = useState<{ id: string; name: string } | null>(null)
   const [full, setFull] = useState(false)
 
@@ -38,7 +38,7 @@ export default function EntityPeek({ id, name, onClose }: {
     const own: Dict = e.fields || {}
     const hidden = new Set<string>((e.hidden_fields || []) as string[])
     const has = (key: string) => (def.fields || []).some((f: Dict) => f.key === key)
-    // у ГМа закрытое от стола видно, но с рустовой меткой — как на странице карточки
+    // the GM sees what's hidden from the table, but with a rust mark, as on the card page
     const shut = (key: string) => (isGM && hidden.has(key) ? ' shut' : '')
     const locked = (key: string) => !isGM && hidden.has(key)
 

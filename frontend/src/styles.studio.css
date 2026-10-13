@@ -1,10 +1,10 @@
-/* --- мастерская: пульт слева, лента попыток справа --------------------------- */
+/* --- studio: control panel on the left, attempts feed on the right ------------ */
 
 .backdrop.st-backdrop { padding: 16px; }
 .st { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line2); min-height: 0; }
 .st.st-modal { width: min(1560px, 100%); height: min(940px, calc(100vh - 32px)); }
 .st.st-embed { height: auto; }
-/* на странице мастерская по содержимому: кнопка сразу под настройками, а не внизу экрана */
+/* on the page the studio sizes to its content: the button sits right under the settings, not at the screen bottom */
 .st-embed .st-left { overflow: visible; }
 .st-embed .st-go { margin-top: 6px; }
 .st-embed .st-lp textarea { min-height: 90px; }
@@ -19,12 +19,12 @@
 .st-name { font-size: 15px; font-weight: 600; letter-spacing: .02em; }
 .st-hd .sp, .st-lp-hd .sp, .st-opts .sp, .st-pr-tabs .sp, .st-att-hd .sp, .st-cand-bar .sp { flex: 1; }
 .st-x { width: 30px; height: 28px; padding: 0; font-size: 18px; line-height: 1; font-weight: 400; }
-/* воркер на связи — нейтрально, цветом только беда */
+/* worker connected — neutral; only trouble gets a color */
 .st-hd .gw-badge.online { color: var(--dim2); border-color: var(--line); }
 .st-hd .gw-badge.online .gw-dot { background: var(--dim2); }
 .st-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 360px minmax(0, 1fr); }
 
-/* пульт */
+/* control panel */
 .st-left {
   border-right: 1px solid var(--line); padding: 14px 14px 12px; overflow-y: auto;
   display: flex; flex-direction: column; gap: 14px; min-height: 0;
@@ -67,7 +67,7 @@
 .st-brush input[type=range] { width: 100%; padding: 0; accent-color: var(--amber); border: none; background: none; }
 .st-brush .v { font-family: var(--util); font-size: 11px; color: var(--dim2); min-width: 34px; text-align: right; }
 
-/* лента */
+/* feed */
 .st-feed { overflow-y: auto; min-height: 0; padding: 12px 14px 16px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
 .st-feed-hd { display: flex; align-items: baseline; gap: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
 .st-feed-hd .t { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
@@ -106,7 +106,7 @@
 .st-att.one .st-pr { border-bottom: none; border-left: 1px solid var(--line); order: 2; }
 .st-att.one .st-cands, .st-att.one .st-att-err { order: 1; }
 
-/* промпт попытки */
+/* attempt prompt */
 .st-pr { padding: 8px 10px 9px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .st-pr-tabs { display: flex; align-items: center; gap: 4px; }
 .st-pr-tabs .tb {
@@ -130,7 +130,7 @@
 .st-pr textarea { font-family: var(--util); font-size: 11.5px; line-height: 1.5; min-height: 96px; }
 .st-pr-ft { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
 
-/* кандидаты */
+/* candidates */
 .st-cands { display: grid; gap: 10px; padding: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; }
 .st-cands.one { grid-template-columns: minmax(0, 1fr); }
 .st-cand { margin: 0; background: #100f0d; border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
@@ -148,7 +148,7 @@
 .st-ico { width: 24px; height: 23px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .st-kept-l { font-family: var(--util); font-size: 10.5px; color: var(--olive); letter-spacing: .06em; text-transform: uppercase; padding: 2px; }
 
-/* холст правки */
+/* edit canvas */
 .st-cv { background: var(--surface); border: 1px solid var(--amber-dim); flex: none; }
 .st-cv-hd { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
 .st-cv-hd .t { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--amber); }

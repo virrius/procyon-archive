@@ -15,7 +15,7 @@ type Status = {
 }
 
 const POLL_MS = 10000
-// сеть чихает чаще, чем падает воркер: гасим плашку только на втором промахе подряд
+// the network hiccups more often than the worker goes down: hide the badge only on the second miss in a row
 const MISSES_TO_OFFLINE = 2
 
 const LABEL: Record<State | 'unknown', string> = {
@@ -32,7 +32,7 @@ const SHORT: Record<State | 'unknown', string> = {
   offline: 'worker.short',
 }
 
-/** compact — вариант для шапки: точка и одно слово, полный статус в подсказке */
+/** compact: the header variant, a dot and one word, the full status in the tooltip */
 export function GenWorkerBadge({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('studio')
   const [st, setSt] = useState<Status | null>(null)

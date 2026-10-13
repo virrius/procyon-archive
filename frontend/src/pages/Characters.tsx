@@ -13,25 +13,25 @@ const cardPath = (id: string) => `/crew/team/${id}`
 const STATE_KEY = 'pa_crew_state'
 
 
-/** Команда: персонажи экипажа. Живёт вкладкой в разделе «Экипаж». */
+/** Team: the crew's characters. Lives as a tab in the Crew section. */
 export default function Team() {
   const { meta, campaign, isGM, L } = useApp()
   const { t } = useTranslation('crew')
   const nav = useNavigate()
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // table view is read-only
   const [creating, setCreating] = useState<Dict | null>(null)
-  // ГМу: показывать ли состояние персонажей на плитках — помнится в браузере
+  // for the GM: whether to show characters' condition on tiles — remembered in the browser
   const [showState, setShowState] = useState(() => {
     try { return localStorage.getItem(STATE_KEY) !== '0' } catch { return true }
   })
   const flipState = () => {
     const v = !showState
     setShowState(v)
-    try { localStorage.setItem(STATE_KEY, v ? '1' : '0') } catch { /* без хранилища — до перезагрузки */ }
+    try { localStorage.setItem(STATE_KEY, v ? '1' : '0') } catch { /* no storage — until reload */ }
   }
   const [rows, loading, reloadRows, error] = useAsync<Dict[]>(
     () => api.get(`${c()}/entities?kind=${KIND}`), [])
-  /* галерея живёт своей жизнью: обновляем её ручкой, а не перемонтажом по key */
+  /* the gallery lives on its own: refresh it through a handle, not by remounting via key */
   const galleryReload = useRef<((silent?: boolean) => void) | null>(null)
 
   const def: Dict = meta?.kinds?.[KIND] || {}
@@ -41,8 +41,8 @@ export default function Team() {
   const myId = campaign?.my_member_id
   const refresh = () => { reloadRows(); galleryReload.current?.() }
 
-  // группа на игрока-владельца: своя первой, дальше по имени, без игрока — в конце.
-  // игрок без единого видимого персонажа — бледная пустая группа; своя пустая — с кнопкой добавления
+  // a group per owning player: yours first, then by name, no player last.
+  // a player without a single visible character is a dimmed empty group; your own empty one has an add button
   const byPlayer = useCallback((list: Dict[]): Group[] => {
     const members = (campaign?.members || []) as Dict[]
     const who = new Map<string, string>(
@@ -144,7 +144,7 @@ export default function Team() {
   )
 }
 
-/* --- ГМ: кто чем играет ----------------------------------------------------- */
+/* --- GM: who plays whom ----------------------------------------------------- */
 
 function PlayerRow({ member, owned, free, onBind, onCreate, L }: {
   member: Dict

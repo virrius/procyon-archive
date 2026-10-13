@@ -7,8 +7,8 @@ import '../styles.looks.css'
 const asText = (v: any) => (Array.isArray(v) ? v.join(', ') : String(v ?? ''))
 const fromText = (s: string) => s.split(',').map(x => x.trim()).filter(Boolean)
 
-/** Образы кампании: одежда с удачных кадров, которую мастерская надевает дословно.
- *  Запоминаются кнопкой под кадром персонажа, здесь смотрятся, правятся и забываются. */
+/** Campaign looks: outfits from good frames that the studio puts on verbatim.
+ *  Saved with the button under a character's frame; viewed, edited and forgotten here. */
 export default function LooksPage() {
   const { t } = useTranslation('media')
   const [data, , reload, err] = useAsync<Dict>(() => api.get(`${c()}/wardrobe`), [])

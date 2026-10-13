@@ -17,8 +17,8 @@ const star = (r: number, ri: number) => Array.from({ length: 10 }, (_, i) => {
   return `${(Math.cos(a) * rr).toFixed(2)},${(Math.sin(a) * rr).toFixed(2)}`
 }).join(' ')
 
-/** Двойная отрисовка: сначала тёмный контур пожирнее, поверх — цветная фигура.
-    Иначе значок теряется на светлых участках карты. */
+/** Double render: first a thicker dark outline, then the colored shape on top.
+    Otherwise the icon gets lost on light parts of the map. */
 function shape(icon: string, hex: string, w: number) {
   const pair = (el: (stroke: string, sw: number, fill: string) => any) => (
     <>{el(DARK, w + 3.5, DARK)}{el(hex, w, hex)}</>
@@ -54,7 +54,7 @@ function shape(icon: string, hex: string, w: number) {
   }
 }
 
-/** Значок отметки. Рисуется от центра (0,0) — точка привязки совпадает с координатой. */
+/** Pin icon. Drawn from the center (0,0): the anchor point matches the coordinate. */
 export function Glyph({ icon, color, size = 26, on = false, hit = false, children, ...rest }: {
   icon?: string; color?: string; size?: number; on?: boolean; hit?: boolean
 } & React.SVGProps<SVGSVGElement>) {

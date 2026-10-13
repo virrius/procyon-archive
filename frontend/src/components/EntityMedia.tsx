@@ -5,14 +5,14 @@ import { useApp, useAsync } from '../ctx'
 import { ImgActions, ImgFlags } from './ImageTools'
 import Lightbox from './Lightbox'
 
-/* --- вложения --------------------------------------------------------------- */
+/* --- attachments ------------------------------------------------------------ */
 
-/** Вложения карточки: миниатюры плиткой, снимок разворачивается на весь экран,
- *  свой файл убирает загрузивший, чужой — ГМ. */
+/** Card attachments: thumbnail tiles, a picture expands to full screen,
+ *  the uploader removes their own file, the GM anyone's. */
 export default function EntityMedia({ entityId, bump, readonly, onChange, onBrush, tail }: {
   entityId: string; bump: number; readonly: boolean; onChange: () => void
   onBrush: (a: Dict) => void
-  /** плитки «добавить» в конце сетки, на месте следующего снимка */
+  /** "add" tiles at the end of the grid, in place of the next picture */
   tail?: ReactNode
 }) {
   const { isGM, campaign } = useApp()
@@ -36,7 +36,7 @@ export default function EntityMedia({ entityId, bump, readonly, onChange, onBrus
     } catch (ex: any) { setOops(ex?.message || t('media.delete_failed')) }
   }
 
-  // видимость поштучная: файл остаётся у ГМа, стол его просто не получает
+  // per-file visibility: the file stays with the GM, the table just doesn't get it
   const setVis = async (a: Dict, hide: boolean) => {
     setOops('')
     try {

@@ -12,12 +12,12 @@ import '../styles.frames.css'
 export type Frame = {
   id: string; url: string; caption: string
   width: number; height: number; created_at?: string
-  /** кадр завёл этот участник: свой можно подписать и убрать */
+  /** this member added the frame: they can caption and remove their own */
   mine?: boolean
   visibility?: string; prompt?: string
 }
 
-// кадров бывает сотня: дорисовываем ленту порциями, когда до конца доскроллили
+// there can be a hundred frames: render the feed in portions as the user scrolls to the end
 const STEP = 60
 
 const time = (iso?: string) => {
@@ -26,7 +26,7 @@ const time = (iso?: string) => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-/** день кадра — заголовок ленты: дни совпадают с сессиями */
+/** frame day is the feed heading: days match sessions */
 const day = (iso?: string) => {
   if (!iso) return ''
   const d = new Date(iso)
@@ -34,24 +34,24 @@ const day = (iso?: string) => {
   return d.getFullYear() === new Date().getFullYear() ? dm : i18n.t('media:day_year', { day: dm, year: d.getFullYear() })
 }
 
-/** Коллекция кадров кампании: снимки одного размера, подпись под каждым. Свой кадр
- *  участник подписывает и убирает сам, любой — ГМ; видимость держит только ГМ. */
+/** Campaign frame collection: same-size pictures, a caption under each. A member captions and removes
+ *  their own frames, the GM any frame; only the GM controls visibility. */
 export default function FramesGallery({ tick, onBrush }: {
   tick?: number
-  /** кисть по кадру — правка уходит в мастерскую над коллекцией */
+  /** brush over a frame: the edit goes to the studio above the collection */
   onBrush?: (f: Frame) => void
 }) {
   const { t } = useTranslation('media')
   const lng = lang()
   const { campaign, isGM } = useApp()
   const role = campaign?.my_role || ''
-  // кадр заводит весь стол; чужой кадр правит и убирает только ГМ
+  // the whole table adds frames; only the GM edits and removes someone else's frame
   const canAdd = (role === 'gm' || role === 'player') && !isPublicView()
   const isRealGM = isGM && !isPublicView()
   const [uploading, setUploading] = useState(false)
-  const [over, setOver] = useState(false)      // над панелью тащат файл
+  const [over, setOver] = useState(false)      // a file is dragged over the panel
   const pick = useRef<HTMLInputElement>(null)
-  const depth = useRef(0)                      // dragleave стреляет и на детях панели
+  const depth = useRef(0)                      // dragleave also fires on panel children
   const [frames, loading, reload, loadErr] = useAsync<Frame[]>(
     () => api.get(`${c()}/scene-frames`), [tick || 0])
   const [limit, setLimit] = useState(STEP)
@@ -61,7 +61,7 @@ export default function FramesGallery({ tick, onBrush }: {
 
   const rows = frames || []
   const more = rows.length > limit
-  // сервер отдаёт свежие сверху — режем ленту на дни по порядку
+  // the server returns newest first: split the feed into days in order
   const days = useMemo(() => {
     const out: [string, [Frame, number][]][] = []
     rows.slice(0, limit).forEach((f, i) => {
@@ -95,7 +95,7 @@ export default function FramesGallery({ tick, onBrush }: {
     catch (e: any) { setErr(e?.message || t('err.delete_failed')) }
   }
 
-  /** свои файлы — те же кадры коллекции, только без промпта и очереди */
+  /** own files: the same collection frames, just without a prompt and queue */
   const upload = async (files: FileList | File[] | null) => {
     const pics = Array.from(files || []).filter(f => f.type.startsWith('image/'))
     if (!pics.length) {
@@ -115,19 +115,19 @@ export default function FramesGallery({ tick, onBrush }: {
     finally { setUploading(false) }
   }
 
-  // снимок из буфера — тот же кадр коллекции
+  // clipboard image: the same collection frame
   const paste = (
     <PasteImage enabled={canAdd} onFiles={files => upload(files)}
       question={t('paste_question')} />
   )
 
-  // на панель можно просто бросить файлы из проводника. Тип содержимого не проверяем:
-  // в Safari и в синтетических событиях dataTransfer.types пуст до самого drop —
-  // картинку от прочего отсеиваем уже в upload
+  // files can be dropped onto the panel straight from the file manager. We don't check the content type:
+  // in Safari and in synthetic events dataTransfer.types is empty until the drop itself;
+  // images are filtered from the rest in upload
   const dnd = canAdd ? {
     onDragEnter: () => { depth.current += 1; setOver(true) },
     onDragOver: (e: DragEvent) => {
-      e.preventDefault()          // без этого браузер просто откроет файл вместо drop
+      e.preventDefault()          // without this the browser just opens the file instead of drop
       e.dataTransfer.dropEffect = 'copy'
     },
     onDragLeave: () => {
@@ -142,8 +142,8 @@ export default function FramesGallery({ tick, onBrush }: {
     },
   } : {}
 
-  // трафарет карточки: та же плитка, но пустая — кликнул, выбрал файл, кадр в коллекции.
-  // input держим рядом, а не внутри кнопки: вложенный он открывает диалог дважды
+  // card placeholder: the same tile, but empty; click, pick a file, the frame is in the collection.
+  // keep the input next to the button, not inside: nested, it opens the dialog twice
   const addTile = canAdd && (
     <div className={`frame-card frame-add${uploading ? ' busy' : ''}${over ? ' over' : ''}`}
       key="add">
@@ -238,7 +238,7 @@ export default function FramesGallery({ tick, onBrush }: {
   )
 }
 
-/** Подпись: у стола — текст, у ГМа — то же место, но правится по клику. */
+/** Caption: plain text for the table; for the GM the same spot, editable on click. */
 export function FrameCaption({ frame, canEdit, onSave }: {
   frame: Frame
   canEdit: boolean

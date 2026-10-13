@@ -1,14 +1,13 @@
-"""Поля по типам сущностей.
+"""Fields by entity kind.
 
-Каркас у всех типов одинаковый (фото, имя, краткое описание, ранг,
-фракции/место, статус, права владения, видимость, связи, записи) и рисуется
-одним общим кодом в EntityPage — здесь остаются только 1-3 своих поля типа.
-Всё остальное знание живёт в записях (ContentBlock) со своей видимостью.
+All kinds share one frame (photo, name, summary, Tier, factions/location, status, ownership,
+visibility, links, notes), drawn by one shared EntityPage; only 1-3 kind-specific fields
+remain here. All other knowledge lives in notes (ContentBlock) with their own visibility.
 
-Любое поле карточки ГМ закрывает поштучно: ключ лежит в
-``entities.hidden_fields``, значение живёт всегда, а раскрыть его можно
-позже одним переключателем. ``secret=True`` в описании поля значит только
-«закрыто у новой карточки по умолчанию» — потом это обычный переключатель.
+The GM can hide any entity field individually: the key goes into
+``entities.hidden_fields``, the value is always kept, and it can be revealed
+later with one toggle. ``secret=True`` in a field spec only means
+"hidden on a new entity by default" — after that it is a regular toggle.
 """
 
 from __future__ import annotations
@@ -16,28 +15,28 @@ from __future__ import annotations
 from .book_defs import book
 from .i18n import tr, twin_lang
 
-# модуль загружен на обоих языках (см. langpack): язык — из имени модуля
+# the module is loaded in both languages (see langpack): language comes from the module name
 LANG = twin_lang(__name__)
 PROCYON, SHIP_SIZES, SHIP_TYPES = book(LANG).PROCYON, book(LANG).SHIP_SIZES, book(LANG).SHIP_TYPES
 PLAYBOOK_SHEETS, CHAR_SHEET = book(LANG).PLAYBOOK_SHEETS, book(LANG).CHAR_SHEET
 
 T, TA, SEL, MULTI, REF = "text", "textarea", "select", "multi", "ref"
-# у REF в kinds — виды карточек, из которых выбирают; значение — id карточки
-# у MULTI в описании поля может стоять max — потолок выбранных вариантов
+# for REF, kinds lists the entity kinds to pick from; the value is the entity id
+# for MULTI, the field spec may set max — a cap on selected options
 
 RANKS = ["0", "1", "2", "3", "4"]
 SYS_LEVELS = ["0", "1", "2", "3"]
 DMG_LEVELS = ["0", "1", "2", "3", "4"]
 XP_LEVELS = ["0", "1", "2", "3", "4", "5", "6", "7", "8"]
 STANCES = ["-3", "-2", "-1", "0", "+1", "+2", "+3"]
-# общая шкала «ранга» — сила/угроза/ценность
+# shared Tier scale — strength/threat/value
 RANK_SCALE = ["0", "1", "2", "3", "4", "5"]
 ORG_CATEGORIES = ["hegemony", "criminal", "weird"]
 LOC_TYPES = ["planet", "station", "port", "gate", "site"]
-# система — не карточка, а атрибут места: список берём из книги
+# a system is not an entity but a location attribute: the list comes from the book
 SYSTEMS = [s["system"] for s in PROCYON if s.get("system")]
 
-# бланки персонажа из книги — постоянная часть листа
+# character playbooks from the book — a fixed part of the sheet
 PLAYBOOKS = [
     "Здоровяк", "Механик", "Мистик", "Переговорщик", "Пилот", "Пройдоха", "Умник",
 ]
@@ -47,7 +46,7 @@ VICES = [
     "Религия", "Роскошь",
 ]
 PASTS = [p["name"] for p in CHAR_SHEET["pasts"]]
-# слух и работа — одно и то же дело на разных стадиях зрелости
+# rumor and job are the same thing at different stages
 JOB_TYPES = ["rumor", "job"]
 
 TRAUMAS = [
@@ -55,7 +54,7 @@ TRAUMAS = [
     "Раздолбай", "Садист", "Социопат", "Тряпка",
 ]
 
-# английский экземпляр хранит значения по английской книге; порядок тот же, что выше
+# the English instance stores values from the English book; order is the same as above
 if LANG == "en":
     PLAYBOOKS = ["Muscle", "Mechanic", "Mystic", "Speaker", "Pilot", "Scoundrel", "Stitch"]
     HERITAGES = ["Imperial", "Spacer", "Colonist", "Manufactured", "Wanderer", "Xeno"]
@@ -81,8 +80,8 @@ KINDS: dict[str, dict] = {
             f("background", TA),
         ],
     },
-    # stress / harm / actions / xp / talents / items / contacts / custom лежат в том же fields,
-    # их рисует бланк персонажа (components/charsheet), а не общая форма
+    # stress / harm / actions / xp / talents / items / contacts / custom live in the same fields,
+    # drawn by the character sheet (components/charsheet), not the generic form
     "npc": {
         "statuses": ["active", "blocked", "dead", "unknown"],
         "fields": [
@@ -92,7 +91,7 @@ KINDS: dict[str, dict] = {
         ],
     },
     "faction": {
-        # организация либо есть, либо её нет — состояние читается из ранга и записей
+        # a faction either exists or not — its state reads from Tier and notes
         "statuses": [],
         "fields": [
             f("category", SEL, options=ORG_CATEGORIES),
@@ -101,8 +100,8 @@ KINDS: dict[str, dict] = {
             f("system", SEL, options=SYSTEMS),
         ],
     },
-    # modules / upgrades / talents / contacts / custom лежат в том же fields JSONB,
-    # но их рисует бланк корабля, а не generic-форма.
+    # modules / upgrades / talents / contacts / custom live in the same fields JSONB,
+    # but are drawn by the ship sheet, not the generic form.
     "ship": {
         "statuses": ["active", "impounded", "destroyed", "lost"],
         "fields": [
@@ -127,9 +126,9 @@ KINDS: dict[str, dict] = {
         ],
     },
     "location": {
-        # место не меняет состояний — что о нём известно, живёт в записях
+        # a location has no states — what is known about it lives in notes
         "statuses": [],
-        # система — атрибут места и фильтр галереи, отдельной карточкой не заводится
+        # a system is a location attribute and a gallery filter, not a separate entity
         "fields": [
             f("system", SEL, options=SYSTEMS),
             f("loc_type", SEL, options=LOC_TYPES),
@@ -139,7 +138,7 @@ KINDS: dict[str, dict] = {
     "job": {
         "statuses": ["offered", "in progress", "done", "failed", "expired"],
         "fields": [
-            # слух и работа — одна карточка: слух дозревает до дела сменой типа
+            # rumor and job are one entity: a rumor matures into a job by changing its type
             f("job_type", SEL, options=JOB_TYPES, badge=True),
             f("rank", SEL, options=RANK_SCALE),
             f("payout", note=True),
@@ -158,7 +157,7 @@ KINDS: dict[str, dict] = {
 
 
 def kinds() -> dict[str, dict]:
-    """KINDS с подписями видов и полей на языке запроса — для /api/meta."""
+    """KINDS with kind and field labels in the request language — for /api/meta."""
     return {
         kind: {
             "label": tr(f"schema.kinds.{kind}.label"),
@@ -172,11 +171,11 @@ def kinds() -> dict[str, dict]:
 
 
 def initial_status(kind: str) -> str:
-    """Статус новой карточки — первый из статусов вида; у фракций и мест статусов нет."""
+    """Status of a new entity — the first status of its kind; factions and locations have no statuses."""
     return next(iter(KINDS.get(kind, {}).get("statuses") or []), "")
 
 
-# цвет счётчика вместо типа: сортировать их всё равно нечем, а глазом видно
+# clock color instead of a type: there is nothing to sort them by anyway, and color is easy to spot
 CLOCK_COLORS = ["amber", "rust", "steel", "plum", "olive", "white"]
 
 MESSAGE_TYPES = [
@@ -188,7 +187,7 @@ VISIBILITY_SCOPES = ["crew", "selected", "owner", "gm"]
 BLOCK_TYPES = ["text", "image", "attachment", "quote", "rumor", "secret", "warning", "map note"]
 
 
-# шкала видимости — подписи ровно как в пикере
+# visibility scale — labels exactly as in the picker
 def vis_labels() -> dict[str, str]:
     return {scope: tr(f"schema.labels.vis_{scope}") for scope in ("gm", "owner", "selected", "crew")}
 
@@ -205,7 +204,7 @@ LABEL_KEYS: tuple[str, ...] = (
     "injured", "retired",
     "offered", "done", "failed",
     "expired", "accepted", "in progress",
-    # legacy statuses старых строк
+    # legacy statuses of old rows
     "captured", "left crew", "missing",
     "handed over", "stolen", "inaccessible",
     "abandoned", "completed", "replaced",
@@ -270,11 +269,11 @@ LABEL_KEYS: tuple[str, ...] = (
     "playbook",
     "look", "vice", "goal",
     "stance",
-    # «custom» (свой счётчик) и «secret» (маркер, блок досье) подписаны выше:
-    # словарь плоский, на ключ одна подпись — выигрывает та, что видна столу
+    # "custom" (own clock) and "secret" (marker, dossier block) are labeled above:
+    # the dictionary is flat, one label per key — the one the table sees wins
 )
 
-# подпись связи живёт в БД текстом — в словаре у неё смысловой ключ
+# a link label is stored as text in the DB — the dictionary uses a semantic key
 LINK_LABEL_KEYS = {"работает на": "works_for", "где искать": "where_to_find"}
 if LANG == "en":
     LINK_LABEL_KEYS = {"works for": "works_for", "where to find": "where_to_find"}
@@ -282,9 +281,9 @@ if LANG == "en":
 
 
 def labels() -> dict[str, str]:
-    """Подписи внутренних ключей на языке запроса."""
+    """Labels of internal keys in the request language."""
     out = {k: tr(f"schema.labels.{LINK_LABEL_KEYS.get(k, k)}") for k in LABEL_KEYS}
-    # подписи типов кораблей берём из книги, чтобы не разъезжались
+    # ship type labels come from the book so they stay in sync
     for _key, _type in (SHIP_TYPES or {}).items():
         if isinstance(_type, dict):
             out.setdefault(_key, _type.get("label", _key))

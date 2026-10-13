@@ -1,11 +1,11 @@
-/* Бланк корабля — раскладка бумажного бланка «Изгои галактики».
-   Сплошные поверхности, канты 1px, янтарь — единственный акцент. */
+/* Ship sheet — laid out like the Scum and Villainy paper sheet.
+   Solid surfaces, 1px borders, amber as the only accent. */
 
 .ss { display: flex; flex-direction: column; gap: 10px; }
 .ss button, .ss summary.ghost { text-transform: none; letter-spacing: 0; }
 .ss button.tiny, .ss summary.tiny { font-size: 12px; }
 
-/* --- панель управления бланком: всегда у верхнего края экрана --- */
+/* --- sheet toolbar: always at the top of the screen --- */
 .ss-tools {
   position: sticky; top: var(--navbar-h, 0px); z-index: 30;
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -33,7 +33,7 @@
   color: var(--amber); padding: 6px 10px; font-size: 12.5px;
 }
 
-/* --- шапка: слева название с подписью, справа реноме на том же уровне --- */
+/* --- header: name with caption on the left, reputation on the right at the same level --- */
 .ss-head {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
   gap: 10px 20px; align-items: start;
@@ -47,8 +47,8 @@
 .ss-line-in { padding: 4px 7px; font-size: 13.5px; }
 textarea.ss-line-in { min-height: 48px; }
 
-/* поля бланка в правке читаются как текст бланка: без коробки, пунктир снизу;
-   рамка проступает при наведении и в правке — режим «Редактировать» не меняет лист */
+/* sheet fields in edit mode read as sheet text: no box, dashed underline;
+   the frame shows on hover and focus — Edit mode doesn't change the sheet's look */
 .ss .ss-line-in, .ss .drop.ss-size-sel .drop-btn {
   background: transparent; border: 1px solid transparent; border-bottom: 1px dashed var(--line2);
 }
@@ -63,7 +63,7 @@ textarea.ss-line-in { min-height: 48px; }
   padding: 1px 4px; gap: 8px;
   font-size: 13px; color: var(--amber);
 }
-/* подписи обычным регистром; ключи в локалях бывают строчными — первая буква поднимается здесь */
+/* labels in normal case; locale strings may be lowercase — the first letter is capitalized here */
 .ss-cap { font-size: 12px; color: var(--dim2); padding-top: 3px; }
 .ss-cap::first-letter { text-transform: uppercase; }
 .ss-none { color: var(--dim2); }
@@ -77,7 +77,7 @@ textarea.ss-line-in { min-height: 48px; }
 .ss-blurb, .ss textarea.ss-blurb-in { font-size: 13.5px; color: var(--dim); margin-top: 4px; }
 .ss textarea.ss-blurb-in { width: 100%; }
 
-/* --- полоса: ранг экипажа и размер корабля --- */
+/* --- strip: crew quality and ship size --- */
 .ss-strip {
   display: flex; flex-wrap: wrap;
   background: var(--surface); border: 1px solid var(--line);
@@ -98,7 +98,7 @@ button.ss-size {
 button.ss-size:hover { background: var(--surface3); border-color: var(--line2); color: var(--txt); }
 button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim); color: var(--amber); }
 
-/* --- каркас: снимок и состояние сверху, дальше свимлейны разделов --- */
+/* --- layout: image and status on top, then section swimlanes --- */
 .ss-top {
   display: grid; gap: 10px; align-items: start;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -109,7 +109,7 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
 .ss-lane-hd { display: flex; align-items: center; gap: 10px; }
 .ss-lane-t { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.1; color: var(--txt); white-space: nowrap; }
 .ss-lane-rule { flex: 1; height: 1px; background: var(--line2); min-width: 12px; }
-/* панели в ряду тянутся до общей высоты — пустая карточка не оставляет дыру */
+/* panels in a row stretch to a shared height — an empty card leaves no gap */
 .ss-lane-b {
   display: grid; gap: 10px; align-items: stretch;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -118,12 +118,12 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
   grid-template-columns: minmax(0, 1fr);
   background: var(--surface); border: 1px solid var(--line);
 }
-/* содержимое одностолбцового свимлейна лежит прямо в рамке, без вложенной панели */
+/* a single-column swimlane's content sits directly in the frame, no nested panel */
 .ss-lane-plain { min-width: 0; }
 
-/* --- панель --- */
+/* --- panel --- */
 .ss-p { background: var(--surface); border: 1px solid var(--line); min-width: 0; }
-/* рамка — у панели, внутри только линейка под заголовком */
+/* the frame belongs to the panel; inside, only a rule under the heading */
 .ss-p-hd {
   display: flex; align-items: center; gap: 8px;
   border-bottom: 1px solid var(--line); padding: 6px 10px 5px;
@@ -137,7 +137,7 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
 .ss-slots { font-family: var(--util); font-size: 11px; color: var(--dim2); }
 .ss-empty { color: var(--dim2); font-size: 12.5px; font-style: italic; }
 
-/* --- деления показателя --- */
+/* --- rating pips --- */
 .ss-pips { display: inline-flex; gap: 3px; flex-wrap: wrap; }
 .ss-pip {
   display: block; width: 11px; height: 15px; padding: 0; min-width: 0;
@@ -147,7 +147,7 @@ button.ss-size.on { background: var(--surface3); border-color: var(--amber-dim);
 button.ss-pip:hover { background: var(--surface3); border-color: var(--amber-dim); }
 button.ss-pip.on:hover { background: #eab458; border-color: #eab458; }
 
-/* повреждения — косая ржавая заливка, чтобы не спутать с качеством */
+/* damage — diagonal rust hatching so it isn't confused with quality */
 .ss-pip.dmg { border-color: #4c3128; }
 .ss-pip.dmg.on {
   border-color: var(--rust);
@@ -159,7 +159,7 @@ button.ss-pip.dmg.on:hover {
   background: repeating-linear-gradient(45deg, #d97052 0 2px, #4a2317 2px 5px);
 }
 
-/* --- нижний ряд системы: повреждения и эффективный показатель --- */
+/* --- system bottom row: damage and effective rating --- */
 .ss-dmg {
   display: flex; align-items: center; gap: 8px;
   padding: 4px 9px; border-bottom: 1px solid var(--line); background: #191713;
@@ -169,7 +169,7 @@ button.ss-pip.dmg.on:hover {
 .ss-eff b { font-size: 13px; color: var(--txt); margin-left: 3px; }
 .ss-eff b.hurt { color: var(--rust); }
 
-/* --- списки с отметками --- */
+/* --- checklists --- */
 .ss-picks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .ss-pick { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
 .ss-rest { font-size: 13px; line-height: 1.5; color: var(--dim2); }
@@ -184,7 +184,7 @@ button.ss-pip.dmg.on:hover {
 button.ss-tick:hover { background: var(--surface3); border-color: var(--amber-dim); }
 button.ss-tick.on:hover { background: #eab458; border-color: #eab458; }
 
-/* вне правки пустой раздел не оставляет за собой полосу отступа */
+/* outside edit mode an empty section leaves no spacing behind */
 .ss-p-b:empty { display: none; }
 
 .ss-fold { flex: 1; min-width: 0; }
@@ -201,7 +201,7 @@ button.ss-tick.on:hover { background: #eab458; border-color: #eab458; }
 .ss-fold[open] summary::after { content: "−"; }
 .ss-fold summary:hover .ss-nm { color: var(--amber); }
 .ss-fold.flat { display: flex; align-items: baseline; gap: 6px; padding: 1px 0; }
-/* ПК: места хватает, описания стоят открытыми — без плюсиков */
+/* desktop: enough room, descriptions stay expanded — no plus toggles */
 .ss-fold.plain { padding: 1px 0; }
 .ss-fold.plain .ss-nm-row { display: flex; align-items: baseline; gap: 6px; }
 
@@ -212,7 +212,7 @@ button.ss-tick.on:hover { background: #eab458; border-color: #eab458; }
   font-size: 12.5px; color: var(--dim); border-left: 2px solid var(--line2);
   padding: 2px 0 4px 8px; margin: 2px 0 5px 0;
 }
-/* «подробнее ±» — в последней строке описания справа */
+/* “more ±” — at the right end of the description's last line */
 .ss-tmore { display: flex; align-items: last baseline; gap: 16px; }
 .ss-tmore > .ss-text { flex: 1; min-width: 0; }
 .ss-tmore .ss-more-b {
@@ -225,14 +225,14 @@ button.ss-tick.on:hover { background: #eab458; border-color: #eab458; }
   color: var(--amber); border: 1px solid var(--amber-dim); padding: 0 4px;
 }
 
-/* --- изображение корабля --- */
+/* --- ship image --- */
 .ss-shot-img {
   display: block; width: 100%; max-height: 320px;
   object-fit: contain; background: #100f0d;
 }
 .ss-shot-none { aspect-ratio: 16 / 10; padding: 10px; }
 
-/* --- креды, долг, содержание, пропуски --- */
+/* --- cred, debt, upkeep, skipped upkeeps --- */
 .ss-res { display: flex; flex-direction: column; gap: 8px; }
 .ss-track { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .ss-track .ss-cap { flex: none; width: 82px; padding-top: 0; }
@@ -255,7 +255,7 @@ button.ss-sq.on.rust:hover { background: #d06a49; border-color: #d06a49; }
 .ss-big { font-family: var(--util); font-size: 26px; color: var(--amber); margin-left: auto; }
 .ss-hint { font-size: 11px; color: var(--dim2); line-height: 1.45; }
 
-/* --- опыт экипажа --- */
+/* --- crew xp --- */
 .ss-xp-bar { display: flex; align-items: center; gap: 8px; }
 .ss-why > summary { cursor: pointer; list-style: none; padding: 5px 0 0; font-size: 12.5px; color: var(--dim2); }
 .ss-why > summary::-webkit-details-marker { display: none; }
@@ -269,9 +269,9 @@ button.ss-sq.on.rust:hover { background: #d06a49; border-color: #d06a49; }
   font-size: 9px; line-height: 1.9; color: var(--amber-dim);
 }
 
-/* --- знакомые --- */
+/* --- contacts --- */
 .ss-contacts { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0 18px; }
-/* имя с меткой отношения в строке, роль под ними во всю ширину и с переносом */
+/* name with a relationship tag on one line, role below at full width with wrapping */
 .ss-contact { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .ss-contact-b { flex: 1; min-width: 0; }
 .ss-contact-img { flex: none; display: block; }
@@ -290,14 +290,14 @@ a.ss-nm:hover { color: var(--amber); }
 .ss-flag.rival { color: #e08a70; border-color: #5c3327; background: #251712; }
 button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 
-/* --- выбор NPC в знакомые --- */
+/* --- picking an NPC as a contact --- */
 .ss-npc { border: 1px solid var(--line2); background: #100f0d; margin: 6px 0; }
 .ss-npc-hd { display: flex; align-items: center; gap: 6px; padding: 6px 6px 4px 7px; }
 .ss-npc-hd .ss-cap { flex: 1; padding-top: 0; }
 .ss-npc-pick { padding: 0 6px 6px; }
 .ss-npc-pick input { font-size: 13px; padding: 5px 8px; }
 
-/* --- настройка бланков (GM space) --- */
+/* --- sheet setup (GM space) --- */
 .sb { display: flex; flex-direction: column; gap: 12px; }
 .sb-note { font-size: 12.5px; color: var(--dim); }
 
@@ -324,7 +324,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 .sb-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; }
 .sb-pair > .sb-sect { min-width: 0; }
 
-/* карточки: поля без рамок, читаются как бланк; рамка проступает при наведении и в правке */
+/* cards: borderless fields read as a sheet; the frame shows on hover and focus */
 .sb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 8px; }
 .sb-entry {
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; align-content: start;
@@ -380,7 +380,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .sb-entry .ibtn, .sb-row .ibtn { opacity: .65; }
 }
 
-/* правки уходят сами — состояние сохранения держим на виду у нижнего края */
+/* edits save automatically — the save status stays visible at the bottom edge */
 .sb-foot {
   position: sticky; bottom: 0; z-index: 2;
   display: flex; align-items: center; gap: 8px; min-height: 40px;
@@ -394,18 +394,18 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
 }
 
 @media (max-width: 860px) {
-  /* реноме остаётся справа от названия, только уже */
+  /* reputation stays right of the name, just narrower */
   .ss-head { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 8px 12px; }
   .ss-name h2, .ss input.ss-name-in { font-size: 28px; }
   .ss-strip-cell { border-right: none; }
   .ss-dmg { flex-wrap: wrap; }
 }
 
-/* --- телефон: мельче шрифт, снимок под шапкой, данные в две колонки ---------- */
+/* --- phone: smaller type, image under the header, data in two columns ------- */
 
 @media (max-width: 760px) {
   .ss { gap: 6px; }
-  /* снимок сразу под шапкой, затем состояние экипажа, затем свимлейны */
+  /* image right under the header, then crew status, then swimlanes */
   .ss-top { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .ss-status { gap: 6px; }
   .ss-lane { gap: 5px; }
@@ -425,7 +425,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   textarea.ss-line-in { min-height: 38px; }
   .ss-cap { font-size: 11.5px; }
 
-  /* полоса ранга и размера: две ячейки в строку, подпись сверху */
+  /* quality and size strip: two cells per row, label on top */
   .ss-strip { flex-direction: row; }
   .ss-strip-cell {
     flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 8px;
@@ -433,7 +433,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   button.ss-size { padding: 3px 7px; font-size: 10.5px; }
   .ss-size { font-size: 11px; }
 
-  /* заголовок раздела: название и счётчик в строке, показатель — строкой ниже */
+  /* section heading: name and counter on one line, rating on the line below */
   .ss-p-hd { flex-wrap: wrap; padding: 4px 7px; gap: 4px 6px; }
   .ss-p-t { font-size: 13.5px; }
   .ss-p-hd .ss-meter { flex: 1 0 100%; order: 5; }
@@ -442,7 +442,7 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-eff { margin-left: auto; font-size: 10px; }
   .ss-slots { font-size: 10px; }
 
-  /* цели касания добираются невидимой рамкой, сами метки остаются мелкими */
+  /* touch targets are padded with an invisible frame, the marks themselves stay small */
   .ss-pips { gap: 3px; }
   .ss-pip { width: 11px; height: 16px; }
   .ss-sq { width: 14px; height: 14px; }
@@ -467,12 +467,12 @@ button.ss-flag:hover { background: var(--surface3); border-color: var(--dim2); }
   .ss-role, .ss-flag { font-size: 11px; }
   .ss-npc-pick .lnk-hits { max-height: 55vh; }
 
-  /* настройка бланков */
+  /* sheet setup */
   .sb-sect { padding: 8px 8px 10px; }
   .sb-foot { flex-wrap: wrap; }
 }
 
-/* --- очень узкий экран: две колонки данных уже не влезают --- */
+/* --- very narrow screen: two data columns no longer fit --- */
 @media (max-width: 360px) {
   .ss-lane-b { grid-template-columns: minmax(0, 1fr); }
 }

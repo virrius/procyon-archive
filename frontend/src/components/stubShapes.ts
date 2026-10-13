@@ -1,27 +1,27 @@
-/* Силуэты заглушек. Фигура и корабль — обводки с openclipart (CC0, без
-   указания авторства); остальные знаки нарисованы под них. Это данные, разметка
-   живёт в Stub.tsx. */
+/* Placeholder silhouettes. The figure and the ship are traced from openclipart (CC0, no
+   attribution required); the other signs are drawn to match them. This is data; the markup
+   lives in Stub.tsx. */
 
 export type StubShape = {
-  /** viewBox исходной обводки */
+  /** viewBox of the source tracing */
   box: string
-  /** высота внутри кадра заглушки */
+  /** height inside the placeholder frame */
   height: string
-  /** сажать на нижний край кадра, как обрезанный снимок */
+  /** sit on the bottom edge of the frame, like a cropped photo */
   crop?: boolean
-  /** заливка силуэта */
+  /** silhouette fill */
   paths: string[]
-  /** вырезы цветом плиты */
+  /** cutouts in the plate color */
   cuts?: string[]
-  /** линии-вырезы: [толщина, путь] */
+  /** cutout lines: [width, path] */
   ribs?: [number, string][]
-  /** линии цветом силуэта: [толщина, путь] */
+  /** lines in the silhouette color: [width, path] */
   marks?: [number, string][]
 }
 
-/* --- обводки openclipart (CC0) --------------------------------------------- */
+/* --- openclipart tracings (CC0) -------------------------------------------- */
 
-/** фигура в костюме с пистолетом */
+/** figure in a suit with a pistol */
 export const FIGURE: StubShape = {
   box: '0 0 441 752',
   height: '96%',
@@ -127,7 +127,7 @@ export const FIGURE: StubShape = {
   ],
 }
 
-/** истребитель, вид сверху */
+/** fighter, top view */
 export const FIGHTER: StubShape = {
   box: '0 0 450 450',
   height: '78%',
@@ -141,9 +141,9 @@ export const FIGHTER: StubShape = {
   ],
 }
 
-/* --- нарисованные знаки: заливка плюс вырезы цветом плиты ------------------ */
+/* --- drawn signs: fill plus cutouts in the plate color --------------------- */
 
-/** грузовой контейнер */
+/** cargo container */
 export const CONTAINER: StubShape = {
   box: '0 0 210 140',
   height: '60%',
@@ -157,7 +157,7 @@ export const CONTAINER: StubShape = {
   ],
 }
 
-/** планета с кольцом */
+/** planet with a ring */
 export const PLANET: StubShape = {
   box: '0 0 210 150',
   height: '66%',
@@ -173,7 +173,7 @@ export const PLANET: StubShape = {
   ],
 }
 
-/** сигил фракции: пломба со звездой */
+/** faction sigil: a seal with a star */
 export const SIGIL: StubShape = {
   box: '0 0 150 170',
   height: '62%',
@@ -186,7 +186,7 @@ export const SIGIL: StubShape = {
   ribs: [[8, 'M13 78h124']],
 }
 
-/** работа: контракт с печатью */
+/** job: a contract with a stamp */
 export const CONTRACT: StubShape = {
   box: '0 0 160 170',
   height: '64%',
@@ -202,7 +202,7 @@ export const CONTRACT: StubShape = {
   ],
 }
 
-/** слух: перехваченный шёпот */
+/** rumor: an intercepted whisper */
 export const WHISPER: StubShape = {
   box: '0 0 230 170',
   height: '54%',

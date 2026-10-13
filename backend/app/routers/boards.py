@@ -42,13 +42,13 @@ INK_DOC = (
     "`{kind: 'text', text, x, y, color, size}`. At most 400 items, 2000 points per stroke."
 )
 
-# Сетка холста. Внутри всё живёт в единицах холста, но наружу (снимок доски,
-# пакетная правка) координаты ходят клетками: так раскладку можно описать словами,
-# не считая пиксели.
+# Canvas grid. Internally everything lives in canvas units, but externally (board snapshot,
+# batch edits) coordinates move in grid cells: that way a layout can be described in words
+# without counting pixels.
 COL = 40.0
 ROW = 40.0
-# высота карточки складывается из текста и известна только браузеру; для
-# авторазмещения хватает грубой оценки в клетках
+# a card's height comes from its text and only the browser knows it; for
+# auto-placement a rough estimate in cells is enough
 ROWS_BY_KIND = {"entity": 5, "clock": 4, "image": 6, "text": 3, "sketch": 8,
                 "name": 3}
 DEF_W = {"entity": 520.0, "text": 230.0, "image": 260.0, "clock": 230.0,
@@ -56,15 +56,15 @@ DEF_W = {"entity": 520.0, "text": 230.0, "image": 260.0, "clock": 230.0,
 
 
 
-# росчерк — ломаная в координатах карточки, подпись — точка с текстом. Ограничения
-# не про вкус: одно поле не должно разрастись в мегабайты — доска ходит целиком
+# a stroke is a polyline in card coordinates, a label is a point with text. The limits
+# are not about taste: one field must not grow to megabytes — the board travels whole
 MAX_STROKES = 400
 MAX_POINTS = 2000
 
 
 def norm_ink(ink: list | None) -> list[dict]:
-    """Содержимое наброска: росчерк {color, width, pts} (точки — плоский список
-    x, y) или подпись {kind: text, x, y, text, color, size}."""
+    """Sketch content: a stroke {color, width, pts} (points are a flat list
+    of x, y) or a label {kind: text, x, y, text, color, size}."""
     out: list[dict] = []
     for item in (ink or [])[:MAX_STROKES]:
         if not isinstance(item, dict):
@@ -97,7 +97,7 @@ def norm_ink(ink: list | None) -> list[dict]:
 
 
 def card_name(card: BoardCard, entity: Entity | None, clock: Clock | None) -> str:
-    """Как карточка зовётся вслух: имя записи, имя счётчика или начало текста."""
+    """What the card is called aloud: the entry name, the clock name or the start of the text."""
     if entity is not None:
         return entity.name
     if clock is not None:
@@ -117,7 +117,7 @@ def unique_key(base: str, taken: set[str]) -> str:
 
 
 def fill_keys(cards: list[BoardCard], entities: dict, clocks: dict) -> None:
-    """Ключ карточке, у которой его нет: по имени записи, счётчика или началу текста."""
+    """A key for a card that has none: from the entry name, the clock name or the start of the text."""
     taken = {c.key for c in cards if c.key}
     for card in cards:
         if card.key:
@@ -139,14 +139,14 @@ MARKUP = [
 
 
 def plain(text: str) -> str:
-    """Выделение с доски (**жирный**, *курсив*, __подчёркнутый__) записи не нужно."""
+    """The entry does not need board formatting (**bold**, *italic*, __underline__)."""
     for rx in MARKUP:
         text = rx.sub(r"\1", text)
     return text
 
 
 def compose_notes(notes: list | None) -> str:
-    """Записки доски одним текстом: сперва без тега, дальше — группами по тегу."""
+    """The board's notes as one text: untagged first, then grouped by tag."""
     groups: dict[str, list[str]] = {}
     for note in notes or []:
         if not isinstance(note, dict):
@@ -163,7 +163,7 @@ def compose_notes(notes: list | None) -> str:
 
 
 def note_target(card: BoardCard) -> tuple[str, str] | None:
-    """К чему записки карточки прирастают в кампании: запись или счётчик."""
+    """What the card's notes attach to in the campaign: an entry or a clock."""
     if card.kind == "entity" and card.entity_id:
         return "entity", card.entity_id
     if card.kind == "clock" and card.clock_id:
@@ -172,8 +172,8 @@ def note_target(card: BoardCard) -> tuple[str, str] | None:
 
 
 def sync_block(db: Session, v, card: BoardCard, board: Board) -> None:
-    """Записки, привязанные к карточке на доске, живут и в самой записи (или в
-    счётчике) — одним блоком под именем доски. Пусто — блок убирается."""
+    """Notes attached to a card on the board also live in the entry itself (or in
+    the clock) — as one block under the board's name. Empty means the block is removed."""
     target = note_target(card)
     if target is None:
         return
@@ -413,9 +413,9 @@ def card_item(
             "id": cl.id, "name": cl.name, "segments": cl.segments, "filled": cl.filled,
             "color": cl.color, "status": cl.status, "kind": cl.kind,
             "description": cl.description, "outcome": cl.outcome,
-            # доска только у ГМа: владельца не прячем
+            # only the GM has boards: the owner is not hidden
             "owner_type": cl.owner_type, "owner_id": cl.owner_id,
-            # подпись счётчика на доске та же, что в базе: «владелец: имя»
+            # a clock's label on the board is the same as in the database: "owner: name"
             "owner_name": (owners or {}).get(cl.owner_id or "", ""),
             "visibility": cl.visibility,
         },
@@ -501,7 +501,7 @@ def patch_board(
     for k, val in patch.items():
         setattr(b, k, val)
     if "name" in after:
-        # доску переименовали — заголовки её записей в карточках идут следом
+        # the board was renamed — the headings of its blocks in entry cards follow
         block_ids = [
             r.block_id
             for r in db.query(BoardCard.block_id)
@@ -682,7 +682,7 @@ def create_edge(body: EdgeIn, v=Depends(gm_only), db: Session = Depends(get_db))
     data = body.model_dump()
     if data["style"] not in EDGE_STYLES:
         data["style"] = "thread"
-    # та же пара уже связана — новую нить не плодим
+    # the same pair is already linked — do not create a new thread
     twin = (
         db.query(BoardEdge)
         .filter_by(campaign_id=v.campaign_id, board_id=body.board_id,

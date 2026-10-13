@@ -1,5 +1,5 @@
-/* Слой выпадающих меню: портал в body и фиксированные координаты.
-   В потоке страницы такое меню режут прокручиваемая колонка и стековые контексты карточек. */
+/* Dropdown menu layer: a portal into body and fixed coordinates.
+   In the page flow such a menu gets clipped by the scrolling column and the cards' stacking contexts. */
 
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
@@ -12,10 +12,10 @@ export type PopLayerProps = {
   anchor: RefObject<HTMLElement | null>
   popRef?: { current: HTMLDivElement | null }
   className?: string
-  /** середина меню под серединой кнопки */
+  /** menu center under the button center */
   center?: boolean
   role?: string
-  /** закрыть меню по Escape: слой верхний, окно под ним остаётся */
+  /** close the menu on Escape: the layer is on top, the window under it stays */
   onClose?: () => void
   children: ReactNode
 }
@@ -42,12 +42,12 @@ export function PopLayer({
           ? a.top - GAP - p.height
           : Math.max(EDGE, window.innerHeight - EDGE - p.height)
       }
-      /* ширину кнопки отдаём в CSS — сам минимум задаёт стиль конкретного меню */
+      /* the button width goes to CSS: the menu's own style sets the minimum */
       const w = a.width
       setBox(o => (o && o.left === left && o.top === top && o.w === w ? o : { left, top, w }))
     }
     place()
-    /* размер меню меняется на лету — у «выбранным» разворачивается список участников */
+    /* the menu size changes on the fly: "selected" expands the member list */
     const ro = new ResizeObserver(place)
     if (self.current) ro.observe(self.current)
     window.addEventListener('scroll', place, true)

@@ -1,6 +1,6 @@
-/* Фракции и место контакта/персонажа — не тег, а настоящая связь на сущность
-   нужного kind. Список для поиска и подписи чипов берём из тех же данных,
-   что использует галерея (фракции/локации кампании). */
+/* The factions and place of a contact/character are not a tag but a real link to an entity
+   of the right kind. The search list and chip labels come from the same data
+   the gallery uses (campaign factions/locations). */
 
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,8 +20,8 @@ export function useKindIndex(kind: string) {
   return { list, byId, loading }
 }
 
-/** Имя привязки. Своя карточка может быть закрыта от стола — тогда имя приходит
-    отдельным словарём (`peer_names`), а перехода на карточку нет. */
+/** Link name. The linked card may be hidden from the table; then the name comes
+    in a separate dictionary (`peer_names`) and there's no jump to the card. */
 function peerName(id: string, byId: Map<string, Dict>, names?: Dict): string {
   return byId.get(id)?.name || String(names?.[id] || '') || '…'
 }
@@ -29,7 +29,7 @@ function peerName(id: string, byId: Map<string, Dict>, names?: Dict): string {
 export function AffiliationView({ ids, kind, names }: {
   ids?: string[] | null
   kind: string
-  /** id → имя для карточек, закрытых от смотрящего */
+  /** id → name for cards hidden from the viewer */
   names?: Dict
 }) {
   const { t } = useTranslation('entity')
@@ -55,7 +55,7 @@ export function AffiliationPicker({ ids, kind, onChange, disabled, names }: {
   kind: string
   onChange: (ids: string[]) => void
   disabled?: boolean
-  /** id → имя для карточек, закрытых от смотрящего */
+  /** id → name for cards hidden from the viewer */
   names?: Dict
 }) {
   const { t } = useTranslation('entity')
@@ -78,7 +78,7 @@ export function AffiliationPicker({ ids, kind, onChange, disabled, names }: {
       <div className={`tagbox ${disabled ? 'off' : ''}`}>
         {picked.map(id => (
           <span key={id} className={`tag ${disabled ? 'off' : ''}`}>
-            {/* тег — и связь, и вход на карточку: правка не должна запирать переход */}
+            {/* a tag is both a link and a way into the card: editing must not block the jump */}
             {byId.has(id)
               ? <Link className="t" to={`/entity/${id}`} title={t('aff.open')}>
                   {peerName(id, byId, names)}

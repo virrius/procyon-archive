@@ -9,12 +9,12 @@ import HeatBoard from './HeatBoard'
 import EntityPeek from './EntityPeek'
 import '../styles.relations.css'
 
-/* Дашборд отношений: организации, которые стол уже знает (скрытые сервер не отдаёт),
-   уровень отношений -3…+3 и журнал сделанных для них дел. */
+/* Faction status dashboard: organizations the table already knows (the server doesn't send hidden ones),
+   status level -3…+3 and a log of jobs done for them. */
 
 const STANCES = ['-3', '-2', '-1', '0', '+1', '+2', '+3']
 
-// подписи уровня — те же слова, что за столом
+// level labels: the same words used at the table
 const STANCE_LABEL: Dict = {
   '-3': 'stance.war', '-2': 'stance.hostile', '-1': 'stance.interfering', '0': 'stance.neutral',
   '+1': 'stance.helpful', '+2': 'stance.friendly', '+3': 'stance.allies',
@@ -33,7 +33,7 @@ const fld = (e: Dict, key: string) => String(e.fields?.[key] ?? '').trim()
 const deedsOf = (e: Dict): Deed[] =>
   Array.isArray(e.fields?.deeds) ? (e.fields.deeds as Deed[]) : []
 
-/** «1» и «+1» — один и тот же уровень: старые карточки писали его без знака. */
+/** "1" and "+1" are the same level: old cards stored it without a sign. */
 const stanceOf = (e: Dict): string => {
   const raw = fld(e, 'stance')
   if (!raw) return ''
@@ -54,7 +54,7 @@ export default function RelationsBoard() {
   const [peek, setPeek] = useState<Dict | null>(null)
   const [oops, setOops] = useState('')
 
-  const readonly = isPublicView()  // витрина для стола — только чтение
+  const readonly = isPublicView()  // showcase for the table: read only
   const isObserver = campaign?.my_role === 'observer'
   const canEdit = !readonly && !isObserver
 
@@ -67,7 +67,7 @@ export default function RelationsBoard() {
 
   const groups: [string, string, Dict[]][] = CATEGORIES.map(([key, label]) => {
     const known = CATEGORIES.map(([k]) => k).filter(Boolean)
-    // как в бланке: сверху сильные организации, внутри ранга — по алфавиту
+    // as on the sheet: strong organizations on top, alphabetical within a Tier
     const list = shown.filter(e => {
       const cat = fld(e, 'category')
       return key ? cat === key : !known.includes(cat)
@@ -75,8 +75,8 @@ export default function RelationsBoard() {
       (Number(fld(b, 'rank')) || 0) - (Number(fld(a, 'rank')) || 0) ||
       String(a.name).localeCompare(String(b.name)))
     return [key, label, list] as [string, string, Dict[]]
-    // три основные колонки бланка стоят всегда — иначе одна оставшаяся растягивается
-    // на всю ширину; «Прочие» показываем только когда есть кого туда положить
+    // the sheet's three main columns are always shown, otherwise a single remaining one stretches
+    // to full width; "Other" is shown only when there is something to put there
   }).filter(([key, , list]) => key !== '' || list.length > 0)
 
   const patch = async (e: Dict, body: Dict) => {
@@ -142,7 +142,7 @@ export default function RelationsBoard() {
                     <tr key={e.id} className={isGM && e.visibility === 'gm' ? 'gm-only' : undefined}>
                       <td className="rel-name">
                         <Link to={`/entity/${e.id}`} onClick={ev => {
-                          // карточка окном поверх доски; с Ctrl/Shift — как обычная ссылка
+                          // card as a window over the board; with Ctrl/Shift, as a normal link
                           if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return
                           ev.preventDefault(); setPeek(e)
                         }}>{e.name}</Link>
@@ -185,7 +185,7 @@ export default function RelationsBoard() {
   )
 }
 
-/** Отметки дел: галочки с подписью показываем плотнее, чем список. */
+/** Job marks: checkboxes with labels are shown denser than a list. */
 function Tally({ deeds }: { deeds: Deed[] }) {
   const { t } = useTranslation('crew')
   const marks = deeds.slice(0, 10)
@@ -199,8 +199,8 @@ function Tally({ deeds }: { deeds: Deed[] }) {
   )
 }
 
-/** Шкала -3…+3: центр — нейтралитет, влево вражда, вправо дружба.
- *  Клик по текущему уровню ничего не меняет: промах пальцем не стирает отношения. */
+/** Scale -3…+3: the center is neutral, left is hostility, right is friendship.
+ *  Clicking the current level changes nothing: a stray tap doesn't erase the status. */
 function StanceBar({ value, disabled, onChange }: {
   value: string; disabled?: boolean; onChange: (v: string) => void
 }) {
@@ -211,7 +211,7 @@ function StanceBar({ value, disabled, onChange }: {
   return (
     <span className="rel-bar" title={cur ? t(STANCE_LABEL[cur]) : t('relations.unset')}>
       {STANCES.map((s, i) => {
-        // залито всё от нейтралитета до текущего уровня — знак читается длиной полосы
+        // everything from neutral to the current level is filled: the sign reads by the bar length
         const on = idx >= 0 && (i === zero
           ? idx === zero
           : idx > zero ? i > zero && i <= idx : i < zero && i >= idx)
@@ -270,7 +270,7 @@ function DeedList({ entity, canEdit, onChange }: {
   )
 }
 
-/* правка дела уходит на сервер по уходу из поля, а не на каждую букву */
+/* a job edit goes to the server on leaving the field, not on every keystroke */
 function DeedText({ value, onCommit }: { value: string; onCommit: (t: string) => void }) {
   const { t } = useTranslation('crew')
   const [v, setV] = useState(value)

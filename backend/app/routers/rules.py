@@ -20,13 +20,13 @@ from .files import drop_files
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["rules"], responses=AUTH_ERRORS)
 
-# вырезки — кухня ГМа: и раздел, и его содержимое лежат в блоках с этим владельцем
+# clippings are the GM's workshop: both a section and its contents live in blocks with this owner
 OWNER = "rules"
 SECTION, TEXT, SHOT, SEED = "section", "text", "shot", "seed"
 
-# картинка вырезки: либо залитый файл (att:<id>), либо страница книги (media:<каталог>/<файл>).
-# Каталог у страницы свой: у русской книги assets/rules, у английской — assets/rules_en,
-# и вырезка помнит, из какой книги она, когда язык экземпляра сменится
+# a clipping image: either an uploaded file (att:<id>) or a rulebook page (media:<dir>/<file>).
+# Each page has its own directory: assets/rules for the Russian book, assets/rules_en for the English one,
+# so a clipping remembers which book it came from when the instance language changes
 ATT, MEDIA = "att:", "media:"
 ASSETS = "/data/assets"
 
@@ -36,7 +36,7 @@ def rules_dir(lang: str) -> str:
 
 
 def camp_lang(db: Session, v: Viewer) -> str:
-    """Книга кампании — на языке её материалов."""
+    """The campaign's book is in the language of its presets."""
     return campaign_lang(v.campaign_id)
 
 
@@ -50,7 +50,7 @@ def page_ref(file: str, lang: str) -> str:
 
 
 def page_src(content: str) -> str:
-    """media:<каталог>/<файл> → путь картинки; без каталога — запись до двух книг, русская."""
+    """media:<dir>/<file> → image path; no directory means an entry from the single-book days, the Russian one."""
     ref = content[len(MEDIA):]
     return f"/media/{ref}" if "/" in ref else f"/media/rules/{ref}"
 
@@ -172,9 +172,9 @@ def item_out(b: ContentBlock, cid: str) -> dict:
 
 
 def seed_rules(db: Session, campaign_id: str, member_id: str | None, lang: str) -> None:
-    """Книга раскладывается по разделам при заведении кампании; дальше разделы живут своей
-    жизнью — ГМ правит и сносит что угодно. Блок-отметка говорит, что книга уже разложена:
-    у выгрузки кампании, где разделы так и не открывали, её нет, и загрузка раскладывает книгу."""
+    """The book is laid out into sections when the campaign is created; after that the sections live their own
+    life — the GM edits and deletes anything. A marker block says the book has been laid out:
+    a campaign export where the sections were never opened lacks it, and the import lays the book out."""
     if db.query(ContentBlock.id).filter_by(campaign_id=campaign_id, entity_type=OWNER, block_type=SEED).first():
         return
     db.add(block(campaign_id, member_id, SEED, "", tr("content.rules_seeded", lang=lang), "", 0))
@@ -253,8 +253,8 @@ def delete_rules_section(section_id: str, v: Viewer = Depends(gm_only), db: Sess
 
 
 def forget_shot(db: Session, v: Viewer, b: ContentBlock) -> None:
-    """Залитый файл уходит вместе с вырезкой; страница книги остаётся на диске —
-    она общая и вернётся, если ГМ снова добавит её в раздел."""
+    """An uploaded file goes away with the clipping; a rulebook page stays on disk —
+    it is shared and comes back if the GM adds it to a section again."""
     if b.block_type != SHOT or not b.content.startswith(ATT):
         return
     a = db.get(Attachment, b.content[len(ATT):])

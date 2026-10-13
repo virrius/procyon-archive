@@ -1,13 +1,13 @@
-"""Имена для статистов: тех, кто говорит одну фразу и в базу кампании не идёт.
+"""Names for extras: characters who say one line and never enter the campaign database.
 
-Две базы. Сеттинговая — списки корника («Изгои Галактики», стр. 70) и придуманные в
-том же духе: короткие звучные имена фронтира и фамилии вроде книжных Валорум, Кранакс,
-Орткатт. Общемировая — классика по странам: имя и фамилия всегда из одной культуры,
-поэтому «Нида Эмари» не встречается с «Пейш Ветрило». Страны собраны в крупные полки
-(Европа, Восток, Африка), но внутри полки страна выбирается на каждую строку.
+Two pools. The setting pool is the core rulebook lists (Russian edition, p. 70) plus names made up
+in the same spirit: short, punchy frontier first names and surnames like the book's Valorum, Kranax,
+Ortcutt. The world pool is classic names by country: first name and surname always come from one
+culture, so "Nida Emari" never meets "Peish Vetrilo". Countries are grouped into large regions
+(Europe, East, Africa), but within a region the country is picked per row.
 
-Прозвища общие: их дают на станции, откуда бы ты ни был. Ксеносы живут только в
-сеттинговой базе — у них ни страны, ни фамилии.
+Aliases are shared: you get one on a station wherever you come from. Xenos live only in
+the setting pool: they have neither a country nor a surname.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import random
 
 from .i18n import twin_lang
 
-# сеттинг: корник и фронтир
+# setting: core rulebook and frontier
 SETTING_FIRST = [
     "Абра", "Айгнор", "Ария", "Виктор", "Виндам", "Гай", "Гарм", "Гарни", "Гаррус",
     "Григ", "Дел", "Джаана", "Джанго", "Дженера", "Джерек", "Джет", "Дункан", "Зокар",
@@ -54,7 +54,7 @@ SETTING_FAMILY = [
 ]
 
 
-# прозвища: железо, деньги, улица, пустота, повадка — вне стран
+# aliases: iron, money, street, void, habits — not tied to countries
 ALIAS = [
     "Агон", "Альфа", "Ас", "Афина", "Барсук", "Бинго", "Бич", "Бритва", "Вандал",
     "Вжух", "Вольт", "Восьмёрка", "Впрыск", "Гало", "Гвоздь", "Гипер", "Гонзо",
@@ -99,7 +99,7 @@ ALIAS = [
 ]
 
 
-# ксеносы: одно имя, без фамилии — так их зовут и в корнике
+# xenos: one name, no surname — that is how the core rulebook names them too
 XENO = [
     "Ааш'ти", "Аштрекк", "Вррекх", "Виш'ла", "Гхал-Ту", "Гшерр", "Дзеккт", "Дхарр-Ссу",
     "Иссарин", "Икс'ло", "Йрру", "Йшант", "Ккал", "Кторр", "Ктарр", "Кшемм", "Лу'вени",
@@ -446,8 +446,8 @@ COUNTRIES: dict[str, dict] = {
 }
 
 
-# Крупные полки для выбора: внутри полки страна выбирается на строку, чтобы имя
-# и фамилия были из одной культуры
+# Large regions to pick from: within a region the country is picked per row, so that the first name
+# and surname come from one culture
 GROUPS: list[tuple[str, str, tuple[str, ...]]] = [
     ("ru", "Россия", ("ru",)),
     ("us", "Америка", ("us",)),
@@ -464,7 +464,7 @@ GROUPS: list[tuple[str, str, tuple[str, ...]]] = [
 ]
 
 
-# Женские имена: по ним и отбирают пол, и склоняют фамилию там, где она склоняется
+# Female first names: used both to filter by gender and to inflect the surname where it inflects
 FEMALE: dict[str, frozenset[str]] = {
     "setting": frozenset((
         "Ария", "Джаана", "Дженера", "Йола", "Кали", "Касуми", "Кендра", "Лиара",
@@ -564,7 +564,7 @@ QUOTES = ("«", "»")
 
 
 def feminize(family: str, country: str) -> str:
-    """Женская форма фамилии: русская и польско-чешская её требуют."""
+    """Female form of a surname: Russian and Polish/Czech surnames require it."""
     if country == "ru":
         if family.endswith(("ов", "ев", "ёв", "ин", "ын")):
             return family + "а"
@@ -587,7 +587,7 @@ _BY_KEY = {k: cs for k, _, cs in GROUPS}
 
 
 def group_list() -> list[list[str]]:
-    """Полки для выбора в интерфейсе: ключ и подпись."""
+    """Regions for the UI picker: key and label."""
     return [[k, label] for k, label, _ in GROUPS]
 
 
@@ -599,8 +599,8 @@ def pools(pool: str, country: str) -> tuple[list[str], list[str]]:
 
 
 def by_gender(first: list[str], key: str, gender: str) -> list[str]:
-    """Имена одного пола. Женские перечислены, мужские — всё остальное; если полка
-    вышла пустой, отдаём её целиком: пустой бросок хуже неточного."""
+    """Names of one gender. Female names are listed, male ones are everything else; if filtering
+    leaves nothing, return the whole list: an empty roll is worse than an inaccurate one."""
     if gender not in ("f", "m"):
         return first
     fem = FEMALE.get(key, frozenset())
@@ -610,13 +610,13 @@ def by_gender(first: list[str], key: str, gender: str) -> list[str]:
 
 def roll(n: int = 8, shape: str = "mix", pool: str = "setting", region: str = "any",
          gender: str = "any", seed: int | None = None) -> list[dict]:
-    """Пачка имён: shape задаёт огранку (одно имя, с фамилией, с прозвищем, полное,
-    ксенос), mix мешает все. region — полка мировой базы, any берёт все. gender — пол
-    имени; у ксеносов пола нет, они приходят при любом выборе."""
+    """A batch of names: shape sets the form (single name, with surname, with alias, full,
+    xeno), mix mixes them all. region is a world-pool region, any takes them all. gender is the
+    name's gender; xenos have none and come up with any choice."""
     rnd = random.Random(seed)
     world = pool == "world"
     shapes = SHAPES[:-1] if world else SHAPES
-    # region — полка (Восток) или отдельная страна (jp); всё прочее берёт весь мир
+    # region is a group (East) or a single country (jp); anything else takes the whole world
     keys = _BY_KEY.get(region) or (
         (region,) if region in COUNTRIES else tuple(c for cs in _BY_KEY.values() for c in cs))
     out: list[dict] = []
@@ -645,7 +645,7 @@ def roll(n: int = 8, shape: str = "mix", pool: str = "setting", region: str = "a
     return out
 
 
-# английский двойник модуля (см. langpack): те же базы латиницей, женские фамилии — готовыми парами
+# English twin of the module (see langpack): same pools in Latin script, female surnames as ready pairs
 if twin_lang(__name__) == "en":
     from .names_en import *  # noqa: E402,F403
     from .names_en import FAMILY_F  # noqa: E402

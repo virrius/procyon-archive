@@ -9,8 +9,8 @@ import ShipSetup from '../components/sheet/ShipSetup'
 import { clone, dict, useAutosave } from '../components/sheet/parts'
 import '../styles.char.css'
 
-/** GM space → «Бланки»: настройка бланка корабля и бланков экипажа поверх книги.
- *  На самих бланках настройки нет — игроки видят только итог. */
+/** GM space → "Sheets": setup of the ship sheet and crew sheets on top of the book.
+ *  The sheets themselves have no settings — players see only the result. */
 export default function SheetsSetup() {
   const { meta, campaign, reload } = useApp()
   const { t } = useTranslation('gm')

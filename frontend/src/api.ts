@@ -6,7 +6,7 @@ const TOKEN_KEY = 'pa_token'
 const CAMP_KEY = 'pa_campaign'
 const VIEWAS_KEY = 'pa_viewas'
 
-// куки не различают порты: два экземпляра на одном хосте затирали бы токен друг друга
+// cookies ignore ports: two instances on one host would overwrite each other's token
 const COOKIE = location.port ? `${TOKEN_KEY}_${location.port}` : TOKEN_KEY
 
 function syncCookie(v: string | null) {
@@ -27,13 +27,13 @@ export const store = {
   set viewAs(v: string | null) { v ? localStorage.setItem(VIEWAS_KEY, v) : localStorage.removeItem(VIEWAS_KEY) },
 }
 
-// <img src> ходит без заголовка и живёт на этой куке, а ставится она только при
-// логине — на другом хосте (127.0.0.1 вместо localhost) её нет. Подсыпаем на старте
+// <img src> requests carry no header and rely on this cookie, which is set only at
+// login — on another host (127.0.0.1 instead of localhost) it's missing. Set it on startup
 if (store.token) syncCookie(store.token)
-// общая pa_token осталась от версий без суффикса порта: «Выйти» её не стирает
+// the shared pa_token is left over from versions without a port suffix: “sign out” doesn't clear it
 if (COOKIE !== TOKEN_KEY) document.cookie = `${TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`
 
-/** витрина «как видят игроки»: общий вид без конкретного участника, только чтение */
+/** “as players see it” preview: the shared view without a specific member, read-only */
 export const PUBLIC_VIEW = 'crew'
 export const isPublicView = () => store.viewAs === PUBLIC_VIEW
 
@@ -71,18 +71,18 @@ export const api = {
 
 export const c = () => `/api/campaigns/${store.campaign}`
 
-/** Соль в адресе миниатюры. Адрес снимка не меняется, когда правят рамку превью, а
- *  браузеры, однажды получившие миниатюру без Cache-Control, держат её часами и не
- *  ходят на сервер. Поднять число — и стол увидит миниатюры заново. */
+/** Salt in the thumbnail URL. The image URL doesn't change when the preview crop is edited, and
+ *  browsers that once got a thumbnail without Cache-Control keep it for hours without
+ *  hitting the server. Bump the number and the table sees fresh thumbnails. */
 const THUMB_SALT = 2
 
-/** Миниатюра вместо оригинала: в плитку 230px незачем тянуть кадр 1344×768.
- *  Ширины закрыты на сервере (240/480/960), лишние игнорируются и вернут оригинал. */
+/** A thumbnail instead of the original: no need to load 1344×768 into a 230px tile.
+ *  Widths are fixed on the server (240/480/960); others are ignored and return the original. */
 export const thumb = (url?: string | null, w: 240 | 480 | 960 = 480, ver?: number) =>
   !url ? '' : `${url}${url.includes('?') ? '&' : '?'}w=${w}&s=${THUMB_SALT}`
     + (ver ? `&r=${ver}` : '')
 
-/** Миниатюра всего кадра, мимо рамки превью: рамка кадрирует снимок карточки,
- *  а в списке вложений файл показываем таким, какой он есть. */
+/** A thumbnail of the whole image, ignoring the preview crop: the crop frames the entry image,
+ *  while the attachment list shows the file as it is. */
 export const thumbFull = (url?: string | null, w: 240 | 480 | 960 = 480, ver?: number) =>
   !url ? '' : `${thumb(url, w, ver)}&crop=0`

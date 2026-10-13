@@ -1,12 +1,12 @@
-"""Выгрузка и загрузка кампании целиком — в фоне, с ходом работы для Admin space.
+"""Export and import of a whole campaign — in the background, with progress for Admin space.
 
-Архив (формат procyon-archive/2): ``campaign.json`` — строки кампании по таблицам и язык
-экземпляра, ``files/<имя>`` — файлы вложений как лежат на диске. Выгрузка без файлов —
-один ``campaign.json``.
+Archive (format procyon-archive/2): ``campaign.json`` — campaign rows by table and the instance
+language, ``files/<name>`` — attachment files as stored on disk. An export without files is
+just ``campaign.json``.
 
-Загрузка заводит новую кампанию: все id переписываются на свежие (архив можно залить
-дважды и на тот же сервер), участники остаются только те, чьи учётки есть на этом
-сервере, загрузивший становится ГМом. Содержимое остаётся таким, каким было в архиве.
+Import creates a new campaign: all ids are rewritten to fresh ones (an archive can be imported
+twice, even into the same server), only members whose accounts exist on this server are kept,
+and the importer becomes the GM. The content stays as it was in the archive.
 """
 from __future__ import annotations
 
@@ -69,18 +69,18 @@ TABLES = [
     ("board_edges", BoardEdge),
     ("attachments", Attachment),
     ("events", Event),
-    # попытки мастерской и заказы депеш: лента попыток и черновики живут на них
+    # Studio attempts and dispatch orders: the attempt feed and drafts live on them
     ("image_gen_jobs", ImageGenJob),
     ("news_jobs", NewsJob),
 ]
-# заявка в работе на новом месте не продолжится — заливаем её неудавшейся
+# a job in progress won't continue in the new place — import it as failed
 FINAL = {"image_gen_jobs": ("ready", "done", "failed"), "news_jobs": ("ready", "failed")}
 UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 WORK_DIR = os.path.join(settings.upload_dir, "_transfers")
 KEEP_SECONDS = 6 * 3600
 CHUNK = 1 << 20
 
-# задачи живут в памяти процесса: после перезапуска сервера незаконченная пропадает
+# jobs live in process memory: an unfinished one is lost on server restart
 JOBS: dict[str, dict] = {}
 _lock = threading.Lock()
 
@@ -106,7 +106,7 @@ def job_out(job: dict) -> dict:
 
 
 def _sweep() -> None:
-    """Готовые архивы и брошенные загрузки живут несколько часов."""
+    """Finished archives and abandoned uploads live for a few hours."""
     now = time.time()
     with _lock:
         for jid, job in list(JOBS.items()):
@@ -123,7 +123,7 @@ def _sweep() -> None:
             pass
 
 
-# --- выгрузка -----------------------------------------------------------------
+# --- export -------------------------------------------------------------------
 
 
 def _row(obj) -> dict:
@@ -151,7 +151,7 @@ def dump(db, campaign_id: str, progress=None) -> dict:
 
 
 def _flat_name(url) -> str:
-    """Имя файла вложения без каталогов; пусто — имени нет."""
+    """Attachment file name without directories; empty means there is no name."""
     name = os.path.basename(str(url or ""))
     return "" if name in (".", "..") else name
 
@@ -179,7 +179,7 @@ def _export(job: dict, with_files: bool) -> None:
             _set(job, status="done", stage="done", file=path, download=f"{nice}.json")
             return
         folder = os.path.join(settings.upload_dir, camp.id)
-        # только файлы живых вложений: от удалённых на диске остаются сироты
+        # only files of live attachments: deleted ones leave orphans on disk
         names = sorted({a.url for a in db.query(Attachment.url).filter_by(campaign_id=camp.id)
                         if a.url and _flat_name(a.url) == a.url})
         sizes = {n: os.path.getsize(os.path.join(folder, n)) for n in names
@@ -190,19 +190,19 @@ def _export(job: dict, with_files: bool) -> None:
             z.writestr(zipfile.ZipInfo("campaign.json"), data, compress_type=zipfile.ZIP_DEFLATED)
             done = 0
             for n, size in sizes.items():
-                # картинки и так сжаты: кладём как есть, без второго прохода компрессии
+                # images are already compressed: store as is, without a second compression pass
                 z.write(os.path.join(folder, n), f"files/{n}")
                 done += size
                 _set(job, done=done)
         _set(job, status="done", stage="done", file=path, download=f"{nice}.zip")
-    except Exception as exc:  # noqa: BLE001 — ошибку показываем в Admin space
+    except Exception as exc:  # noqa: BLE001 — the error is shown in Admin space
         log.exception("export %s", job["campaign_id"])
         _set(job, status="failed", error=str(exc)[:500])
     finally:
         db.close()
 
 
-# --- загрузка -----------------------------------------------------------------
+# --- import -------------------------------------------------------------------
 
 
 def upload_path(job: dict) -> str:
@@ -249,7 +249,7 @@ def _import(job: dict) -> None:
         if not str(payload.get("format", "")).startswith("procyon-archive/") or "campaign" not in payload:
             raise ValueError("not a Procyon Archive campaign export")
 
-        # все id кампании — свежие; текстом, чтобы переписались и ссылки внутри JSON и путей
+        # all campaign ids are fresh; replaced as text so references inside JSON and paths are rewritten too
         ids = {payload["campaign"]["id"]}
         for name, _model in TABLES:
             ids |= {r["id"] for r in payload.get(name, []) if r.get("id")}
@@ -273,7 +273,7 @@ def _import(job: dict) -> None:
         for e in payload.get("entities", []):
             if e.get("owner_member_id") and e["owner_member_id"] not in kept | {ANY_PLAYER}:
                 e["owner_member_id"] = None
-        # файл вложения — только имя в папке кампании: путь из чужого архива не доверяем
+        # an attachment file is just a name in the campaign folder: paths from a foreign archive are not trusted
         for a in payload.get("attachments", []):
             a["url"] = _flat_name(a.get("url"))
         payload["attachments"] = [a for a in payload.get("attachments", []) if a["url"]]
@@ -291,7 +291,7 @@ def _import(job: dict) -> None:
         done = 0
         for name, model in TABLES:
             rows = [_typed(model, r) for r in payload.get(name, [])]
-            # пачкой вставляются строки с одинаковым набором колонок: дописанный ГМ — короче
+            # rows with the same column set are inserted in one batch: the appended GM row is shorter
             for keys in dict.fromkeys(tuple(sorted(r)) for r in rows):
                 same = [r for r in rows if tuple(sorted(r)) == keys]
                 for i in range(0, len(same), 500):
@@ -324,7 +324,7 @@ def _import(job: dict) -> None:
 
         db.commit()
         _set(job, status="done", stage="done", campaign_id=cid)
-    except Exception as exc:  # noqa: BLE001 — ошибку показываем в Admin space
+    except Exception as exc:  # noqa: BLE001 — the error is shown in Admin space
         log.exception("import %s", job.get("name"))
         db.rollback()
         if folder:

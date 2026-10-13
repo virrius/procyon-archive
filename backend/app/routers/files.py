@@ -26,7 +26,7 @@ ALLOWED = {
     "application/pdf", "audio/mpeg", "audio/ogg", "audio/wav", "text/plain",
 }
 MAX_BYTES = 25 * 1024 * 1024
-# доска — холст ГМа: загруженное на неё стол не видит
+# a board is the GM's canvas: the table does not see what is uploaded to it
 BOARD_TARGETS = ("board", "board_card")
 
 TargetType = Literal["entity", "message", "marker", "map", "clock", "board", "board_card", "scene_frame", "rules"]
@@ -89,8 +89,8 @@ async def upload(
     data = await file.read()
     if len(data) > MAX_BYTES:
         raise HTTPException(413, tr("files.too_large"))
-    # файл живёт при родителе: на закрытой карточке или в неотправленном письме его и так не видно,
-    # а интерфейс грузит портреты и фоны карт без видимости — умолчание `crew`, как было
+    # a file lives with its parent: on a hidden card or in an unsent message it is not visible anyway,
+    # and the UI uploads portraits and map backgrounds without visibility — the default is `crew`, as before
     visibility = visibility or "crew"
     if not v.is_gm and visibility == "gm":
         raise HTTPException(403, tr("entities.player_no_gm_vis"))
@@ -123,15 +123,15 @@ async def upload(
     return attachment_item(a, v)
 
 
-# ширины миниатюр, которые готовы отдавать: список закрыт, иначе первый обход
-# страницы наплодит сотню перекодировок
+# thumbnail widths we are willing to serve: the list is closed, otherwise the first pass over
+# a page would spawn a hundred re-encodes
 THUMB_WIDTHS = (240, 480, 960)
 THUMB_DIR = "thumb"
 
 
 def crop_of(a: Attachment, w: int, h: int) -> tuple[int, int, int, int] | None:
-    """Рамка превью в пикселях картинки, обрезанная по её краям. Пусто или рамка во
-    весь кадр — None: резать нечего."""
+    """Preview crop box in image pixels, clipped to its edges. Empty, or a box covering
+    the whole frame — None: nothing to crop."""
     if not (a.crop_box or ""):
         return None
     try:
@@ -146,18 +146,18 @@ def crop_of(a: Attachment, w: int, h: int) -> tuple[int, int, int, int] | None:
 
 
 def stored_path(a: Attachment) -> str | None:
-    """Файл вложения на диске; None — url уводит из папки кампании."""
+    """The attachment file on disk; None if the url leads outside the campaign folder."""
     folder = os.path.realpath(os.path.join(settings.upload_dir, a.campaign_id))
     path = os.path.realpath(os.path.join(folder, a.url or ""))
     return path if path.startswith(folder + os.sep) else None
 
 
 def thumb_path(a: Attachment, width: int, cropped: bool = True) -> str | None:
-    """Миниатюра нужной ширины, рисуется один раз и остаётся на диске рядом с файлом.
-    Если у вложения задана рамка превью — миниатюра рисуется по ней, оригинал цел.
+    """A thumbnail of the requested width, drawn once and kept on disk next to the file.
+    If the attachment has a preview crop box, the thumbnail follows it; the original stays intact.
 
-    `cropped=False` — миниатюра всего кадра: рамка про то, как снимок смотрится
-    портретом карточки, а в списке вложений файл показываем как он есть."""
+    `cropped=False` — a thumbnail of the whole frame: the crop box is about how the picture looks
+    as a card portrait, while in the attachment list the file is shown as is."""
     src = stored_path(a)
     if not src or not a.mime.startswith("image/") or a.mime == "image/svg+xml":
         return None
@@ -172,27 +172,27 @@ def thumb_path(a: Attachment, width: int, cropped: bool = True) -> str | None:
         with Image.open(src) as im:
             box = crop_of(a, im.width, im.height) if cropped else None
             if box is None and im.width <= width:
-                return None  # мельче запрошенного и без рамки — оригинал и есть миниатюра
+                return None  # smaller than requested and no crop box — the original is the thumbnail
             im = im.convert("RGB")
             if box:
                 x, y, cw, ch = box
                 im = im.crop((x, y, x + cw, y + ch))
             im.thumbnail((width, width * 4), Image.LANCZOS)
             im.save(dst, "WEBP", quality=82, method=4)
-    except Exception:  # битый файл или нет кодека — отдадим оригинал
+    except Exception:  # broken file or missing codec — serve the original
         return None
     return dst
 
 
 def drop_thumbs(a: Attachment) -> None:
-    """Убрать миниатюры, оставив оригинал: файл переписали, превью от старого."""
+    """Remove the thumbnails and keep the original: the file was rewritten, the previews are from the old one."""
     folder = os.path.join(settings.upload_dir, a.campaign_id, THUMB_DIR)
     _remove(os.path.join(folder, f"{a.id}-{w}{tail}.webp")
             for w in THUMB_WIDTHS for tail in ("", "-full"))
 
 
 def drop_files(a: Attachment) -> None:
-    """Убрать оригинал и все его миниатюры."""
+    """Remove the original and all its thumbnails."""
     path = stored_path(a)
     if path:
         _remove([path])
@@ -238,8 +238,8 @@ def get_file(
         raise HTTPException(404, tr("files.not_found"))
     if not os.path.exists(path):
         raise HTTPException(410, tr("files.missing"))
-    # рамку превью правят на месте, адрес файла при этом не меняется: без сверки
-    # браузер держал бы старую миниатюру и кадрирование выглядело бы сломанным
+    # the preview crop box is edited in place and the file URL does not change: without revalidation
+    # the browser would keep the old thumbnail and cropping would look broken
     head = {"Cache-Control": "no-cache"}
     if w in THUMB_WIDTHS:
         small = thumb_path(a, w, cropped=bool(crop))
@@ -250,13 +250,13 @@ def get_file(
 
 
 def hidden_portrait(e: Entity, a: Attachment) -> bool:
-    """Портрет, закрытый ГМом от стола, не отдаём и как вложение карточки."""
+    """A portrait the GM hid from the table is not served as a card attachment either."""
     return ("image_url" in hidden_keys(e)
             and (e.image_url or "").split("?")[0].endswith(f"/files/{a.id}"))
 
 
 def with_visible_targets(db: Session, v: Viewer, rows: list[Attachment]) -> list[Attachment]:
-    """Вложение карточки или письма видно только вместе с ним."""
+    """A card or message attachment is visible only together with its card or message."""
     if v.is_gm:
         return rows
     ids = {kind: [a.target_id for a in rows if a.target_type == kind and a.target_id]
@@ -303,8 +303,8 @@ def list_attachments(
 
 
 def can_crop(db: Session, a: Attachment, v: Viewer) -> bool:
-    """Кадрировать превью может тот, кто правит саму карточку, и тот, кто принёс файл:
-    рамка — оформление снимка, а не решение о том, кому его показывать."""
+    """The preview can be cropped by whoever edits the card itself and by whoever brought the file:
+    the crop box is how the picture is framed, not a decision about who gets to see it."""
     if v.is_gm or (a.uploaded_by and a.uploaded_by == v.member_id):
         return True
     if a.target_type != "entity" or not a.target_id:
@@ -339,7 +339,7 @@ def patch_attachment(
     if not a or a.campaign_id != v.campaign_id or not can_see(a, v):
         raise HTTPException(404, tr("files.not_found"))
     patch = body.model_dump(exclude_unset=True)
-    # видимость вложения держит ГМ: файл лежит у него, стол его просто не видит
+    # the GM owns attachment visibility: the file sits with the GM, the table just does not see it
     if set(patch) - {"crop_box"} and not v.is_gm:
         raise HTTPException(403, tr("files.gm_only"))
     if "crop_box" in patch and not can_crop(db, a, v):
@@ -350,7 +350,7 @@ def patch_attachment(
         a.visible_to = list(patch["visible_to"] or [])
     if "caption" in patch:
         a.caption = str(patch["caption"] or "")[:300]
-    # рамка превью правится в любой момент: оригинал цел, режем только миниатюры
+    # the preview crop box can be edited at any time: the original stays intact, only thumbnails are cut
     if "crop_box" in patch:
         a.crop_box = str(patch["crop_box"] or "").strip()[:60]
         drop_thumbs(a)
@@ -371,7 +371,7 @@ def delete_attachment(
     a = db.get(Attachment, attachment_id)
     if not a or a.campaign_id != v.campaign_id or not can_see(a, v):
         raise HTTPException(404, tr("files.not_found"))
-    # свой файл убирает загрузивший, чужой — только ГМ
+    # your own file is removed by the uploader, someone else's only by the GM
     if not v.is_gm and a.uploaded_by != v.member_id:
         raise HTTPException(403, tr("files.not_yours"))
     journal.log(db, v, "file", "delete", target_id=a.id, title=a.filename,

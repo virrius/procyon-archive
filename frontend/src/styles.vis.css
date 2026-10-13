@@ -1,7 +1,7 @@
-/* Иконочные кнопки и меню видимости — один вид во всех панелях.
-   Сплошные поверхности, канты 1px, без свечения и прозрачностей. */
+/* Icon buttons and visibility menus — one look across all panels.
+   Solid surfaces, 1px borders, no glow or translucency. */
 
-/* --- квадратная кнопка-иконка --------------------------------------------- */
+/* --- square icon button --------------------------------------------------- */
 
 .ibtn {
   display: inline-grid; place-items: center; flex: 0 0 auto;
@@ -25,11 +25,11 @@ button.ibtn.danger:disabled:hover,
 }
 .ibtn:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 
-/* кнопка «иконка + слово» */
+/* “icon + word” button */
 button.btn-ico { display: inline-flex; align-items: center; gap: 6px; }
 button.btn-ico svg { display: block; }
 
-/* --- чип видимости --------------------------------------------------------- */
+/* --- visibility chip ------------------------------------------------------- */
 
 .vis-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
 
@@ -55,15 +55,15 @@ button.vis-chip.vis-crew:hover { color: var(--txt); border-color: var(--dim2); }
 .vis-chip.vis-gm       { color: #e08a70; border-color: #5c3327; background: #251712; }
 button.vis-chip.vis-gm:hover { color: #f0a88f; background: #301a14; }
 
-/* чип «кто правит карточку» — тот же корпус, своя шкала */
+/* “Who can edit the entry” chip — same body, its own scale */
 .own-chip.own-gm  { color: var(--dim);   border-color: var(--line2); }
 button.own-chip.own-gm:hover { color: var(--txt); border-color: var(--dim2); }
 .own-chip.own-all { color: var(--amber); border-color: var(--amber-dim); }
 .own-chip.own-one { color: var(--plum);  border-color: #4d3e57; }
 
-/* --- выпадающее меню ------------------------------------------------------- */
+/* --- dropdown menu --------------------------------------------------------- */
 
-/* меню живёт в портале на body: fixed — иначе его режут прокрутка колонки и карточки */
+/* the menu lives in a portal on body: fixed — otherwise column and card scrolling clip it */
 .vis-pop {
   position: fixed; z-index: 320;
   min-width: 236px; max-width: 310px; max-height: calc(100vh - 16px); overflow-y: auto;
@@ -109,7 +109,7 @@ label.vis-who input[type="checkbox"] { width: auto; margin: 0; flex: 0 0 auto; }
   .vis-pop { min-width: 208px; max-width: 76vw; }
 }
 
-/* --- глаз поля: видно столу или лежит у ГМа -------------------------------- */
+/* --- field eye: visible to the table or kept by the GM ---------------------- */
 
 button.fvis {
   display: inline-grid; place-items: center; flex: 0 0 auto;
@@ -122,23 +122,23 @@ button.fvis.off:hover { color: #f0a88f; background: #251712; border-color: #5c33
 button.fvis svg { display: block; }
 button.fvis:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 
-/* подпись поля с глазом: вид как у label, но не label — иначе клик по слову
-   щёлкал бы глазом. Глаз стоит сразу за словом */
+/* field caption with an eye: looks like a label but isn't one — otherwise clicking the word
+   would toggle the eye. The eye sits right after the word */
 .fld-lbl {
   display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
   font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim2);
 }
 .fld-lbl.off { color: #e79a83; }
 
-/* --- действия и метки поверх картинки -------------------------------------- */
+/* --- actions and tags over an image ----------------------------------------- */
 
-/* метки состояния — левый верхний угол, видны всегда; действия — одна планка
-   в правом верхнем углу, всплывают по наведению */
+/* status tags — top left corner, always visible; actions — one bar
+   in the top right corner, shown on hover */
 .imgbox { position: relative; }
 .img-hover { opacity: 0; transition: opacity .08s linear; }
 .imgbox:hover .img-hover,
 .imgbox:focus-within .img-hover { opacity: 1; }
-/* на тач-экране наведения нет — действия видны всегда */
+/* touch screens have no hover — actions are always visible */
 @media (hover: none) {
   .img-hover { opacity: 1; }
 }
@@ -147,7 +147,7 @@ button.fvis:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px
   position: absolute; top: 0; right: 0; z-index: 4;
   display: flex; align-items: flex-start;
 }
-/* действия всплывают по наведению, глаз видимости справа виден всегда */
+/* actions appear on hover, the visibility eye on the right is always visible */
 .imgbar-acts, .imgbar > button.fvis {
   display: flex; background: var(--surface2);
   border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
@@ -188,7 +188,7 @@ button.fvis:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px
   display: grid; place-items: center; width: 26px; height: 26px; padding: 0;
   color: #f0a58a; background: #2a1510; border-color: var(--rust);
 }
-/* закрытый снимок — рустовый пунктир по краю кадра */
+/* a hidden image — a rust dashed edge around the frame */
 .imgshut {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   outline: 2px dashed var(--rust); outline-offset: -5px;

@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { api, c, isPublicView, type Dict } from '../api'
 import { useApp } from '../ctx'
 
-/* Подозрения и уровень розыска по системам Проциона (стр. 186–187 корника):
-   подозрения набираются в той системе, где экипаж наследил, на восьмом пункте
-   обнуляются и поднимают розыск, остаток переносится. Живёт в бланке корабля —
-   это показатель экипажа, а не отдельная сущность. */
+/* Heat and wanted level by Procyon system (rulebook pp. 186–187):
+   heat builds up in the system where the crew left traces, on the eighth point
+   it resets and raises the wanted level, the remainder carries over. Lives in the ship sheet:
+   it's a crew stat, not a separate entity. */
 
 const HEAT_MAX = 8
 const WANTED_MAX = 4
@@ -23,7 +23,7 @@ const cellOf = (raw: any): Cell => ({
   wanted: num(raw?.wanted, WANTED_MAX),
 })
 
-/** Перелив: восьмой пункт подозрений снимается и поднимает розыск, остаток остаётся. */
+/** Overflow: the eighth heat point is removed and raises the wanted level, the remainder stays. */
 const bump = (cell: Cell, heat: number): Cell => {
   if (heat < HEAT_MAX) return { ...cell, heat }
   if (cell.wanted >= WANTED_MAX) return { ...cell, heat: HEAT_MAX }
