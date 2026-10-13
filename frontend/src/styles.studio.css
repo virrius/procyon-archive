@@ -134,16 +134,16 @@
 .st-cands { display: grid; gap: 10px; padding: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; }
 .st-cands.one { grid-template-columns: minmax(0, 1fr); }
 .st-cand { margin: 0; background: #100f0d; border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
-.st-cand.on { border-color: var(--amber); }
 .st-cand.kept { border-color: var(--olive); }
-.st-cand-shot { position: relative; overflow: hidden; background: var(--surface2); cursor: pointer; }
+.st-cand-shot { position: relative; overflow: hidden; background: var(--surface2); }
+.st-cand-shot:has(img) { cursor: zoom-in; }
 .st-cand-shot img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .st-cand-shot .wait {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-family: var(--util); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim2);
 }
 .st-cand-bar { display: flex; flex-wrap: wrap; gap: 4px; padding: 5px; border-top: 1px solid var(--line); visibility: hidden; min-height: 34px; align-items: center; }
-.st-cand:hover .st-cand-bar, .st-cand.on .st-cand-bar, .st-cand.kept .st-cand-bar { visibility: visible; }
+.st-cand:hover .st-cand-bar, .st-cand.kept .st-cand-bar { visibility: visible; }
 .st-cand-bar button.tiny { font-size: 10.5px; padding: 3px 7px; }
 .st-ico { width: 24px; height: 23px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .st-kept-l { font-family: var(--util); font-size: 10.5px; color: var(--olive); letter-spacing: .06em; text-transform: uppercase; padding: 2px; }
