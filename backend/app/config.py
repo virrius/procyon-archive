@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     jwt_ttl_hours: int = 720
     upload_dir: str = "/data/uploads"
     worker_token: str = ""
+    # тексты правил книги в репозиторий не входят: <book_dir>/<язык>.json, если есть
+    book_dir: str = "/data/book"
 
     class Config:
         env_prefix = "PA_"

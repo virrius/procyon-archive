@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      HOST: ${{ secrets.PROCYON_HOST }}
+      USER_NAME: ${{ secrets.PROCYON_USER }}
+      TARGET: ${{ secrets.PROCYON_PATH }}
+      URL: ${{ secrets.PROCYON_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.PROCYON_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync sources
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
+            --exclude '__pycache__/' \
+            --exclude 'node_modules/' \
+            --exclude 'dist/' \
+            --exclude '*.log' \
+            backend frontend worker assets docs docker-compose.yml \
+            "$USER_NAME@$HOST:$TARGET/"
+
+      - name: Rebuild containers
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$USER_NAME@$HOST" \
+            "cd $TARGET && docker compose up -d --build api web && docker image prune -f"
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "$URL/api/health" | grep -q '"ok":true'; then
+              echo "healthy"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "health check failed"
+          exit 1

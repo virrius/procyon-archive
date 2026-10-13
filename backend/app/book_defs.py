@@ -9,7 +9,10 @@ from __future__ import annotations
 
 import sys
 
-from .book_sheets import CHAR_SHEET, PLAYBOOK_SHEETS  # noqa: F401 — бланки персонажей
+from .book_sheets import CHAR_SHEET, PLAYBOOK_SHEETS  # бланки персонажей
+from .book_text import with_text
+
+PLAYBOOK_SHEETS, CHAR_SHEET = with_text("ru", PLAYBOOK_SHEETS, CHAR_SHEET)
 
 SHIP_SIZES: list[str] = ["частный", "грузовоз", "корвет", "фрегат", "дредноут"]
 
