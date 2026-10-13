@@ -227,7 +227,8 @@ def get_file(
     """Binary answer, not JSON. Visibility of the attachment applies. Accepts `?token=` for
     `<img src>`. `Cache-Control: no-cache` so an edited crop box shows at once."""
     a = db.get(Attachment, attachment_id)
-    if not a or a.campaign_id != v.campaign_id or not can_see(a, v):
+    # a look thumbnail is a GM-only candidate frame, but the wardrobe is open to every player in the workshop
+    if not a or a.campaign_id != v.campaign_id or not (can_see(a, v) or a.target_type == "outfit"):
         raise HTTPException(404, tr("files.not_found"))
     if not v.is_gm and a.target_type == "entity" and a.target_id:
         e = db.get(Entity, a.target_id)
