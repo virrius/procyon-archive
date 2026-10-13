@@ -17,7 +17,8 @@ The first start downloads about 250 MB. After that Procyon Archive starts with D
 
 Where players connect:
 
-- **Home network:** `http://<your computer's IP>:7726`.
+- **Home network:** `http://<your computer's local IP>:7726`, like `http://192.168.1.20:7726`.
+  The local IP: `ipconfig` on Windows, System Settings → Network on macOS, `hostname -I` on Linux.
 - **Anywhere, from your computer:** install [ngrok](https://ngrok.com/download), run `ngrok http 7726`
   and send players the `https://…` address it prints. Works while your computer is on.
 - **Anywhere, always on:** run the same steps on a VPS with Docker and open port 7726.
