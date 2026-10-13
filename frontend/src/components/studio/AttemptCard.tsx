@@ -55,6 +55,8 @@ export default function AttemptCard({
   const sig = useRef('')
 
   const slots = over?.slots ?? (parted ? p.slots : null)
+  const shown = useRef('')
+  shown.current = JSON.stringify(slots)
   const prompt = over?.prompt ?? att.prompt
   const hand = over ? over.hand : !!p.hand
   const changed = !!over && (over.prompt !== att.prompt || over.hand !== !!p.hand)
@@ -62,10 +64,14 @@ export default function AttemptCard({
 
   // editing a chip rebuilds the line in code, without the hub
   const rebuild = async (s: Dict, wardrobeKey = '') => {
+    const sent = JSON.stringify(s)
     try {
       const r = await api.post(`${c()}/image-prompt/rebuild`, {
         slots: s, kind, view: p.view || 'interior', register: p.register || '', wardrobe: wardrobeKey,
       })
+      // typing went on while the request was out: this answer would roll the text back and throw the caret
+      // to the end; the newer text gets its own rebuild
+      if (shown.current !== sent) return
       sig.current = JSON.stringify(r.slots || s)
       setOver({ slots: r.slots || s, prompt: r.prompt || '', hand: false, prompts: r.prompts })
     } catch (e: any) { onError(e?.message || t('err.rebuild_failed')) }
