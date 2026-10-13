@@ -40,7 +40,7 @@ Run in the unzipped folder:
 |---|---|
 | Stop | `docker compose down` |
 | Update | `docker compose pull` then `docker compose up -d` |
-| Delete all campaigns | `docker compose down -v` |
+| Delete all campaigns | `docker compose down -v`, then delete the `data` folder |
 | Backup a campaign | Admin space → Campaigns → **export** |
 
 Port 7726 busy: change it in `docker-compose.yml`.
