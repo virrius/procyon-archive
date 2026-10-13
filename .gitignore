@@ -2,6 +2,9 @@
 local_secrets/
 .env
 
+# локальная надстройка compose для разработки
+docker-compose.override.yml
+
 # данные рантайма (uploads, БД наполняется штатно)
 data/
 

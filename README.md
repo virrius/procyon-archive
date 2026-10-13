@@ -28,4 +28,5 @@ release/     docker-compose.yml for installing from images
 samples/     demo campaign
 docs/        story boards API for agents
 INSTALL.md   how to install
+DEV.md       development, deploy
 ```
