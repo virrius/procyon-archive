@@ -1,0 +1,35 @@
+# Development: mounted sources, reload on save.
+# docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+services:
+  db:
+    ports:
+      - "45432:5432"
+
+  api:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    environment:
+      # bind mounts give no inotify events, so watchfiles polls
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./backend/app:/app/app
+      - ./assets:/data/assets:ro
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      API_URL: http://api:8000
+      VITE_POLL: "1"
+      VITE_HMR_PORT: "5180"
+    volumes: !override
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      # nginx serves assets at /media, the dev server serves them from public/
+      - ./assets:/app/public/media:ro
+    ports: !override
+      - "5180:5173"

@@ -30,7 +30,7 @@ Where players connect:
    Or set it before the first start: in `docker-compose.yml`, replace `${PA_ADMIN_PASSWORD:-}` with your password.
 2. Admin space → Language: English or Russian. It sets the interface, generated texts and, by default,
    the presets of new campaigns: rulebook factions and places, sector map, playbooks, rules clippings.
-3. Admin space → Campaigns: create a campaign, or **import from archive** → `DEMO_CAMPAIGN.zip` (in English).
+3. Admin space → Campaigns: create a campaign, or **import from archive** → `DEMO_CAMPAIGN.zip` to see it in action (in English).
 4. GM space → Accounts: **+ grant access**, a login per player.
 5. Optional, pictures and news: add an OpenAI-compatible API key in Admin space → LLM and Images,
    or draw on your own NVIDIA GPU with the [local image worker](worker/README.md).
@@ -51,10 +51,11 @@ Port 7726 busy: change it in `docker-compose.yml`.
 ## Structure
 
 ```
-backend/     API: FastAPI, PostgreSQL
-frontend/    web app: React, nginx
-worker/      image worker for your own GPU (optional)
-assets/      rules clippings, sector map
-samples/     demo campaign
-docs/        development and deploy
+backend/        API: FastAPI, PostgreSQL
+frontend/       web app: React, nginx
+worker/         image worker for your own GPU (optional)
+assets/         rules clippings, sector map
+samples/        demo campaign
+docs/           pictures for this README
+DEVELOPMENT.md  how to develop, deploy, release
 ```
