@@ -17,6 +17,14 @@ _COLUMNS: list[tuple[str, str, str]] = [
     ("campaigns", "sheet_setup", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
 ]
 
+# data fixes that must precede a constraint; idempotent, run before the ALTERs below
+_SQL: list[str] = [
+    # messages from before the in-game date: frozen on the day they showed (the campaign's current day)
+    "UPDATE messages m SET world_day = c.world_day FROM campaigns c"
+    " WHERE m.world_day IS NULL AND c.id = m.campaign_id",
+    "ALTER TABLE messages ALTER COLUMN world_day SET NOT NULL",
+]
+
 _DROP_TABLES: list[str] = [
     # discussion "notes": the UI was removed on 2026-10-09, the table is empty on both instances
     "notes",
@@ -71,6 +79,7 @@ def _statements() -> list[str]:
         f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS "{column}" {ddl}'
         for table, column, ddl in _COLUMNS
     ]
+    out += _SQL
     out += [f"DROP TABLE IF EXISTS {table}" for table in _DROP_TABLES]
     out += [
         f'ALTER TABLE {table} DROP COLUMN IF EXISTS "{column}"'

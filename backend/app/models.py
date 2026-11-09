@@ -201,8 +201,8 @@ class Message(Base, PK, Stamps, VisMixin):
     is_lead: Mapped[bool] = mapped_column(Boolean, default=False)
     expires_at: Mapped[str] = mapped_column(String(80), default="")
     delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # in-game day of the message (like Campaign.world_day)
-    world_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # in-game day of the message (like Campaign.world_day); set to the campaign's day on creation
+    world_day: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class News(Base, PK, Stamps, VisMixin):

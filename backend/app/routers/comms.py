@@ -46,11 +46,11 @@ class MessageIn(BaseModel):
     world_day: int | None = Field(default=None, ge=0, description="Game day of the message; omitted → the campaign's current day.")
 
 
-NULLABLE = ("sender_entity_id", "world_day")
+NULLABLE = ("sender_entity_id",)
 
 
 class MessagePatch(BaseModel):
-    """Only the keys sent are changed; `null` is ignored except on `sender_entity_id` and `world_day`.
+    """Only the keys sent are changed; `null` is ignored except on `sender_entity_id`.
     `status: delivered` behaves exactly like `POST …/deliver`."""
 
     sender_display: str | None = None
@@ -90,7 +90,7 @@ class MessageOut(BaseModel):
     expires_at: str
     delivered_at: datetime | None
     created_at: datetime
-    world_day: int | None
+    world_day: int
     read: bool = Field(description="Read by the calling member (per-member state; false right after POST/PATCH).")
     pinned: bool = Field(description="Pinned by the calling member.")
     sender_reveal: bool

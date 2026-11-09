@@ -282,6 +282,11 @@ def _import(job: dict) -> None:
                 if job_row.get("status") not in final:
                     job_row["status"] = "failed"
 
+        # exports from before the in-game message date
+        for m in payload.get("messages", []):
+            if m.get("world_day") is None:
+                m["world_day"] = src.get("world_day") or 0
+
         camp = _typed(Campaign, src)
         camp.setdefault("lang", payload.get("lang") if payload.get("lang") in ("ru", "en") else "")
         camp.update(owner_id=importer.id, created_at=datetime.now(timezone.utc))
