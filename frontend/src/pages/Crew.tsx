@@ -14,8 +14,8 @@ import * as EntityGalleryMod from '../components/EntityGallery'
 import { parseStamp, stamp } from '../components/WorldTime'
 import '../styles.mail.css'
 
-/** in-game date of the message; without it, the campaign's current date */
-const mailDate = (m: Dict, today: number) => stamp(m.world_day ?? today)
+/** in-game date of the message */
+const mailDate = (m: Dict) => stamp(m.world_day)
 
 // parallel components export either a named or a default export
 const pick = (m: any, name: string): any => (m && m[name]) || (m && m.default)
@@ -65,9 +65,8 @@ function ShipTab() {
 /* --- inbox ----------------------------------------------------------------- */
 
 function MailTab() {
-  const { meta, isGM, L, campaign } = useApp()
+  const { meta, isGM, L } = useApp()
   const { t } = useTranslation('crew')
-  const today = campaign?.world_day ?? 0
   const [msgs, loading, reload] = useAsync<Dict[]>(() => api.get(`${c()}/messages`), [])
   const [msg, setMsg] = useState<Dict | null>(null)
   const [q, setQ] = useState('')
@@ -200,7 +199,7 @@ function MailTab() {
                     <strong>{m.subject || t('mail.no_subject')}</strong>
                     {m.is_lead && <> <Chip tone="violet">{t('mail.lead_chip')}</Chip></>}
                   </td>
-                  <td className="ml-meta mono">{mailDate(m, today)}</td>
+                  <td className="ml-meta mono">{mailDate(m)}</td>
                   {isGM && <td className="ml-meta"><VisChip v={m.visibility} /></td>}
                   {canEdit && (
                     <td className="ml-act"
@@ -235,7 +234,7 @@ function MailTab() {
                     </Link>
                   )}
                   <Chip tone="cyan">{t('mail.from', { sender: msg.sender_display || t('mail.unknown') })}</Chip>
-                  <span className="mono dim2 small">{mailDate(msg, today)}</span>
+                  <span className="mono dim2 small">{mailDate(msg)}</span>
                   {msg.is_lead && <Chip tone="violet">{t('mail.lead_chip')}</Chip>}
                 </div>
                 <div className="panel" style={{ margin: '12px 0', whiteSpace: 'pre-wrap' }}>
@@ -271,14 +270,13 @@ function MailEditor({ msg, types, onSave, onDelete, onLeave, onDirty }: {
   onDirty: (dirty: boolean) => void
 }) {
   const nav = useNavigate()
-  const { campaign } = useApp()
   const { t } = useTranslation('crew')
   const [f, setF] = useState<Dict>({
     sender_display: msg.sender_display || '', msg_type: msg.msg_type || 'crew',
     sender_entity_id: msg.sender_entity_id || null, sender_reveal: !!msg.sender_reveal,
     subject: msg.subject || '', body: msg.body || '', is_lead: !!msg.is_lead,
     visibility: msg.visibility || 'crew', visible_to: msg.visible_to || [],
-    date: stamp(msg.world_day ?? campaign?.world_day ?? 0),
+    date: mailDate(msg),
   })
   const [who, setWho] = useState<Dict | null>(null)
   const [busy, setBusy] = useState(false)
